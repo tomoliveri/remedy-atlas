@@ -76,6 +76,14 @@ def settle_pr(q: Queue, relays, n: int, events: Optional[List[Dict[str, Any]]] =
         out.update(decision="waiting", reason="GitHub refused the merge (conflict or branch protection); will retry")
         return out
     out.update(decision="merged", reason=f"quorum {row['votes']}/{row['quorum']}, CI green")
+    issue = (row.get("spec") or {}).get("issue")
+    if isinstance(issue, int) and issue != n:
+        from .bridge import close_settled
+        try:
+            close_settled(q, issue, f"{repo_url}/pull/{n}")
+            out["issue"] = issue
+        except Exception as e:  # the merge stands; the sweep reconciles the issue later
+            out["note"] = f"issue #{issue} not closed: {e}"
     if gate_key:
         try:
             relays.publish(N.settled_event(gate_key, tid, repo_url, "merged", int(q.now()), output=pr["head_sha"],

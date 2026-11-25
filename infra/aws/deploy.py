@@ -297,7 +297,7 @@ Wants=network-online.target
 
 [Service]
 ExecStart=/usr/bin/python3 -m workstead.relayd --host :: --port 8080 --pow 8
-Environment=PYTHONPATH=/opt/workstead PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONPATH=/opt/workstead PYTHONDONTWRITEBYTECODE=1 WS_CLIENT_IP_HEADER=cloudfront-viewer-address
 Environment=WS_REQUIRE_ORIGIN=1
 # Read by systemd as root before privileges drop; the file is root-only (0600).
 EnvironmentFile=/etc/workstead/relayd.env

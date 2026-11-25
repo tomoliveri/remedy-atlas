@@ -338,6 +338,15 @@ def cmd_next(ctx, args, home: Path) -> int:
     a = make_agent(ctx, home)
     item = a.next()
     if item is None:
+        # Plans (a Job's breakdown) and written results stay on the issues
+        # queue: look there before idling. One board read, usually from the CDN.
+        from . import worker as W
+        try:
+            choice, info = W.pick(ctx, getattr(args, "max_hours", None))
+        except Exception:  # GitHub unreachable: the relays are still the queue
+            choice = None
+        if choice and choice["kind"] in ("task", "resume", "triage"):
+            return W.emit_choice(ctx, choice, info)
         state = N.compute(a._events, ctx.cfg, a.repo, a.now())
         live = [r for r in state.values() if r["status"] in ("open", "leased", "submitted", "pending")]
         if not live and state:

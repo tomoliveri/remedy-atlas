@@ -241,6 +241,9 @@ class GitHub:
     def me(self) -> str:
         return self.request("GET", "/user")["login"]
 
+    def branch_sha(self, branch: str) -> str:
+        return self.request("GET", f"{self.r}/commits/{branch}")["sha"]
+
     def repo_info(self) -> Dict[str, Any]:
         d = self.request("GET", self.r)
         return {"private": d.get("private", False), "default_branch": d.get("default_branch", "main"),

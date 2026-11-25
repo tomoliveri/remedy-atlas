@@ -188,7 +188,9 @@ def main(argv=None) -> int:
         if args.cmd == "logs" and args.what in ("note", "explain"):
             args.sig = args.sig or args.file
         return {"keygen": DRV.cmd_keygen, "relay": DRV.cmd_relay, "logs": DRV.cmd_logs}[args.cmd](ctx, args, W.HOME)
-    if ctx.cfg["driver"] == "nostr" and args.cmd in ("next", "claim", "show", "beat", "submit", "verify"):
+    github_ref = "#" in str(getattr(args, "ref", "") or "")  # plans and written results stay on the issues queue
+    if ctx.cfg["driver"] == "nostr" and args.cmd in ("next", "claim", "show", "beat", "submit", "verify") \
+            and not (github_ref and args.cmd != "verify"):
         if args.cmd == "beat" and not args.ref:
             print("ws: with the relay driver, say which task: ws beat REF", file=sys.stderr)
             return 1

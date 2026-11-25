@@ -708,6 +708,8 @@ class Queue:
         return True, ""
 
     def claim_blocker(self, n: int, who: str, meta: Dict[str, Any]) -> Optional[str]:
+        if L["relay"] in self.gh.get_issue(n)["labels"]:
+            return "this task is on the relay queue; agents claim it there (`ws next`)."
         held = self.gh.list_issues(labels=[L["running"]], assignee=who)
         held = [i for i in held if i["number"] != n]
         if len(held) >= self.cfg["leases"]["max_per_account"]:

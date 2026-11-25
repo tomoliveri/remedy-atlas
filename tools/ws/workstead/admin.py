@@ -5,7 +5,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from . import config as C
 from .engine import Queue
@@ -108,7 +108,7 @@ def render_codeowners(root: Path, info: Dict[str, Any], cfg: Dict[str, Any]) -> 
 
 HARDEN_STEPS = """secret scanning, push protection, Dependabot alerts and fixes, private vulnerability reporting,
 read-only default workflow token, no PR approvals by Actions, approval for first-time contributors' fork workflows,
-default-branch protection (CI ok + code owners), release tag ruleset"""
+default-branch protection (CI ok + code owners), release tag ruleset, relay mode's gate key"""
 
 
 def harden(root: Path, check: bool = False) -> int:
@@ -180,6 +180,9 @@ def harden(root: Path, check: bool = False) -> int:
             "bypass_actors": [{"actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always"}]})
     step("release tags (v*) only by admins", tag_ruleset,
          lambda: any(x.get("name") == "release tags" for x in (gh.request("GET", f"{r}/rulesets") or [])))
+    step("relay mode: gate key in secret WS_NOSTR_KEY, its public key in relay.publishers",
+         lambda: relay_init(root, gh, cfg),
+         lambda: not cfg["relay_pending"] and exists(f"{r}/actions/secrets/WS_NOSTR_KEY"))
     for status, name in results:
         print(f"{status:<5}{name}")
     if not (root / ".github" / "CODEOWNERS").is_file():
@@ -188,6 +191,44 @@ def harden(root: Path, check: bool = False) -> int:
     if bad:
         print("Some settings need an admin token or a different GitHub plan; the rest were applied.")
     return 1 if bad else 0
+
+
+def relay_init(root: Path, gh, cfg: Dict[str, Any]) -> None:
+    """Turn on relay mode: a fresh gate key goes straight into the repository
+    secret WS_NOSTR_KEY (never printed or saved), and its public key, plus
+    this maintainer's own worker key, into relay.publishers in workstead.json."""
+    import subprocess
+    from pathlib import Path as _P
+    from . import schnorr
+    from .driver import load_or_create_key
+    from .gh import GitHubError
+    if cfg["driver"] == "github-issues" and not cfg["relay_pending"]:
+        return  # the project chose the issues queue explicitly
+    try:
+        gh.request("GET", f"/repos/{gh.repo}/actions/secrets/WS_NOSTR_KEY")
+        have_secret = True
+    except GitHubError:
+        have_secret = False
+    f = root / "workstead.json"
+    data = json.loads(f.read_text()) if f.is_file() else {}
+    pubs = list(((data.get("relay") or {}).get("publishers")) or [])
+    if not have_secret or not pubs:
+        sk, pk = schnorr.generate()
+        try:
+            r = subprocess.run(["gh", "secret", "set", "WS_NOSTR_KEY", "--repo", gh.repo], input=sk.hex(),
+                               capture_output=True, text=True, timeout=60)
+        except OSError:
+            raise GitHubError("needs the GitHub CLI (gh) to store the gate key as a secret") from None
+        if r.returncode != 0:
+            raise GitHubError(f"gh secret set failed: {r.stderr.strip()[:160]}")
+        pubs.append(schnorr.npub(pk))
+    _, mine = load_or_create_key(_P.home() / ".workstead")
+    mine_npub = schnorr.npub(bytes.fromhex(mine))
+    if mine_npub not in pubs and mine not in pubs:
+        pubs.append(mine_npub)
+    data.setdefault("relay", {})["publishers"] = pubs
+    f.write_text(json.dumps(data, indent=2) + "\n")
+    print("workstead.json: relay.publishers set. Commit and push it to switch the fleet to relay mode.")
 
 
 def queue_from_env(cfg: Dict[str, Any]) -> Queue:
@@ -208,8 +249,37 @@ def actions_event(root: Path) -> int:
     path = os.environ.get("GITHUB_EVENT_PATH")
     payload = json.loads(Path(path).read_text()) if path else {}
     q.handle_event(name, payload)
-    print(f"handled {name}; dispatched {len(q.dispatched)}; API calls {q.gh.calls}; remaining {q.gh.remaining}")
+    bridged = bridge_tasks(q, cfg) if name in ("issues", "issue_comment", "workflow_dispatch") else []
+    print(f"handled {name}; dispatched {len(q.dispatched)}; bridged {len(bridged)}; API calls {q.gh.calls}; "
+          f"remaining {q.gh.remaining}")
     return 0
+
+
+def bridge_tasks(q: Queue, cfg: Dict[str, Any], relays=None) -> List[Dict[str, Any]]:
+    """Relay mode: publish ready task issues to the relays (bridge.py). Needs the gate key."""
+    if cfg["driver"] != "nostr":
+        return []
+    from .settle import gate_key_from_env
+    key = gate_key_from_env()
+    if not key:
+        print("relay mode: secret WS_NOSTR_KEY isn't set, so ready issues aren't published (run ./ws harden)")
+        return []
+    import tempfile
+    from .bridge import publish_ready
+    from .driver import relays_for
+    own = relays is None
+    try:
+        relays = relays or relays_for(cfg, Path(tempfile.mkdtemp()), probe=False)
+        done = publish_ready(q, relays, key)
+    except Exception as e:  # relays unreachable: the next run retries
+        print(f"bridge skipped: {e}")
+        return []
+    finally:
+        if own and relays is not None:
+            relays.close()
+    for b in done:
+        print(f"bridged #{b['issue']} -> {b['task'][:12]}")
+    return done
 
 
 def actions_sweep(root: Path) -> int:
@@ -217,6 +287,7 @@ def actions_sweep(root: Path) -> int:
     q = queue_from_env(cfg)
     snap = q.sweep()
     if cfg["driver"] == "nostr":
+        bridge_tasks(q, cfg)
         relay_board_into_issue(q, cfg)
     st = snap["stats"]
     summary = (f"### Workstead sweep\n\nopen tasks {st['open_tasks']} · done in 24 h {st['done_24h']} · "
@@ -265,6 +336,8 @@ def actions_settle(root: Path) -> int:
     results = [settle_pr(q, relays, int(pr), gate_key=key)] if pr.isdigit() else settle_open(q, relays, key)
     for r in results:
         print(json.dumps(r))
+    if any(r.get("issue") for r in results):
+        bridge_tasks(q, cfg, relays)  # dependents of what just merged are ready now
     relays.close()
     return 0
 

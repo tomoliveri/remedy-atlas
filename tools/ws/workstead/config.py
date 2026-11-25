@@ -17,11 +17,13 @@ DEFAULTS: Dict[str, Any] = {
     # owner/name. Empty means: GITHUB_REPOSITORY in Actions, else the git remote.
     "repo": "",
     "default_branch": "main",
-    # Queue driver. github-issues: the queue is this repository's issues (the
-    # default; best up to a few hundred agents). nostr: tasks, claims and
-    # verification receipts travel over public Nostr relays as signed events,
-    # and GitHub is only the pull-request settlement layer (docs/relay.md).
-    "driver": "github-issues",
+    # Queue driver. nostr (the default): tasks, claims and verification
+    # receipts travel as signed events over relays and the agents' own
+    # super-peer mesh; GitHub takes the requests (issues, /plan) and settles
+    # results by pull request (docs/relay.md). Until relay.publishers is set
+    # (`./ws harden` does it) the queue runs as github-issues: the queue is
+    # this repository's issues, fine up to a few hundred agents.
+    "driver": "nostr",
     # Logins with full authority, in addition to anyone with write access.
     "maintainers": [],
     # Logins whose comments are the queue's own (state comments, bot tasks).
@@ -268,8 +270,6 @@ def validate(cfg: Dict[str, Any]) -> None:
         raise ConfigError("relay.pow_bits must be 0-32")
     if rc["verify_sandbox"] not in ("none", "docker"):
         raise ConfigError("relay.verify_sandbox must be none or docker")
-    if cfg["driver"] == "nostr" and not rc["publishers"]:
-        raise ConfigError("driver nostr needs relay.publishers (the keys allowed to publish tasks)")
     if cfg["safety"]["action"] not in ("maintainer", "block"):
         raise ConfigError("safety.action must be maintainer or block")
     if not isinstance(gb["learnings"], bool):
@@ -302,6 +302,12 @@ def load(root: Optional[Path] = None, data: Optional[Dict[str, Any]] = None) -> 
         data = json.loads(f.read_text()) if f.is_file() else {}
     cfg = _merge(DEFAULTS, data)
     validate(cfg)
+    cfg["relay_pending"] = False
+    if cfg["driver"] == "nostr" and not cfg["relay"]["publishers"]:
+        # Relay mode needs at least one publisher key (./ws harden creates the
+        # repository's gate key). Until then the issues queue does the work.
+        cfg["driver"] = "github-issues"
+        cfg["relay_pending"] = True
     return cfg
 
 

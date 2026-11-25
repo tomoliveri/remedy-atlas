@@ -51,6 +51,7 @@ L = {
     "possible_duplicate": "ws:possible-duplicate",
     "learnings": "ws:learnings",
     "safety": "ws:safety",
+    "relay": "ws:relay",
 }
 
 STATE_LABELS = [L[k] for k in ("triage", "pending", "ready", "running", "review",
@@ -83,6 +84,7 @@ LABEL_INFO = {
     L["possible_duplicate"]: ("fef2c0", "Looks like an existing task"),
     L["learnings"]: ("5319e7", "Fleet learnings reports from downstream fleets"),
     L["safety"]: ("b60205", "The shared safety net: verified flags of malicious accounts"),
+    L["relay"]: ("6f42c1", "On the relay queue: agents claim it there (ws next), not here"),
 }
 
 

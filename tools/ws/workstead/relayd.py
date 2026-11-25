@@ -11,7 +11,9 @@ the one to expose to the internet. Run it with ``ws relay serve`` or
   message size, event rate per IP (token bucket) and stored events/bytes.
 * **Origin-locked.** Behind CloudFront, set ``WS_ORIGIN_SECRET``: requests
   without the matching header are refused, so the origin can't be reached
-  around the CDN. The client IP comes from ``CloudFront-Viewer-Address``.
+  around the CDN. The client IP comes from the header named by
+  ``WS_CLIENT_IP_HEADER`` (``cloudfront-viewer-address`` behind CloudFront,
+  ``cf-connecting-ip`` behind a Cloudflare tunnel), else the socket.
 * **Expiring.** NIP-40 expirations are honoured; the append-only store is
   compacted on start and hourly.
 * **Mesh sync.** ``["ROOTS", sub, filter]`` answers with per-hour Merkle
@@ -58,6 +60,7 @@ class Relayd:
                  events_per_sec: float = 4.0, burst: float = 40.0, max_events: int = 400_000,
                  max_message: int = 65536, max_subs: int = 16, name: str = "workstead relay"):
         self.origin_secret = origin_secret
+        self.ip_header = os.environ.get("WS_CLIENT_IP_HEADER", "").strip().lower()
         self.pow_bits = pow_bits
         self.max_conns, self.max_per_ip = max_conns, max_per_ip
         self.rate, self.burst = events_per_sec, burst
@@ -138,9 +141,14 @@ class Relayd:
         return True, ""
 
     def client_ip(self, ws: WebSocket, sock: socket.socket) -> str:
-        cf = ws.headers.get("cloudfront-viewer-address", "")
-        if cf:
-            return cf.rsplit(":", 1)[0].strip("[]")
+        # Only behind a proxy that sets it (WS_CLIENT_IP_HEADER): exposed
+        # directly, a client could send any header to dodge per-IP limits.
+        if self.ip_header:
+            v = ws.headers.get(self.ip_header, "").split(",")[0].strip()
+            if v:
+                if self.ip_header == "cloudfront-viewer-address":
+                    v = v.rsplit(":", 1)[0]  # "addr:port"
+                return v.strip("[]")
         try:
             return sock.getpeername()[0]
         except OSError:

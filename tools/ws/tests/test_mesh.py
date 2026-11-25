@@ -238,5 +238,61 @@ class SeedlessBootstrap(unittest.TestCase):
             r.stop()
 
 
+class Bridge(unittest.TestCase):
+    """GitHub intake -> signed relay tasks -> settlement closes the issue -> dependents follow."""
+
+    class Pool:
+        def __init__(self):
+            self.events = []
+
+        def publish(self, ev):
+            self.events.append(ev)
+
+        def snapshot(self, repo_url):
+            return list(self.events)
+
+    def test_issue_to_relay_and_back(self):
+        from workstead.bridge import publish_ready, task_ref
+        from workstead.protocol import L
+        from workstead.settle import settle_pr
+        r = Repo({"relay": {"publishers": [S.pubkey(PUB).hex()], "pow_bits": 0, "pov_min_prior_verifications": 0,
+                            "trusted_agents": [S.pubkey(key(i)).hex() for i in range(2, 6)]}})
+        self.assertEqual(r.cfg["driver"], "nostr")
+        a = r.task("Parser")
+        b = r.task("Docs for the parser", partition="docs", deps=[a])
+        plan = r.task("Research options", partition="research")
+        pool = self.Pool()
+        q = r.fresh_queue()
+        done = publish_ready(q, pool, PUB)
+        self.assertEqual([d["issue"] for d in done], [a])  # b waits on a; research stays on GitHub
+        self.assertIn(L["relay"], r.labels(a))
+        self.assertNotIn(L["relay"], r.labels(plan))
+        self.assertEqual(publish_ready(r.fresh_queue(), pool, PUB), [])  # idempotent
+        tid = task_ref(q, a)
+        self.assertEqual(tid, pool.events[0]["id"])
+        spec = json.loads(pool.events[0]["content"])
+        self.assertEqual((spec["issue"], spec["title"]), (a, "Parser"))
+        self.assertNotIn("ws:meta", spec["body"])
+        # Claiming the bridged task on GitHub is refused.
+        r.say("worker", a, "/claim")
+        self.assertNotIn(L["running"], r.labels(a))
+        # The fleet verifies it over the relays; the gate merges and closes the issue.
+        now = int(r.w.clock())
+        out = "f" * 40
+        for sk, role in ((key(2), "produce"), (key(3), "verify"), (key(4), "verify")):
+            pool.publish(N.receipt_event(sk, tid, REPO, "b" * 40, out, "c" * 64, "d" * 64, "pass", role, now + 1,
+                                         ref="https://x.example/r.git#b" if role == "produce" else None))
+        pr = r.as_("worker").open_pr("Parser", "Done.\n\n<!-- ws:relay " + json.dumps({"task": tid}) + " -->",
+                                    "ws/relay-a", ["src/parser.py"], sha=out)
+        r.w.advance(5)
+        res = settle_pr(r.fresh_queue(), pool, pr)
+        self.assertEqual((res["decision"], res.get("issue")), ("merged", a), res)
+        r.pump()
+        self.assertEqual(r.issue(a)["state"], "closed")
+        self.assertEqual(r.state(a)["status"], "done")
+        done = publish_ready(r.fresh_queue(), pool, PUB)
+        self.assertEqual([d["issue"] for d in done], [b])  # the dependent follows
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -248,7 +248,7 @@ def candidates(ctx: Ctx, tasks: List[Dict[str, Any]], reviews: List[Dict[str, An
         lease = t.get("lease") or {}
         if t["status"] == "running" and mine(ctx, t["number"], lease):
             out.append(dict(t, kind="resume"))
-        elif t["status"] == "queued" and t.get("ready") and t.get("meta"):
+        elif t["status"] == "queued" and t.get("ready") and t.get("meta") and L["relay"] not in (t.get("labels") or []):
             out.append(dict(t, kind="task"))
     for r in reviews:
         if r.get("review_lease"):
@@ -510,6 +510,8 @@ def cmd_claim(ctx: Ctx, args) -> int:
     review = issue["is_pr"] or L["review"] in issue["labels"] or L["triage"] in issue["labels"]
     if not review and L["ready"] not in issue["labels"]:
         raise WsError(f"#{n} isn't ready to claim (labels: {', '.join(issue['labels'])}). Run `ws next`.", EXIT_LOST)
+    if not review and L["relay"] in issue["labels"]:
+        raise WsError(f"#{n} is on the relay queue: `ws next` hands it out there.", EXIT_LOST)
     comment = c.gh.create_comment(n, f"/claim node={node}")
 
     key = "review_lease" if review else "lease"

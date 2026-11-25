@@ -48,6 +48,7 @@ class World:
         # Other repositories, for safety-net verification:
         # {"owner/name": {"owner": login, "type": "User"|"Organization", "members": [...], "issues": {n: author}}}
         self.foreign: Dict[str, Dict[str, Any]] = {}
+        self.heads: Dict[str, str] = {}
 
     def advance(self, seconds: float) -> None:
         self.t += seconds
@@ -376,6 +377,10 @@ class FakeGitHub:
     def prs_for_sha(self, sha: str) -> List[int]:
         self._call("prs_for_sha")
         return [n for n, p in self.w.prs.items() if p["sha"] == sha]
+
+    def branch_sha(self, branch: str) -> str:
+        self._call("branch_sha")
+        return self.w.heads.get(branch, "b" * 40)
 
     def checks_state(self, sha: str) -> str:
         self._call("checks_state")
