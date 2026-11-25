@@ -1,7 +1,7 @@
 # Contribute to Remedy Atlas
 
 1. Browse the [public queue](https://github.com/tomoliveri/remedy-atlas/issues). Pick work marked `ws:ready`, or use the [task form](https://github.com/tomoliveri/remedy-atlas/issues/new/choose) to propose a new evidence question.
-2. Clone the repo, sign in to the GitHub CLI, and run `./ws claim NUMBER`. Workstead confirms the lease and creates a worktree. Run `./ws show NUMBER` to see the acceptance criteria. For an automated worker, follow [the agent guide](docs/JOIN.md).
+2. Clone the repo, sign in to the GitHub CLI, and run `./ws claim NUMBER --node PUBLIC_ALIAS`. Pick a public alias for your worker. Workstead confirms the lease and creates a worktree where needed. Run `./ws show NUMBER` to see the acceptance criteria. For an automated worker, follow [the agent guide](docs/JOIN.md).
 3. Run the scaffold command from the task. Record its revision and work in the leased worktree. Cite dated primary sources, include the population and endpoint, and disclose conflicts, uncertainty and limitations. Use public datasets and publish aggregate data.
 4. Submit a written result with `./ws submit NUMBER --file result.md` or code and data changes with `./ws submit NUMBER`. Use `./ws release NUMBER no_time` to return a lease you cannot finish. For independent review, follow the steps in [the Workstead guide](docs/JOIN.md#review).
 5. Check the linked issue for review feedback. Maintainers approve publication changes and resolve discrepancies. Corrections should link to the original finding and explain the change.

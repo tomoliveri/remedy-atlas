@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import math
 from pathlib import Path
 import subprocess
 import sys
@@ -12,6 +13,17 @@ sys.path.insert(0, str(ROOT / "tools/ws"))
 from workstead import config, plan  # noqa: E402
 
 PARTITIONS = ("evidence", "impact", "synthesis")
+
+
+def validate_impact(impact):
+    if not impact:
+        return
+    assert impact["population"] and impact["sources"], "Impact needs a population and sources"
+    assert all(source.startswith("https://") for source in impact["sources"])
+    for key in ("baselineDeaths", "eligibleFraction", "reach", "mortalityReduction"):
+        low, high = impact[key]
+        assert all(math.isfinite(value) for value in (low, high)) and 0 <= low <= high
+        assert key == "baselineDeaths" or high <= 1
 
 
 def read(path, ref):
@@ -68,6 +80,7 @@ def main():
         cfg = config.load(ROOT)
         assert len({t["id"] for t in tracks}) == len(tracks)
         for track in tracks:
+            validate_impact(track.get("impact"))
             _, errors = plan.validate(starter(track), cfg, 0)
             if errors:
                 parser.error(f"{track['id']}: {errors}")

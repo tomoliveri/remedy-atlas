@@ -13,7 +13,7 @@ python3 research/atlas.py job TRACK > /tmp/atlas-job.md
 ./ws job --title "TRACK evidence review" --body-file /tmp/atlas-job.md --priority 5
 python3 research/atlas.py plan TRACK > /tmp/atlas-plan.json
 ./ws plan-check /tmp/atlas-plan.json
-./ws claim NUMBER
+./ws claim NUMBER --node PUBLIC_ALIAS
 ./ws submit NUMBER --file /tmp/atlas-plan.json --plan
 ```
 
@@ -42,3 +42,5 @@ wrangler deploy
 ```
 
 Use Python 3.9+, Node 22+ and a Cloudflare credential scoped to Workers deployment. Wrangler deploys the public UI and read-only GitHub feed on Cloudflare Workers. Locally, use `wrangler dev`. The Worker caches queue snapshots for up to 60 seconds. Track metadata changes require a Worker deployment; queue state changes show up automatically. The dashboard displays the last successful fetch when GitHub is unavailable.
+
+Once reviewed evidence supports an estimate, add an `impact` object to the track with `population` (include geography and year), `sources` (primary-source HTTPS links), and lower and upper pairs for `baselineDeaths`, `eligibleFraction`, `reach` and `mortalityReduction`. The dashboard multiplies the lower and upper inputs to display a conditional scenario range. Document the inputs and correlations in the evidence record. This range represents the proposed assumptions and carries no statistical confidence level.

@@ -47,8 +47,6 @@ export async function listIssues(fetcher = fetch) {
   throw new Error("GitHub issue feed exceeds the dashboard page limit");
 }
 
-let refresh;
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -60,8 +58,7 @@ export default {
     const cached = await cache.match(url.toString());
     if (cached) return cached;
     try {
-      refresh ??= listIssues().finally(() => { refresh = undefined; });
-      const issues = await refresh;
+      const issues = await listIssues();
       const response = Response.json({updatedAt: new Date().toISOString(), tracks: summarize(issues)}, {
         headers: {"Cache-Control": "public, max-age=60"},
       });

@@ -10,3 +10,5 @@ __pycache__/
 .vscode/
 *.swp
 infra/aws/state.json
+.playwright-mcp/
+.wrangler/

@@ -19,6 +19,14 @@ function link(label, href) {
   return node;
 }
 
+function impactValue(impact) {
+  const inputs = [impact.baselineDeaths, impact.eligibleFraction, impact.reach, impact.mortalityReduction];
+  const format = new Intl.NumberFormat(undefined, {maximumSignificantDigits: 2});
+  const [low, high] = [0, 1].map(bound =>
+    format.format(inputs.reduce((product, input) => product * input[bound], 1)));
+  return low === high ? low : `${low}–${high}`;
+}
+
 function card(track) {
   const issueData = snapshot?.tracks[track.id];
   const tasks = issueData?.tasks ?? [];
@@ -36,14 +44,16 @@ function card(track) {
     link("Source", track.burden.source));
   const potential = element("div", "", "metric");
   potential.append(element("p", "Potential lives saved / year", "metric-label"),
-    element("strong", "Unestimated"), element("p", track.gap, "secondary"));
+    element("strong", track.impact ? impactValue(track.impact) : "Unestimated"),
+    element("p", track.impact ? `Conditional scenario · ${track.impact.population}` : track.gap, "secondary"));
+  track.impact?.sources.forEach((source, index) => potential.append(link(`Source ${index + 1}`, source), " "));
   impact.append(context, potential);
 
   const queue = element("div", "", "queue");
   queue.append(element("p", track.next, "next"));
   if (issueData) {
     queue.append(element("p", tasks.length ? `${done} reviewed and closed · ${remaining} open · ${underway} underway` :
-      "Planning job open in the public queue", "queue-summary"));
+      "Planning activity in the public queue", "queue-summary"));
     const details = element("details", "");
     details.append(element("summary", "View queue activity"));
     const list = element("ul", "");
