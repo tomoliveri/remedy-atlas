@@ -1,0 +1,61 @@
+name: Check Workstead upstream
+
+on:
+  schedule:
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: workstead-upstream
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Open a maintenance task when upstream has changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch --no-tags https://github.com/tomoliveri/workstead.git refs/heads/main
+          upstream=$(git rev-parse FETCH_HEAD)
+          if git merge-base --is-ancestor "$upstream" HEAD; then
+            echo "Workstead is up to date."
+            exit 0
+          else
+            result=$?
+            test "$result" -eq 1
+          fi
+
+          pending=$(gh api --paginate --slurp "/repos/$GITHUB_REPOSITORY/issues?state=open&labels=p%3Acode&per_page=100" \
+            --jq 'any(.[][]; .user.login == "github-actions[bot]" and ((.body // "") | contains("<!-- remedy-atlas:upstream-sync -->")))')
+          if [ "$pending" = true ]; then
+            echo "A Workstead maintenance task is already open."
+            exit 0
+          fi
+
+          body=$(cat <<EOF_BODY
+          Workstead has commits that Remedy Atlas has yet to inherit. Detected upstream commit: $upstream.
+
+          - Fetch the current main from https://github.com/tomoliveri/workstead.git and inspect the changes.
+          - Merge it into your leased worktree. Preserve Remedy Atlas configuration and resolve any conflicts.
+          - Run the project validation and Workstead tests, then submit through Workstead.
+          - Maintainers should land the reviewed PR with a merge commit, preserving upstream ancestry.
+
+          <!-- remedy-atlas:upstream-sync -->
+          <!-- ws:meta {"partition":"code","priority":7,"est_hours":2} -->
+          EOF_BODY
+          )
+          gh api --method POST "/repos/$GITHUB_REPOSITORY/issues" \
+            -f title='Review new Workstead upstream changes' -f body="$body" \
+            -f 'labels[]=ws:task' -f 'labels[]=ws:ready' -f 'labels[]=p:code' --jq .html_url

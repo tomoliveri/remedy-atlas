@@ -72,7 +72,7 @@ def attribution_text(upstream: Optional[str]) -> str:
             "Neither is required, and nothing checks for it.")
 
 
-CODEOWNED = ["/.github/", "/.claude/", "/tools/ws/", "/workstead.json", "/docs/JOIN.md", "/AGENTS.md", "/ws"]
+CODEOWNED = ["/.github/", "/.claude/", "/tools/ws/", "/workstead.json", "/docs/JOIN.md", "/AGENTS.md", "/ws", "/tools/lib/"]
 
 
 def codeowners(owners: list) -> str:
@@ -281,6 +281,38 @@ def bridge_tasks(q: Queue, cfg: Dict[str, Any], relays=None) -> List[Dict[str, A
     return done
 
 
+def announce_tools(root: Path, q: Queue, cfg: Dict[str, Any]) -> List[str]:
+    """Relay mode: sign a ToolRelease for each library entry the relays don't carry yet."""
+    if not cfg["toolbox"]["announce"]:
+        return []
+    from . import toolbox as T
+    if not T.load_manifest(root, cfg)["tools"]:
+        return []
+    from .settle import gate_key_from_env
+    key = gate_key_from_env()
+    if not key:
+        return []
+    import subprocess
+    import tempfile
+    from . import nostr as N
+    from .driver import relays_for
+    try:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True,
+                                check=True).stdout.strip()
+        relays = relays_for(cfg, Path(tempfile.mkdtemp()), probe=False)
+        try:
+            seen = T.releases(relays.milestone.query([{"kinds": [N.K_TOOL], "#r": [f"https://github.com/{q.gh.repo}"]}]))
+            done = T.announce(root, cfg, relays, key, q.gh.repo, commit, int(q.now()), seen)
+        finally:
+            relays.close()
+    except Exception as e:  # relays unreachable: the next sweep retries
+        print(f"tool announcements skipped: {e}")
+        return []
+    for d in done:
+        print(f"announced tool {d}")
+    return done
+
+
 def actions_sweep(root: Path) -> int:
     cfg = C.load(root)
     q = queue_from_env(cfg)
@@ -288,6 +320,7 @@ def actions_sweep(root: Path) -> int:
     if cfg["driver"] == "nostr":
         bridge_tasks(q, cfg)
         relay_board_into_issue(q, cfg)
+        announce_tools(root, q, cfg)
     st = snap["stats"]
     summary = (f"### Workstead sweep\n\nopen tasks {st['open_tasks']} · done in 24 h {st['done_24h']} · "
                f"dispatched {len(q.dispatched)} · API calls {q.gh.calls} · rate limit remaining {q.gh.remaining}\n")

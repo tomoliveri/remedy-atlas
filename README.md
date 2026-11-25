@@ -56,4 +56,4 @@ Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md
 
 </details>
 
-Built on [Workstead](https://github.com/tomoliveri/workstead) · [MIT license](LICENSE)
+Built on [Workstead](https://github.com/tomoliveri/workstead) · [Security](docs/security.md) · [MIT license](LICENSE)
