@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import ssl
 import subprocess
 import sys
 import time
@@ -22,10 +23,40 @@ API = os.environ.get("GITHUB_API_URL", "https://api.github.com")
 UA = "workstead/1"
 
 
+def tls_context() -> ssl.SSLContext:
+    """Verified TLS that also works where Python ships without CA certificates.
+
+    The python.org macOS build has no CA bundle until "Install Certificates" is
+    run, so fall back to the operating system's bundle. Verification stays on.
+    """
+    ctx = ssl.create_default_context()
+    paths = ssl.get_default_verify_paths()
+    if not any(p and os.path.exists(p) for p in (paths.cafile, paths.capath)) or os.environ.get("SSL_CERT_FILE"):
+        for f in (os.environ.get("SSL_CERT_FILE"), "/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt",
+                  "/etc/pki/tls/certs/ca-bundle.crt", "/usr/local/etc/openssl/cert.pem", "/opt/homebrew/etc/openssl@3/cert.pem"):
+            if f and os.path.exists(f):
+                try:
+                    ctx.load_verify_locations(cafile=f)
+                    break
+                except (OSError, ssl.SSLError):
+                    continue
+    return ctx
+
+
+TLS = tls_context()
+
+
 class GitHubError(RuntimeError):
     def __init__(self, status: int, message: str, url: str = ""):
         super().__init__(f"GitHub {status}: {message} ({url})")
         self.status = status
+
+
+def _gh_available() -> bool:
+    try:
+        return subprocess.run(["gh", "auth", "status"], capture_output=True, timeout=20).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
 
 
 def token() -> str:
@@ -84,6 +115,8 @@ class GitHub:
         self.min_remaining = min_remaining
         self.remaining: Optional[int] = None
         self.calls = 0
+        # Last resort when Python's TLS can't verify GitHub: let `gh` do HTTPS.
+        self.via_gh = os.environ.get("WS_TRANSPORT") == "gh"
 
     # --- plumbing -----------------------------------------------------------
 
@@ -95,6 +128,48 @@ class GitHub:
 
     def request(self, method: str, path: str, body: Any = None, accept: str = "application/vnd.github+json",
                 raw: bool = False, tries: int = 5) -> Any:
+        if self.via_gh:
+            return self._request_gh(method, path, body, accept, raw)
+        try:
+            return self._request(method, path, body, accept, raw, tries)
+        except GitHubError as e:
+            if e.status == 0 and "CERTIFICATE_VERIFY_FAILED" in str(e) and not self._token_from_env():
+                self.via_gh = True
+                return self._request_gh(method, path, body, accept, raw)
+            raise
+
+    @staticmethod
+    def _token_from_env() -> bool:
+        return any(os.environ.get(k) for k in ("WS_TOKEN", "GH_TOKEN", "GITHUB_TOKEN")) and not _gh_available()
+
+    def _request_gh(self, method: str, path: str, body: Any, accept: str, raw: bool) -> Any:
+        """The same request through the GitHub CLI (`gh api --include`)."""
+        url = path if path.startswith("http") else f"{self.api}{path}"
+        endpoint = url[len(self.api):] if url.startswith(self.api) else url
+        cmd = ["gh", "api", "--include", "-X", method, "-H", f"Accept: {accept}", endpoint]
+        if body is not None:
+            cmd += ["--input", "-"]
+        r = subprocess.run(cmd, input=json.dumps(body) if body is not None else None,
+                           capture_output=True, text=True, timeout=120)
+        self.calls += 1
+        out = r.stdout.replace("\r\n", "\n")
+        head, _, payload = out.partition("\n\n")
+        m = re.match(r"HTTP/[0-9.]+ ([0-9]{3})", head)
+        status = int(m.group(1)) if m else (200 if r.returncode == 0 else 0)
+        headers = {}
+        for line in head.splitlines()[1:]:
+            k, _, v = line.partition(":")
+            headers[k.strip().lower()] = v.strip()
+        if headers.get("x-ratelimit-remaining", "").isdigit():
+            self.remaining = int(headers["x-ratelimit-remaining"])
+        self._last_link = headers.get("link", "")
+        if status >= 400 or status == 0:
+            raise GitHubError(status, (payload or r.stderr).strip()[:500], url)
+        if raw:
+            return payload
+        return json.loads(payload) if payload.strip() else None
+
+    def _request(self, method: str, path: str, body: Any, accept: str, raw: bool, tries: int) -> Any:
         url = path if path.startswith("http") else f"{self.api}{path}"
         data = json.dumps(body).encode() if body is not None else None
         delay = 2.0
@@ -107,7 +182,7 @@ class GitHub:
             if data is not None:
                 req.add_header("Content-Type", "application/json")
             try:
-                with urllib.request.urlopen(req, timeout=60) as r:
+                with urllib.request.urlopen(req, timeout=60, context=TLS if url.startswith("https") else None) as r:
                     self.calls += 1
                     rem = r.headers.get("X-RateLimit-Remaining")
                     if rem is not None:
@@ -364,7 +439,7 @@ class GitHub:
         if public:
             try:
                 url = f"https://raw.githubusercontent.com/{self.repo}/{branch}/{path}"
-                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=30) as r:
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=30, context=TLS) as r:
                     return r.read().decode()
             except (urllib.error.URLError, TimeoutError, ConnectionError):
                 pass  # CDN unavailable: fall back to the API below
