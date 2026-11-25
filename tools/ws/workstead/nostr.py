@@ -516,7 +516,7 @@ def _enforce_lease_limits(out, by_task, tasks, agents, pubs, window, rc, now, po
     tier = tier or _tier_fn(agents, set())
     pol = pol or claim_policy(rc)
     limit = int(rc["max_active_leases"])
-    kw = dict(pov=pov, tier=tier, pol=pol, struck=struck, lapses=lapses)
+    kw = {"pov": pov, "tier": tier, "pol": pol, "struck": struck, "lapses": lapses}
 
     def held_now():
         held: Dict[str, List[Tuple[int, str, str]]] = {}
