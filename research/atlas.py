@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "tools/ws"))
 
 from workstead import config, plan  # noqa: E402
 
-PARTITIONS = ("evidence", "impact", "synthesis")
+PARTITIONS = ("compute", "replicate")
 
 
 def read(path, ref):
@@ -38,26 +38,41 @@ def scaffold(track, partition, ref, task=None):
 
 
 def starter(track):
+    specifications = [
+        ("model", "compute", "Run the Python model", track["next"], []),
+        ("sensitivity", "compute", "Run the Python sensitivity analysis", track["stress_test"], []),
+        ("reproduce", "replicate", "Reproduce the computed results",
+         "Rerun both merged studies locally and compare results against the stated baseline.",
+         ["model", "sensitivity"]),
+    ]
     tasks = []
-    for partition, action in zip(PARTITIONS, ("Review evidence", "Assess addressable burden", "Summarise findings")):
+    for key, partition, action, question, dependencies in specifications:
         body = (
-            f"{track['next']}\n\n"
-            f"Refresh and render the current scaffold before starting: "
+            f"{question}\n\n"
+            f"Read the current task scaffold: "
             f"`python3 research/atlas.py scaffold {track['id']} {partition} --latest --task NUMBER`. "
-            "Replace NUMBER with this issue's number. "
-            "Record the printed revision in the submission. Follow docs/PROJECT.md."
+            "Replace NUMBER with this issue number. Work in the leased worktree. "
+            "Submit Python code, a result JSON and its run receipt."
         )
         tasks.append({
-            "key": partition,
-            "title": f"{track['name']}: {action}",
-            "partition": partition,
-            "priority": track["priority"],
-            "body": body,
-            "deps": ["evidence", "impact"] if partition == "synthesis" else [],
-            "acceptance": ["Cite primary sources and state the remaining uncertainty."],
+            "key": key, "title": f"{track['name']}: {action}", "partition": partition,
+            "priority": track["priority"], "body": body, "deps": dependencies,
+            "acceptance": [
+                "Run Python locally and report the exact command, input source, result and run receipt.",
+                "Include a baseline or control and state what the results cannot establish.",
+            ],
         })
     return {"summary": track["next"], "tasks": tasks}
 
+
+def job_body(track):
+    return (
+        f"{track['question']}\n\n{track['next']}\n\n"
+        f"Starter plan: `python3 research/atlas.py plan {track['id']}`. "
+        "This job splits local Python modelling and sensitivity analysis into independent tasks, "
+        "followed by reproduction. Use the public numerical data and scope in docs/PROJECT.md.\n\n"
+        f"<!-- atlas:track {track['id']} -->"
+    )
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -98,11 +113,7 @@ def main():
     if args.command == "plan":
         print(json.dumps(starter(track), indent=2))
     elif args.command == "job":
-        print(f"{track['question']}\n\n{track['next']}\n")
-        print(f"Starter plan: `python3 research/atlas.py plan {track['id']}`. "
-              "Adjust task types, dependencies and priorities to the evidence gap before submission. "
-              "This job covers public evidence and impact analysis.\n")
-        print(f"<!-- atlas:track {track['id']} -->")
+        print(job_body(track))
     else:
         if not re.fullmatch(r"[a-z][a-z0-9-]*", args.partition) or (args.task is not None and args.task < 1):
             parser.error("provide a valid partition and positive issue number")

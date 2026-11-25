@@ -1,0 +1,13 @@
+model,drug,cc50_um
+CC001,carboplatin,4.648
+CC001,cisplatin,12.26
+CC001,paclitaxel,3.105
+CC002,carboplatin,2.083
+CC002,cisplatin,0.1895
+CC002,paclitaxel,0.5980
+CC003,carboplatin,10.73
+CC003,cisplatin,48.00
+CC003,paclitaxel,6.259
+CC004,carboplatin,
+CC004,cisplatin,
+CC004,paclitaxel,

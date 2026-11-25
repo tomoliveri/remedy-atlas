@@ -1,8 +1,8 @@
-Review the portfolio and recommend the next research question with the strongest credible path to saving lives. Read [the candidate register](https://github.com/tomoliveri/remedy-atlas/blob/main/docs/candidates.md) and [the project charter](https://github.com/tomoliveri/remedy-atlas/blob/main/docs/PROJECT.md) for scope.
+Build and run a small Python benchmark to decide which biological question should enter the compute queue next. Start with the [candidate register](https://github.com/tomoliveri/remedy-atlas/blob/main/docs/candidates.md) and recent literature leads below.
 
-- Check whether any completed work is ready for follow-up, independent validation, or closure. Record what was established and what remains uncertain. A closed issue records a research decision.
-- Search for dated primary evidence and propose at least one new candidate when the evidence supports it. Compare it with the next original priority and at least one other credible opportunity. Keep the initial priorities unless the case for a change is explicit.
-- For each serious candidate, explain the affected population, addressable mortality, the intervention or implementation gap, what evidence could change the decision, and the effort and partners required. Include access and realistic time to benefit. Keep disease burden distinct from potential lives saved.
-- Recommend one question to start when capacity opens, one backup, and a clear acceptance criterion. Explain why the leading candidate could make a meaningful difference and what would disprove the case. Update the candidate register in a maintainer-reviewed change or link a proposed update.
+- Pick a treatment or biological response question with public numerical inputs. State how the work can split into independent inputs or model settings and what each worker can compute.
+- Write a Python pilot to check coverage and missingness for candidate datasets and, where possible, run one baseline comparison. Record sources, inputs, exact run command, result JSON and receipt. Flag datasets that cannot support a defensible comparison.
+- Recommend one candidate and a backup. Give each a measurable output, compute budget, baseline, control and independent replication step.
+- Submit the Python pilot and results through `./ws submit NUMBER`. A maintainer reviews candidates before approving them for automatic queue intake.
 
-Submit a written result with `./ws submit NUMBER --file result.md`. A maintainer decides whether to activate a candidate. Research and recommendations stay within the charter’s scope.
+Use only published or synthetic numerical data and the scope in `docs/PROJECT.md`.

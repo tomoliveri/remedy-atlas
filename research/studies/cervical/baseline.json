@@ -1,0 +1,86 @@
+{
+  "model": "Hill viability sensitivity",
+  "seed": 42,
+  "samples": 2000,
+  "assumed_slope_bounds": [
+    0.5,
+    3.0
+  ],
+  "dose_multipliers": [
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+  ],
+  "results": {
+    "CC001": {
+      "missing": [],
+      "pair_counts": {
+        "carboplatin vs cisplatin": {
+          "left": 9243,
+          "right": 757,
+          "tie": 0
+        },
+        "carboplatin vs paclitaxel": {
+          "left": 2024,
+          "right": 7976,
+          "tie": 0
+        },
+        "cisplatin vs paclitaxel": {
+          "left": 226,
+          "right": 9774,
+          "tie": 0
+        }
+      }
+    },
+    "CC002": {
+      "missing": [],
+      "pair_counts": {
+        "carboplatin vs cisplatin": {
+          "left": 0,
+          "right": 10000,
+          "tie": 0
+        },
+        "carboplatin vs paclitaxel": {
+          "left": 472,
+          "right": 9528,
+          "tie": 0
+        },
+        "cisplatin vs paclitaxel": {
+          "left": 9424,
+          "right": 576,
+          "tie": 0
+        }
+      }
+    },
+    "CC003": {
+      "missing": [],
+      "pair_counts": {
+        "carboplatin vs cisplatin": {
+          "left": 9538,
+          "right": 462,
+          "tie": 0
+        },
+        "carboplatin vs paclitaxel": {
+          "left": 1446,
+          "right": 8554,
+          "tie": 0
+        },
+        "cisplatin vs paclitaxel": {
+          "left": 93,
+          "right": 9907,
+          "tie": 0
+        }
+      }
+    },
+    "CC004": {
+      "missing": [
+        "carboplatin",
+        "cisplatin",
+        "paclitaxel"
+      ],
+      "pair_counts": {}
+    }
+  }
+}

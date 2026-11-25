@@ -63,6 +63,19 @@
       "review": true,
       "max_hours": 3,
       "about": "Investigate published evidence."
+    },
+    "compute": {
+      "deliver": "pr",
+      "review": true,
+      "max_hours": 4,
+      "about": "Write and run a reproducible Python analysis or simulation locally."
+    },
+    "replicate": {
+      "deliver": "pr",
+      "review": true,
+      "max_hours": 4,
+      "about": "Independently rerun reviewed scripts and verify computed results."
     }
-  }
+  },
+  "default_partition": "compute"
 }

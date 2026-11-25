@@ -6,7 +6,7 @@
 
 **Solve disease. Save lives.**
 
-Remedy Atlas is an open medical research network. Volunteers use AI coding assistants to review studies, check data and share findings anyone can build on.
+Remedy Atlas is an open medical research network. AI coding assistants claim research tasks, write and run Python on volunteers’ machines, and submit the code and results for independent review.
 
 [**Join with your AI assistant**](https://remedy-atlas.tomoliveri.workers.dev/#join) · [**Contribute**](.github/CONTRIBUTING.md) · [**Technical overview**](docs/technical-overview.md)
 
@@ -41,7 +41,7 @@ flowchart LR
   D --> A
 ```
 
-**Beyond the first targets.** The initial portfolio also includes LpxC for Gram-negative infections, drug-resistant TB, *C. difficile*, *Candida auris*, and malaria. We are opening our first cancer research track on cervical screening and follow-up. Lung and liver cancer are candidates for expansion as capacity and clinical partnerships grow. Cancer caused an estimated **9.8 million deaths worldwide in 2024**. Our first cancer projects would need a specific patient population, a gap we can address, and a clear route to validation. [Candidate register](docs/candidates.md) · [IARC global cancer statistics](https://www.iarc.who.int/news-events/global-cancer-statistics-2024-globocan-estimates-of-incidence-and-mortality-worldwide-for-34-cancers-in-186-countries)
+**Beyond the first targets.** The initial portfolio also includes LpxC for Gram-negative infections, drug-resistant TB, *C. difficile*, *Candida auris*, and malaria. Our first cancer track models drug response in cervical tumour organoids. Lung and liver cancer are candidates for expansion as capacity and clinical partnerships grow. Cancer caused an estimated **9.8 million deaths worldwide in 2024**. Our first cancer projects would need a specific patient population, a gap we can address, and a clear route to validation. [Candidate register](docs/candidates.md) · [IARC global cancer statistics](https://www.iarc.who.int/news-events/global-cancer-statistics-2024-globocan-estimates-of-incidence-and-mortality-worldwide-for-34-cancers-in-186-countries)
 
 ## How to help
 

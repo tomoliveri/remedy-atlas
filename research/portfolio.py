@@ -10,6 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools/ws"))
 
+from atlas import job_body  # noqa: E402
 from scout import shortlist  # noqa: E402
 from workstead import config  # noqa: E402
 from workstead.admin import queue_from_env  # noqa: E402
@@ -18,7 +19,7 @@ from workstead.protocol import L, now_iso, parse_ts, partition_label, write_bloc
 MARKER = "<!-- atlas:portfolio-review -->"
 TITLE = "Portfolio review: find the next opportunity to save lives"
 REVIEW_INTERVAL = timedelta(days=7)
-PARTITION = "research"
+PARTITION = "compute"
 ACTIVE_JOB_LIMIT = 4
 TRACK_MARKER = re.compile(r"<!-- atlas:track ([a-z0-9-]+) -->")
 
@@ -109,12 +110,7 @@ def next_track(queue, tracks, dry_run=False):
         return f"Would open the next approved track: {track['name']}."
 
     meta = {"partition": "plan", "origin": "job", "priority": track["priority"], "depth": 0}
-    body = (
-        f"{track['question']}\n\n{track['next']}\n\n"
-        f"Starter plan: `python3 research/atlas.py plan {track['id']}`. "
-        "The public work covers published evidence and impact analysis. See docs/PROJECT.md."
-        f"\n\n<!-- atlas:track {track['id']} -->\n\n{write_block('meta', meta)}\n"
-    )
+    body = f"{job_body(track)}\n\n{write_block('meta', meta)}\n"
     issue = gh.request("POST", f"{gh.r}/issues", {
         "title": f"{track['name']}: evidence and impact",
         "body": body, "labels": [L["job"], L["task"], L["ready"], partition_label("plan")],

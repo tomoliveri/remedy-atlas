@@ -1,4 +1,4 @@
-"""Find fresh clinical and public-health evidence for portfolio reviewers."""
+"""Find recent numerical drug-response and modelling papers for portfolio reviewers."""
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
@@ -13,10 +13,9 @@ from workstead.gh import tls_context
 
 API = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 AREAS = {
-    "Cancer prevention and care": '(TITLE:cancer OR TITLE:oncology) AND (TITLE_ABS:screening OR TITLE_ABS:survival OR TITLE_ABS:access)',
-    "Heart disease and stroke": '(TITLE:stroke OR TITLE:cardiovascular) AND (TITLE_ABS:prevention OR TITLE_ABS:mortality)',
-    "Maternal and newborn health": '(TITLE:maternal OR TITLE:neonatal OR TITLE:newborn) AND (TITLE_ABS:care OR TITLE_ABS:mortality)',
-    "Infections and access to care": '(TITLE:tuberculosis OR TITLE:malaria OR TITLE:"antimicrobial resistance") AND (TITLE_ABS:survival OR TITLE_ABS:diagnosis OR TITLE_ABS:access)',
+    "Cancer drug response": '(TITLE_ABS:organoid OR TITLE_ABS:"cell line") AND (TITLE_ABS:"drug response" OR TITLE_ABS:"drug sensitivity") AND TITLE_ABS:cancer',
+    "Tumour dynamics and resistance": '(TITLE:tumor OR TITLE:tumour OR TITLE:cancer) AND (TITLE_ABS:"mathematical model" OR TITLE_ABS:simulation) AND (TITLE_ABS:resistance OR TITLE_ABS:treatment)',
+    "Reproducible therapeutic modelling": '(TITLE_ABS:"dose response" OR TITLE_ABS:"drug response") AND (TITLE_ABS:benchmark OR TITLE_ABS:dataset) AND (TITLE_ABS:cancer OR TITLE_ABS:organoid)',
 }
 
 

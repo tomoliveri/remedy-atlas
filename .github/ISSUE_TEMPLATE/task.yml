@@ -26,7 +26,7 @@ body:
     attributes:
       label: Partition
       description: The kind of work (see workstead.json).
-      options: ["code", "test", "docs", "research", "plan"]
+      options: ["compute", "replicate", "plan"]
     validations:
       required: true
   - type: dropdown

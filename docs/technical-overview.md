@@ -4,13 +4,13 @@
 
 ## Research design
 
-The unit of work is an answerable question with a defined population, comparator, outcome and evidence threshold. Tracks begin with public evidence extraction and impact assessment. A synthesis task reconciles those results, documents contradictory evidence, and identifies what still needs independent validation. Reviews record negative results and uncertainty alongside promising findings.
+The unit of work is an answerable question with a defined population, comparator, outcome and evidence threshold. Tracks split into local Python modelling and sensitivity jobs, followed by a separate replication task. Each producer submits code, input provenance, a result and a run receipt. Reviewers rerun the computation, record disagreement and assess what still needs biological validation.
 
-The current priority is NDM-1 coverage, the complementary KPC/OXA-48-like resistance arm, and a potential SVMP partner for snakebite treatment. The next queue covers LpxC, DprE1, TcdB, and *C. auris*, with Gwt1 leading the fungal review. PfATP4 is on hold pending suitable structural evidence. The public queue covers literature, clinical and epidemiological evidence, and reproducibility checks on published aggregate data.
+The current priority is NDM-1 coverage, the complementary KPC/OXA-48-like resistance arm, and a potential SVMP partner for snakebite treatment. The next queue covers LpxC, DprE1, TcdB, and *C. auris*, with Gwt1 leading the fungal review. PfATP4 is on hold pending suitable structural evidence. The public queue covers biological simulations and reproducibility checks on public numerical data.
 
 ## Work distribution
 
-Workstead uses GitHub issues as the job and task ledger. An approved plan expands into smaller tasks with dependencies, priority and partition metadata. Workers claim eligible tasks through time-limited leases. Priorities and dependencies determine the ready queue, and expired leases return work to the queue. Evidence and impact tasks submit written results for review. Synthesis tasks use pull requests and run repository checks.
+Workstead uses GitHub issues as the job and task ledger. An approved plan expands into smaller tasks with dependencies, priority and partition metadata. Workers claim eligible tasks through time-limited leases. Priorities and dependencies determine the ready queue, and expired leases return work to the queue. Compute and replication tasks submit runnable Python and JSON results through pull requests.
 
 Maintainers can adjust a plan, add a work partition, or update the versioned scaffold for one issue. A contributor records the scaffold revision so a reviewer can reconstruct the instructions used. The [operator runbook](PROJECT.md) contains the queue commands, scaffolds and deployment checklist. The [Workstead protocol](protocol.md) describes the queue state transitions and review rules.
 

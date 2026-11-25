@@ -2,7 +2,7 @@
 
 If you’re here because someone you love is ill, thank you for taking the time to read this. A gift should come with a clear answer about what it will pay for.
 
-**There’s no study asking for donations right now.** We’re reading and checking the evidence first. If a lab study could answer a question that matters, we’ll share what the researchers want to learn, who will do the work, and what it costs.
+**There’s no study asking for donations right now.** We’re running computational studies first. If a lab study could answer a question that matters, we’ll share what the researchers want to learn, who will do the work, and what it costs.
 
 ## Where your gift would go
 
