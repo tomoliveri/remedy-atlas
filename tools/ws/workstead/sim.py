@@ -34,7 +34,7 @@ TICK = 300  # seconds of simulated time per tick
 
 
 class Agent:
-    def __init__(self, sim: "Sim", login: str, node: str, trusted: bool, die_p: float):
+    def __init__(self, sim: Sim, login: str, node: str, trusted: bool, die_p: float):
         self.sim, self.login, self.node = sim, login, node
         self.gh = FakeGitHub(sim.w, login)
         self.ctx = W.Ctx(Path("."), repo=sim.w.repo, cfg=sim.cfg, gh=self.gh)

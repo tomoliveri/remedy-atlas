@@ -130,7 +130,7 @@ class Leases(unittest.TestCase):
         self.assertEqual(r.state(t)["status"], "queued")
         self.assertIn(L["ready"], r.labels(t))
         self.assertEqual(r.issue(t)["assignees"], [])
-        for i in range(3):
+        for _ in range(3):
             r.say("bob", t, "/claim")
             r.say("bob", t, "/fail tests won't build")
         self.assertEqual(r.state(t)["status"], "held")

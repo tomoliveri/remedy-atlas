@@ -328,7 +328,7 @@ def give_back_target(ctx: Ctx) -> Optional[str]:
     return up if owed_h >= float(gb["min_owed_hours"]) else None
 
 
-def upstream_ctx(ctx: Ctx, repo: str) -> "Ctx":
+def upstream_ctx(ctx: Ctx, repo: str) -> Ctx:
     """A context for another repository (give-back), cloned under ~/.workstead/repos."""
     dest = HOME / "repos" / slug(repo)
     if not (dest / ".git").exists():
@@ -868,9 +868,9 @@ def load_plan_file(path: str) -> Any:
         text = Path(path).read_text() if path else sys.stdin.read()
         return json.loads(text)
     except OSError as e:
-        raise WsError(f"can't read the plan: {e}")
+        raise WsError(f"can't read the plan: {e}") from None
     except ValueError as e:
-        raise WsError(f"the plan isn't valid JSON: {e}")
+        raise WsError(f"the plan isn't valid JSON: {e}") from None
 
 
 def cmd_plan_check(ctx: Ctx, args) -> int:

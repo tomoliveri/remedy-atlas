@@ -1262,7 +1262,6 @@ class Queue:
                     break
 
         # Repair projections and catch missed transitions.
-        open_status = {n: c.get("status") for n, c in cache.items()}
         for n, i in items.items():
             if i["is_pr"]:
                 if L["approved"] in i["labels"] and L["ready_to_merge"] not in i["labels"]:

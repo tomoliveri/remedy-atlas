@@ -164,7 +164,7 @@ class FakeGitHub:
             i = self.w.issues[n]
             if state != "all" and i["state"] != state:
                 continue
-            if any(l not in i["labels"] for l in labels):
+            if any(lab not in i["labels"] for lab in labels):
                 continue
             if since and (i["updated_at"] or "") < since:
                 continue
@@ -214,9 +214,9 @@ class FakeGitHub:
 
     def add_labels(self, n: int, labels: List[str]) -> None:
         self._call("add_labels")
-        for l in labels:
-            if l not in self.w.issues[n]["labels"]:
-                self.w.issues[n]["labels"].append(l)
+        for lab in labels:
+            if lab not in self.w.issues[n]["labels"]:
+                self.w.issues[n]["labels"].append(lab)
         self._touch(n)
 
     def remove_label(self, n: int, label: str) -> None:
@@ -228,10 +228,10 @@ class FakeGitHub:
     def add_assignees(self, n: int, logins: List[str]) -> None:
         self._call("add_assignees")
         i = self.w.issues[n]
-        for l in logins:
-            allowed = l in i["commenters"] or self.w.perms.get(l) in ("admin", "write", "maintain")
-            if allowed and l not in i["assignees"] and len(i["assignees"]) < 10:
-                i["assignees"].append(l)
+        for who in logins:
+            allowed = who in i["commenters"] or self.w.perms.get(who) in ("admin", "write", "maintain")
+            if allowed and who not in i["assignees"] and len(i["assignees"]) < 10:
+                i["assignees"].append(who)
         self._touch(n)
 
     def remove_assignees(self, n: int, logins: List[str]) -> None:
