@@ -30,6 +30,7 @@ def tls_context() -> ssl.SSLContext:
     run, so fall back to the operating system's bundle. Verification stays on.
     """
     ctx = ssl.create_default_context()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     paths = ssl.get_default_verify_paths()
     if not any(p and os.path.exists(p) for p in (paths.cafile, paths.capath)) or os.environ.get("SSL_CERT_FILE"):
         for f in (os.environ.get("SSL_CERT_FILE"), "/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt",

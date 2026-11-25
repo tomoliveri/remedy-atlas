@@ -61,7 +61,7 @@ def repo_cfg(repo):
             cfg["relay"].update({k: rel[k] for k in ("publishers", "trusted_agents", "pow_bits") if k in rel})
             break
         except Exception:
-            continue
+            continue  # try the next one
     _CFG[repo] = (time.time(), cfg)
     return cfg
 
@@ -73,7 +73,7 @@ def keys(cfg, name):
         try:
             out.add(schnorr.parse_pubkey(k))
         except ValueError:
-            pass
+            pass  # best effort: the connection or cache is optional here
     return out
 
 

@@ -10,10 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write        # the ws-board branch
-  issues: write
-  pull-requests: write
-  actions: write
+  contents: read
 
 concurrency:
   group: ws-sweep
@@ -21,6 +18,11 @@ concurrency:
 
 jobs:
   workstead-sweep:
+    permissions:
+      contents: write        # the ws-board branch
+      issues: write
+      pull-requests: write
+      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

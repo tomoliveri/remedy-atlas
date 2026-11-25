@@ -11,10 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  actions: write
+  contents: read
 
 concurrency:
   group: ws-setup
@@ -22,6 +19,11 @@ concurrency:
 
 jobs:
   workstead-setup:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

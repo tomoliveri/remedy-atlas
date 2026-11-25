@@ -86,6 +86,8 @@ class WebSocket:
             if tls is None:
                 from .gh import TLS
                 tls = TLS
+            if tls.minimum_version < ssl.TLSVersion.TLSv1_2:
+                tls.minimum_version = ssl.TLSVersion.TLSv1_2
             raw = tls.wrap_socket(raw, server_hostname=u.hostname)
         key = base64.b64encode(os.urandom(16)).decode()
         path = (u.path or "/") + (f"?{u.query}" if u.query else "")
@@ -128,14 +130,14 @@ class WebSocket:
                 else:
                     sock.sendall(b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
             except OSError:
-                pass
+                pass  # best effort: the connection or cache is optional here
             return None
         refusal = check(hdrs) if check is not None else None
         if refusal:
             try:
                 sock.sendall(f"HTTP/1.1 {refusal}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".encode())
             except OSError:
-                pass
+                pass  # best effort: the connection or cache is optional here
             return None
         acc = base64.b64encode(hashlib.sha1((key + WS_GUID).encode()).digest()).decode()
         sock.sendall(("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
@@ -217,7 +219,7 @@ class WebSocket:
                 try:
                     self._send(0x8, b"")
                 except RelayError:
-                    pass
+                    pass  # best effort: the connection or cache is optional here
                 raise RelayError("closed by peer")
             if opcode in (0x0, 0x1, 0x2):
                 parts.append(payload)
@@ -229,12 +231,12 @@ class WebSocket:
             try:
                 self._send(0x8, b"")
             except RelayError:
-                pass
+                pass  # best effort: the connection or cache is optional here
         self.closed = True
         try:
             self.sock.close()
         except OSError:
-            pass
+            pass  # best effort: the connection or cache is optional here
 
 
 # --- one relay connection --------------------------------------------------------------
@@ -290,7 +292,7 @@ class RelayConn:
                         try:
                             m = json.loads(msg)
                         except ValueError:
-                            continue
+                            continue  # try the next one
                         if isinstance(m, list) and m[:1] == ["OK"] and len(m) >= 3 and m[1] == ev["id"]:
                             ok = bool(m[2])
                             note = str(m[3]) if len(m) > 3 else ""
@@ -321,7 +323,7 @@ class RelayConn:
                     try:
                         m = json.loads(msg)
                     except ValueError:
-                        continue
+                        continue  # try the next one
                     if not isinstance(m, list) or len(m) < 2 or m[1] != sub:
                         continue
                     if m[0] == "EVENT" and len(m) >= 3:
@@ -331,7 +333,7 @@ class RelayConn:
                 try:
                     ws.send(json.dumps(["CLOSE", sub]))
                 except RelayError:
-                    pass
+                    pass  # best effort: the connection or cache is optional here
             except RelayError:
                 self._failed()
                 raise
@@ -351,7 +353,7 @@ class RelayConn:
                 try:
                     m = json.loads(msg)
                 except ValueError:
-                    continue
+                    continue  # try the next one
                 if isinstance(m, list) and m[:2] == ["ROOTS", sub] and len(m) >= 3 and isinstance(m[2], dict):
                     return {int(k): str(v) for k, v in m[2].items() if str(k).isdigit()}
             raise RelayError(f"{self.url}: no ROOTS answer")
@@ -369,7 +371,7 @@ class RelayConn:
                 try:
                     m = json.loads(msg)
                 except ValueError:
-                    continue
+                    continue  # try the next one
                 if isinstance(m, list) and m[:1] == ["PROBE"] and len(m) >= 3:
                     return bool(m[1]), str(m[2])
             return False, ""
@@ -634,7 +636,7 @@ class LocalRelay:
                         WebSocket.connect(url, timeout=4).close()
                         ok = True
                     except (OSError, RelayError):
-                        pass
+                        pass  # best effort: the connection or cache is optional here
                     ws.send(json.dumps(["PROBE", ok, url]))
         finally:
             ws.close()
@@ -666,7 +668,7 @@ class LocalRelay:
                             added += 1
                 conn.close()
             except (RelayError, OSError):
-                continue
+                continue  # try the next one
         return added
 
     def drop_connections(self) -> None:
@@ -681,7 +683,7 @@ class LocalRelay:
         try:
             self.srv.close()
         except OSError:
-            pass
+            pass  # best effort: the connection or cache is optional here
 
 
 # --- the in-memory network (simulation) ----------------------------------------------------

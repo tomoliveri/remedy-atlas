@@ -29,7 +29,7 @@ def fetch(url: str, cache: Path, max_age: int = 3600) -> Dict[str, Any]:
         if cache.is_file() and time.time() - cache.stat().st_mtime < max_age:
             return json.loads(cache.read_text())
     except (OSError, ValueError):
-        pass
+        pass  # best effort: the connection or cache is optional here
     try:
         from .gh import TLS, UA
         req = urllib.request.Request(url, headers={"User-Agent": UA})

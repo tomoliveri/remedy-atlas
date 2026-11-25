@@ -534,7 +534,7 @@ def wait_health(domain, path="/health", minutes=25):
                 if r.status == 200:
                     return json.loads(r.read().decode() or "{}")
         except Exception:
-            pass
+            pass  # best effort: the connection or cache is optional here
         time.sleep(15)
     raise RuntimeError(f"https://{domain}{path} never became healthy")
 

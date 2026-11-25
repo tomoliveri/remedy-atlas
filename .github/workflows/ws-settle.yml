@@ -24,11 +24,7 @@ on:
         default: ""
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
-  checks: read
-  statuses: read
+  contents: read
 
 concurrency:
   group: ws-settle
@@ -36,6 +32,12 @@ concurrency:
 
 jobs:
   workstead-settle:
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      checks: read
+      statuses: read
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

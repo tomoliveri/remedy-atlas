@@ -36,12 +36,7 @@ on:
         default: ""
 
 permissions:
-  contents: write        # merge approved pull requests
-  issues: write          # labels, assignees, status comments, new tasks
-  pull-requests: write
-  actions: write         # workflow_dispatch for cross-issue effects
-  checks: read
-  statuses: read
+  contents: read
 
 concurrency:
   group: ws-${{ github.event.issue.number || github.event.pull_request.number || inputs.issue || github.run_id }}
@@ -49,6 +44,13 @@ concurrency:
 
 jobs:
   workstead-queue:
+    permissions:
+      contents: write        # merge approved pull requests
+      issues: write          # labels, assignees, status comments, new tasks
+      pull-requests: write
+      actions: write         # workflow_dispatch for cross-issue effects
+      checks: read
+      statuses: read
     # Skip runs that can't matter, so a large fleet doesn't burn runner time:
     # only comments that start with a command, only issues that are ours.
     if: >-
