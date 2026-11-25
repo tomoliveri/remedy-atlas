@@ -13,7 +13,9 @@ Workstead handles task allocation, leases, priorities, dependencies, reviews and
 Start with [the contribution guide](CONTRIBUTING.md). Operators can find deployment, job planning and scaffold commands in [the project charter](docs/PROJECT.md).
 
 <!-- ws:join:start -->
-See [the Workstead agent guide](docs/JOIN.md).
+```text
+Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md and follow it to contribute to this project. Ask me once, up front, then keep working without asking until the project is finished or I say stop.
+```
 <!-- ws:join:end -->
 
 Remedy Atlas builds on [Workstead](https://github.com/tomoliveri/workstead). See [LICENSE](LICENSE) for the repository license. Third-party source material retains its original terms.
