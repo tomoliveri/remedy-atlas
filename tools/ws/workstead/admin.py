@@ -72,6 +72,124 @@ def attribution_text(upstream: Optional[str]) -> str:
             "Neither is required, and nothing checks for it.")
 
 
+CODEOWNED = ["/.github/", "/tools/ws/", "/workstead.json", "/JOIN.md", "/AGENTS.md", "/CLAUDE.md", "/SECURITY.md",
+             "/ws", "/ws.cmd"]
+
+
+def codeowners(owners: list) -> str:
+    """CODEOWNERS for the paths that control the fleet (GitHub enforces it)."""
+    who = " ".join(f"@{o}" for o in owners)
+    lines = ["# The paths that control the fleet and its agents. Rendered by Workstead setup.",
+             "# With `./ws harden`, branch protection requires a code owner's review for these,",
+             "# on top of the queue's own maintainer check. Everything else merges through the fleet.", ""]
+    lines += [f"{p} {who}" for p in CODEOWNED]
+    return "\n".join(lines) + "\n"
+
+
+def render_codeowners(root: Path, info: Dict[str, Any], cfg: Dict[str, Any]) -> bool:
+    owners = list(cfg["maintainers"]) or ([info["owner"]] if info.get("owner_type") == "User" and info.get("owner") else [])
+    f = root / ".github" / "CODEOWNERS"
+    if not owners:
+        # Organisations: list maintainers in workstead.json (or add a team by
+        # hand). Never leave the template's own owner in someone else's repo.
+        if f.is_file() and "Rendered by Workstead setup" in f.read_text():
+            f.unlink()
+            return True
+        return False
+    new = codeowners(owners)
+    if f.is_file() and f.read_text() == new:
+        return False
+    if f.is_file() and "Rendered by Workstead setup" not in f.read_text():
+        return False  # someone wrote their own: leave it alone
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(new)
+    return True
+
+
+HARDEN_STEPS = """secret scanning, push protection, Dependabot alerts and fixes, private vulnerability reporting,
+read-only default workflow token, no PR approvals by Actions, approval for first-time contributors' fork workflows,
+default-branch protection (CI ok + code owners), release tag ruleset"""
+
+
+def harden(root: Path, check: bool = False) -> int:
+    """Apply GitHub's protective settings to this repository (needs admin)."""
+    from .gh import GitHubError
+    cfg = C.load(root)
+    gh = GitHub(cfg["repo"] or _repo(root))
+    info = gh.repo_info()
+    branch = info.get("default_branch") or cfg["default_branch"]
+    r = f"/repos/{gh.repo}"
+    results = []
+
+    def step(name, apply, probe=None):
+        try:
+            if check:
+                results.append(("ok" if probe and probe() else "todo", name))
+            else:
+                apply()
+                results.append(("ok", name))
+        except GitHubError as e:
+            results.append(("FAIL", f"{name}: {str(e)[:160]}"))
+
+    def sa():
+        return gh.request("GET", r).get("security_and_analysis") or {}
+
+    def exists(path):
+        try:
+            gh.request("GET", path)
+            return True
+        except GitHubError:
+            return False
+    step("secret scanning + push protection",
+         lambda: gh.request("PATCH", r, {"security_and_analysis": {"secret_scanning": {"status": "enabled"},
+                                                                    "secret_scanning_push_protection": {"status": "enabled"}}}),
+         lambda: (sa().get("secret_scanning_push_protection") or {}).get("status") == "enabled")
+    step("Dependabot alerts", lambda: gh.request("PUT", f"{r}/vulnerability-alerts"),
+         lambda: exists(f"{r}/vulnerability-alerts"))
+    step("Dependabot security updates", lambda: gh.request("PUT", f"{r}/automated-security-fixes"),
+         lambda: (gh.request("GET", f"{r}/automated-security-fixes") or {}).get("enabled"))
+    step("private vulnerability reporting", lambda: gh.request("PUT", f"{r}/private-vulnerability-reporting"),
+         lambda: (gh.request("GET", f"{r}/private-vulnerability-reporting") or {}).get("enabled"))
+    step("read-only default workflow token; Actions can't approve pull requests",
+         lambda: gh.request("PUT", f"{r}/actions/permissions/workflow",
+                            {"default_workflow_permissions": "read", "can_approve_pull_request_reviews": False}),
+         lambda: gh.request("GET", f"{r}/actions/permissions/workflow").get("default_workflow_permissions") == "read")
+    step("fork pull request workflows need approval for first-time contributors",
+         lambda: gh.request("PUT", f"{r}/actions/permissions/fork-pr-contributor-approval",
+                            {"approval_policy": "first_time_contributors"}),
+         lambda: (gh.request("GET", f"{r}/actions/permissions/fork-pr-contributor-approval") or {}).get("approval_policy")
+         in ("first_time_contributors", "first_time_contributors_new_to_github", "all_external_contributors"))
+    step(f"protect {branch}: require CI ok, code-owner review on fleet-control paths, no force pushes",
+         lambda: gh.request("PUT", f"{r}/branches/{branch}/protection", {
+             "required_status_checks": {"strict": False, "checks": [{"context": "CI ok"}]},
+             "enforce_admins": False,
+             "required_pull_request_reviews": {"required_approving_review_count": 0, "require_code_owner_reviews": True,
+                                               "dismiss_stale_reviews": True},
+             "restrictions": None, "allow_force_pushes": False, "allow_deletions": False}),
+         lambda: bool(((gh.request("GET", f"{r}/branches/{branch}/protection") or {})
+                       .get("required_pull_request_reviews") or {}).get("require_code_owner_reviews")))
+
+    def tag_ruleset():
+        existing = gh.request("GET", f"{r}/rulesets") or []
+        if any(x.get("name") == "release tags" for x in existing):
+            return
+        gh.request("POST", f"{r}/rulesets", {
+            "name": "release tags", "target": "tag", "enforcement": "active",
+            "conditions": {"ref_name": {"include": ["refs/tags/v*"], "exclude": []}},
+            "rules": [{"type": "creation"}, {"type": "update"}, {"type": "deletion"}, {"type": "non_fast_forward"}],
+            "bypass_actors": [{"actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always"}]})
+    step("release tags (v*) only by admins", tag_ruleset,
+         lambda: any(x.get("name") == "release tags" for x in (gh.request("GET", f"{r}/rulesets") or [])))
+    for status, name in results:
+        print(f"{status:<5}{name}")
+    if not (root / ".github" / "CODEOWNERS").is_file():
+        print("todo CODEOWNERS: run the Workstead setup workflow (or ./ws setup) to write it")
+    bad = [x for x in results if x[0] == "FAIL"]
+    if bad:
+        print("Some settings need an admin token or a different GitHub plan; the rest were applied.")
+    return 1 if bad else 0
+
+
 def queue_from_env(cfg: Dict[str, Any]) -> Queue:
     repo = os.environ.get("GITHUB_REPOSITORY") or cfg["repo"]
     if not repo:
@@ -119,6 +237,8 @@ def setup(root: Path, write_files: bool = True) -> int:
     upstream = cfg["give_back"]["upstream"] or info.get("template")
     if write_files and render_join(root, q.gh.repo, info.get("default_branch") or cfg["default_branch"], upstream):
         print("README.md: join prompt updated for", q.gh.repo)
+    if write_files and render_codeowners(root, info, cfg):
+        print(".github/CODEOWNERS written")
     if not info.get("template") and not q.gh.list_issues(labels=[L["learnings"]]):
         # An original Workstead repository receives other fleets' learnings.
         from .engine import LEARNINGS_INTRO
@@ -131,6 +251,7 @@ def setup(root: Path, write_files: bool = True) -> int:
         if not any(ATTRIBUTION_MARK in c["body"] for c in q.gh.list_comments(b)):
             q.gh.create_comment(b, attribution_text(upstream))
     print(f"board: {len(snap['tasks'])} open tasks")
+    print("next: run `./ws harden` once from a maintainer's machine to turn on GitHub's protections")
     if not cfg["give_back"]["enabled"]:
         print("tip: set give_back.enabled to true in workstead.json to give 0.1% of fleet time back to Workstead (optional).")
     step = os.environ.get("GITHUB_STEP_SUMMARY")

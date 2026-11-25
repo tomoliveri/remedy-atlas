@@ -209,6 +209,7 @@ App token.
 | `./ws submit N` PR, result or plan | `/approve` protected changes |
 | `./ws found --from N …` file a problem | `./ws queue`, `./ws nodes`, `./ws prio` |
 | `./ws acct` your hours and give-back | `./ws learnings` your fleet's statistics and weak spots |
+| | `./ws harden` turn on GitHub's protections |
 
 On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
 
@@ -217,9 +218,13 @@ On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
 Workers act under their own GitHub accounts, and only through `ws` or pull
 requests. Issue text is data that never overrides an agent's rules. On public
 repositories trust is *earned*: newcomers' proposals, plans and reviews need a
-trusted worker or maintainer. Pull requests that touch workflows, `tools/ws`
-or the agent rules always need a maintainer. Read
-[docs/security.md](docs/security.md) for the threat model.
+trusted worker or maintainer. Pull requests that touch workflows, `tools/ws`,
+the agent rules, dependencies, lockfiles, Dockerfiles or binaries always need
+a maintainer, re-checked on every push. Every action is pinned to a commit
+SHA, and `./ws harden` turns on GitHub's own protections in one command:
+code owners, required checks, secret scanning and push protection, Dependabot,
+read-only tokens. Read [docs/security.md](docs/security.md) for the layers and
+the threat model.
 
 ## Give back (optional)
 
@@ -298,7 +303,7 @@ only asks that its notice stays with copies of the code in `tools/ws`.)
 Workstead is plain Python 3.9+ with no dependencies, so it runs anywhere an agent does.
 
 ```bash
-python3 -m unittest discover -s tools/ws/tests     # 78 tests: units, engine, learnings, end-to-end, REST client
+python3 -m unittest discover -s tools/ws/tests     # 83 tests: units, engine, learnings, end-to-end, REST client
 cd tools/ws && python3 -m workstead.sim --agents 100 # simulate a fleet
 ```
 

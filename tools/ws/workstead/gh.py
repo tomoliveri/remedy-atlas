@@ -104,7 +104,9 @@ def _pr(d: Dict[str, Any]) -> Dict[str, Any]:
             "base_ref": (d.get("base") or {}).get("ref"), "mergeable": d.get("mergeable"),
             "labels": [x["name"] for x in d.get("labels", [])],
             "assignees": [a["login"] for a in d.get("assignees") or []],
-            "created_at": d.get("created_at"), "updated_at": d.get("updated_at")}
+            "created_at": d.get("created_at"), "updated_at": d.get("updated_at"),
+            "additions": d.get("additions") or 0, "deletions": d.get("deletions") or 0,
+            "changed_files": d.get("changed_files") or 0}
 
 
 class GitHub:
@@ -243,6 +245,7 @@ class GitHub:
         return {"private": d.get("private", False), "default_branch": d.get("default_branch", "main"),
                 "can_push": bool((d.get("permissions") or {}).get("push")), "fork": d.get("fork", False),
                 "template": (d.get("template_repository") or {}).get("full_name"),
+                "owner": (d.get("owner") or {}).get("login"), "owner_type": (d.get("owner") or {}).get("type"),
                 "parent": (d.get("parent") or {}).get("full_name")}
 
     def permission(self, login: str) -> str:
@@ -364,6 +367,11 @@ class GitHub:
 
     def pr_files(self, n: int) -> List[str]:
         return [f["filename"] for f in self.paginate(f"{self.r}/pulls/{n}/files?", limit=3000)]
+
+    def pr_reviews(self, n: int) -> List[Dict[str, Any]]:
+        """Native GitHub reviews: [{login, state, sha}]."""
+        return [{"login": (r.get("user") or {}).get("login", ""), "state": r.get("state"), "sha": r.get("commit_id")}
+                for r in self.paginate(f"{self.r}/pulls/{n}/reviews?", limit=300)]
 
     def prs_for_sha(self, sha: str) -> List[int]:
         try:

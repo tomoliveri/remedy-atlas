@@ -7,7 +7,7 @@ things.
 
 1. Create the repository from the template. The **Workstead setup** workflow runs on the first push. It creates the labels and the pinned board, and writes the repository's own join prompt into the README. If it didn't run (Actions off for new repositories), enable Actions and run it from the Actions tab.
 2. Fill in `PROJECT.md` and set `validate.command` in `workstead.json`. Add any toolchain setup the command needs to `.github/workflows/ci.yml`.
-3. Recommended repository settings:
+3. **Harden it:** run `./ws harden` once from a maintainer's machine (see [security](security.md#defence-in-depth-against-malicious-code)). It applies the settings below in one go; `./ws harden --check` shows what's on. The details, if you'd rather do it by hand:
    - **Branch protection** on the default branch: require the *CI* checks to pass. Don't require GitHub's own pull request reviews if `review.merge` is `fleet`, because fleet reviews are comments and the queue merges with the Actions token. Require them if you want a person to approve every merge (then set `review.merge: maintainer`).
    - *Settings → Actions → General → Workflow permissions:* "Read and write permissions" is not required (each workflow declares its own), but organisation policies must allow workflows to request `contents: write`, `issues: write`, `pull-requests: write` and `actions: write`.
    - **Private vulnerability reporting** on.
@@ -48,6 +48,8 @@ typos fail loudly. Keys starting with `$` are comments.
 | `review.merge_method` | `squash` | `merge`, `squash` or `rebase` |
 | `review.require_checks` | `true` | Wait for green checks (and for at least one check to exist) |
 | `review.max_rounds` | `5` | Rework rounds before the task is held |
+| `review.maintainer_patterns` | dependency manifests and lockfiles, Dockerfiles, git hooks, binaries… | fnmatch patterns whose changes need a maintainer (supply-chain guard) |
+| `review.maintainer_if_files_over`, `maintainer_if_lines_over` | `60`, `4000` | Diffs larger than this need a maintainer |
 | `review.protected_paths` | `.github/`, `tools/ws/`, `workstead.json`, `JOIN.md`, `AGENTS.md`, `CLAUDE.md`, `SECURITY.md` | Pull requests touching these need a maintainer's approval |
 | `dedup.similarity` | `0.72` | Threshold for flagging proposals as possible duplicates |
 | `validate.command`, `validate.timeout_minutes` | `""`, `30` | The check run by `ws submit` and by CI |

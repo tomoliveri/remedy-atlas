@@ -998,9 +998,16 @@ class Queue:
             state["approvals"] = [a for a in state["approvals"] if a.get("sha") == pr["head_sha"]]
             hist(state, "new commits; earlier approvals are stale", pr["author"], self.ts())
         if reason == "pr_synchronize":
+            # New commits get the same scrutiny as the first: a pull request
+            # that later adds a dependency or touches CI needs a maintainer.
+            why = self.needs_maintainer(n, pr)
+            if why and L["needs_maintainer"] not in issue["labels"]:
+                self.gh.add_labels(n, [L["needs_maintainer"]])
+                issue["labels"].append(L["needs_maintainer"])
+                replies.append(f"New commits mean this pull request {why}, so a maintainer must now `/approve` it.")
             # Any push after rework (review changes, failed checks, conflicts)
             # puts the task back in review. Idempotent on the task side.
-            state["reason"] = ""
+            state["reason"] = f"{why}: a maintainer must approve" if why else ""
             self.dispatch(t, f"pr_opened:{n}")
             if L["changes"] in issue["labels"]:
                 self.gh.remove_label(n, L["changes"])
@@ -1079,9 +1086,11 @@ class Queue:
         state["task"] = t
         state["review_required"] = self.cfg["review"]["approvals_required"] if part.get("review") else 0
         labels = [L["pr"]]
-        if self.protected(n):
+        why = self.needs_maintainer(n, pr)
+        if why:
             labels.append(L["needs_maintainer"])
-            state["reason"] = "touches protected paths: a maintainer must approve"
+            state["reason"] = f"{why}: a maintainer must approve"
+            replies.append(f"This pull request {why}, so a maintainer must also `/approve` it before the fleet merges it.")
         if state["review_required"]:
             labels.append(L["needs_review"])
         self.gh.add_labels(n, labels)
@@ -1097,13 +1106,29 @@ class Queue:
             need = self.cfg["review"]["approvals_required"] if part.get("review") else 0
         return len(state.get("approvals", [])) < need
 
-    def protected(self, n: int) -> bool:
-        prefixes = self.cfg["review"]["protected_paths"]
+    def needs_maintainer(self, n: int, pr: Dict[str, Any]) -> str:
+        """Why a pull request needs a maintainer's approval, or "" if it doesn't."""
+        import fnmatch
+        rv = self.cfg["review"]
         try:
             files = self.gh.pr_files(n)
         except GitHubError:
-            return True
-        return any(f == p or (p.endswith("/") and f.startswith(p)) for f in files for p in prefixes)
+            return "couldn't be inspected"
+        prefixes = rv["protected_paths"]
+        hit = [f for f in files if any(f == p or (p.endswith("/") and f.startswith(p)) for p in prefixes)]
+        if hit:
+            return f"touches protected paths ({', '.join(hit[:3])})"
+        pats = rv["maintainer_patterns"]
+        hit = [f for f in files if any(fnmatch.fnmatch(f, p) or fnmatch.fnmatch(f.rsplit("/", 1)[-1], p) for p in pats)]
+        if hit:
+            return f"changes dependencies, build or binary files ({', '.join(hit[:3])})"
+        if len(files) > rv["maintainer_if_files_over"] or \
+                pr.get("additions", 0) + pr.get("deletions", 0) > rv["maintainer_if_lines_over"]:
+            return "is too large for an agent review"
+        return ""
+
+    def protected(self, n: int) -> bool:
+        return bool(self.needs_maintainer(n, self.gh.get_pr(n)))
 
     def apply_pr(self, n, pr, issue, state, c, cmd, t) -> Tuple[bool, str]:
         name, args, rest = cmd
@@ -1173,6 +1198,17 @@ class Queue:
         if pr["draft"]:
             return ""
         approvals = [a for a in state.get("approvals", []) if a.get("sha") == pr["head_sha"]]
+        if L["needs_maintainer"] in issue["labels"] and not any(a.get("maintainer") for a in approvals):
+            # A maintainer may approve in GitHub's own review UI (which branch
+            # protection's code-owner rule also needs) instead of with /approve.
+            try:
+                for rv in self.gh.pr_reviews(n):
+                    if rv["state"] == "APPROVED" and rv["sha"] == pr["head_sha"] and rv["login"] != pr["author"] \
+                            and self.is_maintainer(rv["login"]):
+                        approvals.append({"login": rv["login"], "sha": rv["sha"], "maintainer": True})
+                        break
+            except GitHubError:
+                pass  # reviews unavailable: fall back to /approve comments only
         if self._needs_review(tmeta, {"approvals": approvals, "review_required": state.get("review_required")}):
             return ""
         if L["needs_maintainer"] in issue["labels"] and not any(a.get("maintainer") for a in approvals):
@@ -1280,8 +1316,9 @@ class Queue:
         # Repair projections and catch missed transitions.
         for n, i in items.items():
             if i["is_pr"]:
-                if L["approved"] in i["labels"] and L["ready_to_merge"] not in i["labels"]:
-                    self.dispatch(n, "checks")
+                if (L["approved"] in i["labels"] or L["needs_maintainer"] in i["labels"]) \
+                        and L["ready_to_merge"] not in i["labels"]:
+                    self.dispatch(n, "checks", "pr")
                 continue
             st = cache[n].get("status")
             meta = self.meta_of(i)

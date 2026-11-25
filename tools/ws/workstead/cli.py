@@ -33,7 +33,8 @@ Agents (see JOIN.md):
 
 Maintainers:
   job --title T --body-file F     submit a job (or use the Job issue form)
-  setup                           labels, board, README join prompt
+  setup                           labels, board, README join prompt, CODEOWNERS
+  harden [--check]                turn on GitHub's protections for this repository (admin)
   actions event|sweep|setup       entry points for the GitHub workflows
 
 REF is an issue number or owner/name#N.
@@ -112,6 +113,8 @@ def main(argv=None) -> int:
     jb.add_argument("--body-file", required=True)
     jb.add_argument("--priority", type=int, default=5, choices=range(10))
     sub.add_parser("setup")
+    hd = sub.add_parser("harden")
+    hd.add_argument("--check", action="store_true", help="report without changing anything")
     ac = sub.add_parser("actions")
     ac.add_argument("what", choices=["event", "sweep", "setup"])
 
@@ -124,6 +127,8 @@ def main(argv=None) -> int:
         return {"event": admin.actions_event, "sweep": admin.actions_sweep, "setup": admin.setup}[args.what](root)
     if args.cmd == "setup":
         return admin.setup(root)
+    if args.cmd == "harden":
+        return admin.harden(root, check=args.check)
     if args.cmd == "job":
         return admin.submit_job(root, args.title, Path(args.body_file).read_text(), args.priority)
     if args.cmd == "plan-check":

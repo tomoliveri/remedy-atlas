@@ -90,6 +90,23 @@ DEFAULTS: Dict[str, Any] = {
         # Pull requests touching these always need a maintainer's approval.
         "protected_paths": [".github/", "tools/ws/", "workstead.json",
                             "JOIN.md", "AGENTS.md", "CLAUDE.md", "SECURITY.md"],
+        # Supply-chain guard: changes to dependencies, build images, git hooks
+        # and binaries need a maintainer too (fnmatch patterns on file paths).
+        "maintainer_patterns": [
+            "package.json", "*/package.json", "package-lock.json", "*/package-lock.json", "yarn.lock", "*/yarn.lock",
+            "pnpm-lock.yaml", "*/pnpm-lock.yaml", "npm-shrinkwrap.json", ".npmrc", "*/.npmrc",
+            "requirements*.txt", "*/requirements*.txt", "pyproject.toml", "*/pyproject.toml", "setup.py", "*/setup.py",
+            "setup.cfg", "Pipfile*", "poetry.lock", "*/poetry.lock", "uv.lock", "*/uv.lock",
+            "go.mod", "*/go.mod", "go.sum", "*/go.sum", "Cargo.toml", "*/Cargo.toml", "Cargo.lock", "*/Cargo.lock",
+            "Gemfile*", "*/Gemfile*", "composer.json", "composer.lock", "pom.xml", "*/pom.xml", "build.gradle*",
+            "*/build.gradle*", "gradle/wrapper/*", "*.csproj", "packages.lock.json", "Package.swift", "Package.resolved",
+            "Dockerfile*", "*/Dockerfile*", "*.dockerfile", "docker-compose*.yml", "compose*.yaml",
+            ".githooks/*", ".husky/*", ".pre-commit-config.yaml", ".devcontainer/*", ".vscode/tasks.json", ".envrc",
+            "*.exe", "*.dll", "*.so", "*.dylib", "*.bin", "*.jar", "*.whl", "*.pyc", "*.class", "*.wasm", "*.min.js",
+        ],
+        # Very large diffs are hard for an agent to review: a maintainer must.
+        "maintainer_if_files_over": 60,
+        "maintainer_if_lines_over": 4000,
     },
     "dedup": {"similarity": 0.72},
     # One command that proves a change works, run locally by `ws submit` and

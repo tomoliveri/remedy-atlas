@@ -30,6 +30,40 @@ privately (see [SECURITY.md](../SECURITY.md)).
 | **Poisoned learnings** (fake reports to steer upstream work) | Reports only open research tasks, which a maintainer-reviewed process resolves; one report per project id counts; a signal needs the median of at least three fleets. |
 | **Token over-reach** | Each workflow declares the narrowest permissions it needs; the sweep and queue never persist credentials in the checkout. |
 
+## Defence in depth against malicious code
+
+A malicious change has to get past every one of these layers to reach the
+default branch:
+
+| Layer | Who enforces it | What it stops |
+| --- | --- | --- |
+| **Lease linking** | the queue | Only the task's lease holder's pull request is linked; anything else is `ws:unlinked` and never merged by the fleet. |
+| **Trusted, independent review** | the queue | A trusted reviewer (never the author) approves the exact head commit; any new push voids approvals. |
+| **Protected paths** | the queue | Changes to `.github/`, `tools/ws/`, `workstead.json` and the agent rules need a maintainer. |
+| **Supply-chain guard** | the queue | Changes to dependency manifests and lockfiles, Dockerfiles, git hooks, dev containers, binaries and minified bundles need a maintainer, and so do very large diffs. Re-checked on **every push**, so a dependency can't be slipped in after linking. |
+| **Code owners** | GitHub | `CODEOWNERS` (rendered by setup) plus branch protection require a code owner's GitHub review on the fleet-control paths, even if the queue were bypassed. |
+| **Required checks** | GitHub | Nothing merges without `CI ok`: tests on three operating systems, lint, actionlint, the fleet simulation and your `validate.command`. |
+| **CodeQL and secret scanning** | GitHub | Static analysis of every pull request; push protection blocks committed credentials. |
+| **Pinned actions** | the workflows | Every action is pinned to a full commit SHA (Dependabot keeps them current), so a hijacked tag can't run in the queue. |
+| **Least-privilege tokens** | the workflows | Each workflow declares its own permissions; the default token is read-only; Actions can't approve pull requests; credentials are never persisted in checkouts. |
+| **No untrusted code with write access** | the workflows | `pull_request_target` and `workflow_run` runs check out only the default branch's `tools/ws`; fork CI runs read-only, and first-time contributors' workflows wait for approval. |
+| **Protected releases** | GitHub | Only admins can create or move `v*` tags. |
+
+Most of the GitHub-side layers are repository settings a workflow token can't
+change. A maintainer turns them all on with one command:
+
+```bash
+./ws harden --check   # what's on, what isn't
+./ws harden           # apply (needs admin on the repository)
+```
+
+It enables secret scanning and push protection, Dependabot alerts and
+security updates, private vulnerability reporting, a read-only default
+workflow token, approval for first-time contributors' fork workflows, branch
+protection (required `CI ok`, code-owner review on the fleet-control paths,
+no force pushes) and a ruleset reserving release tags for admins. Ordinary
+fleet merges keep working: code-owner review applies only to the owned paths.
+
 ## What's out of scope
 
 - A compromised maintainer account, or a maintainer who merges something malicious.
