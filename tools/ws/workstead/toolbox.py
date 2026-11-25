@@ -64,9 +64,9 @@ OS_PROC = {"system", "popen", "fork", "forkpty", "kill", "killpg", "posix_spawn"
            "spawnl", "spawnle", "spawnlp", "spawnlpe", "spawnv", "spawnve", "spawnvp", "spawnvpe"}
 DESTRUCTIVE = {"rmtree", "remove", "unlink", "rmdir", "removedirs", "chmod", "chown", "lchown", "truncate", "move",
                "rename", "replace", "symlink", "link"}
-SECRET_NAME = re.compile(r"(TOKEN|SECRET|PASSW|API_?KEY|PRIVATE|CREDENTIAL|AUTH|SESSION|COOKIE|NSEC|AWS_|GH_|GITHUB_)",
+WATCHED_VARS = re.compile(r"(TOKEN|SECRET|PASSW|API_?KEY|PRIVATE|CREDENTIAL|AUTH|SESSION|COOKIE|NSEC|AWS_|GH_|GITHUB_)",
                          re.I)
-SECRET_PATH = re.compile(r"(\.ssh\b|id_rsa|id_ed25519|\.aws\b|\.netrc|\.config/gh|\.gnupg|keychain|\.docker/config|"
+WATCHED_PATHS = re.compile(r"(\.ssh\b|id_rsa|id_ed25519|\.aws\b|\.netrc|\.config/gh|\.gnupg|keychain|\.docker/config|"
                          r"\.kube/config|\.git-credentials|\.npmrc|\.pypirc|Cookies|Login Data|wallet)", re.I)
 BLOB = re.compile(r"^[A-Za-z0-9+/=\s]{400,}$|^(?:[0-9a-fA-F]{2}){200,}$")
 ABS_PATH = re.compile(r"^(/(?!dev/null$)[A-Za-z]|~[/\\]|[A-Za-z]:[\\/])")
@@ -170,7 +170,7 @@ def vet_source(text: str, allow_imports: Iterable[str] = (), filename: str = "sc
                 key = arg.value if isinstance(arg, ast.Constant) and isinstance(arg.value, str) else None
                 if key is None:
                     hit("secrets", node, "reads an environment variable chosen at run time")
-                elif SECRET_NAME.search(key):
+                elif WATCHED_VARS.search(key):
                     hit("secrets", node, f"reads environment variable {key}")
             elif last in ("b64decode", "b85decode", "a85decode", "decompress", "fromhex", "unhexlify") \
                     or (last == "decode" and node.args and isinstance(node.args[0], ast.Constant)
@@ -179,7 +179,7 @@ def vet_source(text: str, allow_imports: Iterable[str] = (), filename: str = "sc
         elif isinstance(node, ast.Subscript) and _dotted(node.value).endswith("environ"):
             sl = node.slice
             key = sl.value if isinstance(sl, ast.Constant) and isinstance(sl.value, str) else None
-            if key is None or SECRET_NAME.search(key):
+            if key is None or WATCHED_VARS.search(key):
                 hit("secrets", node, f"reads environment variable {key or '(computed)'}")
         elif isinstance(node, ast.Attribute) and node.attr in ("__globals__", "__code__", "__builtins__",
                                                                "__subclasses__", "__mro__", "f_globals", "f_back"):
@@ -188,8 +188,8 @@ def vet_source(text: str, allow_imports: Iterable[str] = (), filename: str = "sc
             hit("dynamic-code", node, "uses __builtins__")
         elif isinstance(node, ast.Constant) and isinstance(node.value, (str, bytes)):
             s = node.value.decode("latin-1") if isinstance(node.value, bytes) else node.value
-            if SECRET_PATH.search(s):
-                hit("secrets", node, f"mentions a credential location ({SECRET_PATH.search(s).group(0)})")
+            if WATCHED_PATHS.search(s):
+                hit("secrets", node, f"mentions a credential location ({WATCHED_PATHS.search(s).group(0)})")
             elif len(s) >= 400 and BLOB.match(s.strip()):
                 hit("obfuscation", node, f"a {len(s)}-character encoded blob")
             elif len(s) < 300 and ABS_PATH.match(s) and "\n" not in s and id(node) not in in_fstring:
