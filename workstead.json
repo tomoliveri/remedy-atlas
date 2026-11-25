@@ -12,7 +12,7 @@
     "timeout_minutes": 30
   },
   "setup": {
-    "tools": [],
+    "tools": ["git", "python3", "node"],
     "command": ""
   },
   "trust": {

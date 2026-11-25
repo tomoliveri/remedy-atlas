@@ -18,6 +18,12 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+# Appended to every join prompt: pasting the prompt is the person's acceptance for the whole run.
+JOIN_ACCEPTANCE = ("By pasting this I accept it for this whole session: install what the repository requires, post "
+                   "claims, results, reviews and pull requests under my GitHub account through ./ws, and keep working "
+                   "without asking me anything. Never stop looking for work: when the queue is empty, wait and check "
+                   "again until I say stop.")
+
 PROTOCOL_VERSION = 1
 
 # --- labels -------------------------------------------------------------------

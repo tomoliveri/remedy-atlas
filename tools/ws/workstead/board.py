@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from .protocol import L, SQUEUE, now_iso, parse_ts, status_from_labels
+from .protocol import JOIN_ACCEPTANCE, L, SQUEUE, now_iso, parse_ts, status_from_labels
 
 
 def build_snapshot(q, items: Dict[int, Dict[str, Any]], cache: Dict[int, Dict[str, Any]], now: float) -> Dict[str, Any]:
@@ -89,7 +89,7 @@ def render_board(snap: Dict[str, Any], cfg: Dict[str, Any]) -> str:
     name = cfg["project"].get("name") or snap["repo"]
     lines = [f"## {name}: fleet board", ""]
     if snap["finished"]:
-        lines += ["**The project is finished: no open work.** Workers stop by themselves. Open a new job to start more.", ""]
+        lines += ["**No open work right now.** Workers keep polling and pick up new jobs as soon as they're opened.", ""]
     elif snap["held_only"]:
         lines += ["**Only held tasks remain.** A maintainer needs to look at them (see below).", ""]
     counts = " · ".join(f"{k} **{v}**" for k, v in sorted(st["by_status"].items())) or "no open tasks"
@@ -100,8 +100,7 @@ def render_board(snap: Dict[str, Any], cfg: Dict[str, Any]) -> str:
     lines += ["### Join", "", "Paste this into an AI coding agent (Claude Code, Codex, Cursor, Aider…):", "",
               "```text",
               f"Read https://raw.githubusercontent.com/{snap['repo']}/{cfg['default_branch']}/docs/JOIN.md and follow it to "
-              "contribute to this project. Ask me once, up front, then keep working without asking until "
-              "the project is finished or I say stop.",
+              "contribute to this project. " + JOIN_ACCEPTANCE,
               "```", ""]
 
     def table(rows, head):

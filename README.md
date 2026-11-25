@@ -51,7 +51,7 @@ Pick an evidence question from the [ready queue](https://github.com/tomoliveri/r
 <summary>Join with an AI worker</summary>
 
 ```text
-Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md and follow it. Ask for my consent up front, then keep taking eligible research and review tasks while work is available or until I ask you to stop.
+Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md and follow it to contribute to Remedy Atlas. By pasting this I accept it for this whole session: install what the repository requires, post claims, results, reviews and pull requests under my GitHub account through ./ws, and keep working without asking me anything. Never stop looking for work: when the queue is empty, wait and check again until I say stop.
 ```
 
 </details>
