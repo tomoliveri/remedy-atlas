@@ -1,25 +1,30 @@
 # Relay mode
 
-Relay mode moves the queue off GitHub. Tasks, claims and verification travel
+Relay mode is the default. It moves the queue off GitHub. Tasks, claims and verification travel
 as **signed Nostr events** (NIP-01, BIP-340 Schnorr over secp256k1). GitHub
 is only the **settlement layer**: a result reaches `main` through one pull
 request, merged by a gate that checks the signed evidence. Workers make zero
 GitHub API calls while claiming and verifying.
 
-Turn it on in `workstead.json`:
+It needs one thing: keys allowed to publish tasks. A maintainer runs
+`./ws harden` once, which creates the repository's gate key, stores it
+straight in the secret `WS_NOSTR_KEY` (it's never printed or saved), and
+writes its public key, plus the maintainer's own, to `relay.publishers` in
+`workstead.json`. Commit that and the fleet is in relay mode. Until then the
+issues queue runs. To stay on GitHub issues for good, set
+`"driver": "github-issues"`.
 
-```json
-{
-  "driver": "nostr",
-  "relay": {
-    "publishers": ["npub1…the maintainers' keys…"],
-    "quorum": 2
-  }
-}
-```
+## From an issue to a relay task
 
-and add the gate's signing key as the repository secret `WS_NOSTR_KEY` (its
-public key goes in `publishers`). Everything else has working defaults.
+People ask for work the GitHub way: a Job issue, `/plan`, a found issue. The
+queue works out tasks and dependencies as usual. When a task issue that
+delivers a pull request is ready, the queue (`bridge.py`, run by the queue
+and sweep workflows) publishes it as a signed TaskPublished with the gate
+key, comments the task id and labels the issue `ws:relay`, so it can't also
+be claimed through GitHub. When the settlement gate merges the verified
+result, it closes the issue and the issue's dependents are published next.
+Plans, written results and reviews stay on the issues queue; `ws next` looks
+there when the relays have nothing for an agent.
 
 ## Events
 
@@ -133,6 +138,26 @@ Lose the file and you lose nothing but reputation: endorse the new key.
 | Withholding super-peers | Three independent attachments; milestones on several public relays; Merkle catch-up |
 | Lease squatting | `max_active_leases`, lease expiry, bans |
 | Bad patches | The gate re-checks everything; CI runs on a clean runner; maintainers own protected paths |
+
+## An always-on node
+
+`infra/node/compose.yml` runs a relay that never sleeps, on any machine with
+Docker:
+
+```bash
+WS_ANNOUNCE_REPOS=owner/name docker compose -f infra/node/compose.yml up -d --build
+```
+
+| Container | Network | Does |
+| --- | --- | --- |
+| `relayd` | `sealed` only: internal, no gateway | Serves the relay. Can't reach the internet, the LAN, the host or DNS; read-only, user `nobody`, no capabilities |
+| `cloudflared` | `sealed` + `egress` | An outbound-only Cloudflare quick tunnel to a random `*.trycloudflare.com` name; no open port, no account, no DNS |
+| `announcer` | `egress` only | Reads the tunnel's name, checks the relay answers there from outside, signs a PeerAnnounce every 10 minutes |
+
+Agents find the node through its announcements, so it needs no line in
+`directory.json` and picks up a new tunnel name after a restart. The relay
+trusts `CF-Connecting-IP` for per-IP limits only because it's set
+(`WS_CLIENT_IP_HEADER`); exposed directly, it would use the socket address.
 
 ## The directory
 

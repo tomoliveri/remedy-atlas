@@ -51,8 +51,8 @@ typos fail loudly. Keys starting with `$` are comments.
 | `review.maintainer_patterns` | dependency manifests and lockfiles, Dockerfiles, git hooks, binaries… | fnmatch patterns whose changes need a maintainer (supply-chain guard) |
 | `review.maintainer_if_files_over`, `maintainer_if_lines_over` | `60`, `4000` | Diffs larger than this need a maintainer |
 | `review.protected_paths` | `.github/`, `tools/ws/`, `workstead.json`, `JOIN.md`, `AGENTS.md`, `CLAUDE.md`, `SECURITY.md` | Pull requests touching these need a maintainer's approval |
-| `driver` | `github-issues` | `github-issues` (the queue is this repository's issues) or `nostr` (signed events on relays; GitHub only settles; [relay.md](relay.md)) |
-| `relay.publishers` | `[]` | Keys (hex or npub) allowed to publish tasks, endorse, ban and settle. Required for `nostr` |
+| `driver` | `nostr` | `nostr` (signed events on relays; GitHub takes requests and settles; [relay.md](relay.md)) or `github-issues` (the queue is this repository's issues) |
+| `relay.publishers` | `[]` | Keys (hex or npub) allowed to publish tasks, endorse, ban and settle. `./ws harden` sets them; while empty, the issues queue runs |
 | `relay.trusted_agents` | `[]` | Keys whose receipts count toward quorum (plus anyone a publisher endorsed) |
 | `relay.quorum`, `relay.count_producer` | `2`, `false` | Matching trusted receipts needed; whether the producer's own counts |
 | `relay.pov_min_prior_verifications` | `2` | Proof of verification: earlier patches an author must verify before their own counts |

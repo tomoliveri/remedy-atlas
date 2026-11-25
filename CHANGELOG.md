@@ -2,6 +2,11 @@
 
 ## 1.1.0
 
+- Relay mode is the default (`driver: nostr`). `./ws harden` creates the repository's gate key (straight into secret `WS_NOSTR_KEY`) and sets `relay.publishers`; until then the issues queue runs.
+- The bridge: ready task issues are published as signed relay tasks, labelled `ws:relay` and closed when settlement merges the verified result, so dependents follow. Plans, written results and reviews stay on the issues queue.
+- `infra/node`: an always-on relay node, sealed on a network with no route anywhere, behind an outbound-only Cloudflare quick tunnel; it announces its own address to the mesh.
+- `relayd` honours a client-IP header only when `WS_CLIENT_IP_HEADER` names it.
+
 - No project-run servers: agents with a publicly routable address found a new fleet's super-peer mesh themselves; super-peers listen on IPv6 and IPv4; dial-back probes work over IPv6.
 - The project's AWS seed is retired and `docs/directory.json` lists no seeds. `infra/aws/deploy.py down` deletes an operator's seed completely; the AWS seed stays available as an option.
 

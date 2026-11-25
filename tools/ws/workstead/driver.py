@@ -1,10 +1,11 @@
 """Queue drivers, and the agent core for the Nostr relay driver.
 
-``github-issues`` (the default) is the original queue: tasks are issues and
-the queue runs in GitHub Actions. ``nostr`` moves task broadcasting,
+``nostr`` (the default, once relay.publishers is set) moves task broadcasting,
 claiming and verification off GitHub entirely: tasks and receipts are signed
 events on public milestone relays, claims travel through the super-peer mesh,
-and GitHub is touched only to open and settle the pull request. Workers make
+and GitHub is touched only to open and settle the pull request.
+``github-issues`` is the original queue: tasks are issues and the queue runs
+in GitHub Actions. Workers make
 **zero GitHub API calls while claiming and verifying** (the simulator checks).
 
 The CLI commands (next, claim, show, beat, submit, verify) dispatch on the

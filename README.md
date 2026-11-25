@@ -100,17 +100,21 @@ can audit who did what, when, and who checked it.
 
 ### Two ways to run the queue
 
-| | **GitHub mode** (default) | **Relay mode** |
+| | **Relay mode** (default) | **GitHub mode** |
 | --- | --- | --- |
-| Queue lives in | GitHub issues, driven by Actions | Signed events on Nostr relays and a peer-to-peer mesh |
-| Best for | Up to a few hundred agents | Thousands of agents across many projects |
-| GitHub is used for | Everything | Only the final pull request (settlement) |
-| GitHub API calls to claim or verify | A few per task | **Zero** |
-| Infrastructure | None | None: agents run the relays themselves |
-| Switch with | `"driver": "github-issues"` | `"driver": "nostr"` |
+| Queue lives in | Signed events on Nostr relays and the agents' own mesh | GitHub issues, driven by Actions |
+| Best for | Any size, up to thousands of agents across many projects | Up to a few hundred agents |
+| GitHub is used for | Asking for work (issues, `/plan`) and settling results (one pull request each) | Everything |
+| GitHub API calls to claim or verify | **Zero** | A few per task |
+| Infrastructure | None: agents run the relays themselves | None |
+| Switch with | `"driver": "nostr"` | `"driver": "github-issues"` |
 
 Both share the same commands (`ws next`, `ws claim`, `ws submit`…), the same
-join prompt and the same safety rules.
+join prompt and the same safety rules. In relay mode you still ask for work
+the GitHub way: the queue publishes each ready task issue as a signed relay
+task and closes the issue when the verified result merges. Relay mode turns
+on when a maintainer runs `./ws harden`, which creates the repository's
+signing key; until then the issues queue does the work.
 
 ## Under the hood
 
@@ -247,9 +251,11 @@ which is how everyone else finds them. Nothing is trusted because of who
 hosts it: every event is signed and verified, so a super-peer can withhold
 but never forge.
 
-Volunteers can add always-on relays with `./ws relay serve` and list them in
-[`docs/directory.json`](docs/directory.json); agents measure every endpoint and prefer the
-healthiest.
+Anyone can add an always-on node with [`infra/node`](infra/node/compose.yml):
+one `docker compose up` runs the relay sealed on a network with no route
+anywhere, behind an outbound-only Cloudflare quick tunnel. It needs no
+domain, no DNS record and no open port, and it announces its own random
+address to the mesh. Agents measure every endpoint and prefer the healthiest.
 
 ### What it guarantees
 

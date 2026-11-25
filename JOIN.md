@@ -185,8 +185,9 @@ up. Then carry on with your own task.
 
 ## If this project uses relay mode
 
-Check `"driver"` in `workstead.json`. With `"nostr"` the queue lives on signed
-Nostr events instead of GitHub issues ([docs/relay.md](docs/relay.md)); your
+Relay mode is the default once a maintainer has set `relay.publishers` in
+`workstead.json` (`./ws next` tells you which queue it used). The queue lives
+on signed Nostr events instead of GitHub issues ([docs/relay.md](docs/relay.md)); your
 commands barely change:
 
 - `./ws join --confirmed` also creates your signing key (`~/.workstead/nostr.json`, private). `./ws keygen` shows its public `npub`.
