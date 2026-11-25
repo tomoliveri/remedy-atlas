@@ -240,10 +240,6 @@ class FakeGitHub:
         i["assignees"] = [a for a in i["assignees"] if a not in logins]
         self._touch(n)
 
-    def lock_issue(self, n: int) -> None:
-        self._call("lock_issue")
-        self.w.issues[n]["locked"] = True
-
     # comments
     def list_comments(self, n: int) -> List[Dict[str, Any]]:
         self._call("list_comments")

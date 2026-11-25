@@ -230,12 +230,6 @@ class GitHub:
         if logins:
             self.request("DELETE", f"{self.r}/issues/{n}/assignees", {"assignees": logins})
 
-    def lock_issue(self, n: int) -> None:
-        try:
-            self.request("PUT", f"{self.r}/issues/{n}/lock", {"lock_reason": "resolved"})
-        except GitHubError:
-            pass
-
     # --- comments -----------------------------------------------------------
 
     def list_comments(self, n: int) -> List[Dict[str, Any]]:
