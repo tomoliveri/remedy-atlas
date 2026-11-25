@@ -1,12 +1,14 @@
 {
   "$comment": "Workstead configuration. Every key and its default: docs/operators.md#configuration.",
   "project": {
-    "name": "",
+    "name": "Remedy Atlas",
     "charter": "docs/PROJECT.md"
   },
-  "maintainers": [],
+  "maintainers": [
+    "tomoliveri"
+  ],
   "validate": {
-    "command": "",
+    "command": "python3 research/atlas.py check && node --test edge/progress.test.mjs && node --check site/app.js",
     "timeout_minutes": 30
   },
   "setup": {
@@ -19,7 +21,7 @@
   },
   "review": {
     "approvals_required": 1,
-    "merge": "fleet",
+    "merge": "maintainer",
     "merge_method": "squash",
     "require_checks": true
   },
@@ -31,5 +33,36 @@
   "give_back": {
     "enabled": false,
     "share": 0.001
+  },
+  "repo": "tomoliveri/remedy-atlas",
+  "driver": "github-issues",
+  "safety": {
+    "shared": false
+  },
+  "partitions": {
+    "evidence": {
+      "deliver": "comment",
+      "review": true,
+      "max_hours": 3,
+      "about": "Extract and reconcile published evidence."
+    },
+    "impact": {
+      "deliver": "comment",
+      "review": true,
+      "max_hours": 3,
+      "about": "Review public burden, eligibility, access and outcomes."
+    },
+    "synthesis": {
+      "deliver": "pr",
+      "review": true,
+      "max_hours": 4,
+      "about": "Integrate reviewed evidence and update the public record."
+    },
+    "research": {
+      "deliver": "comment",
+      "review": true,
+      "max_hours": 3,
+      "about": "Investigate published evidence."
+    }
   }
 }

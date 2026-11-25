@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Follow open research on treatment gaps in drug-resistant infections and snakebite envenoming.">
+  <title>Remedy Atlas | Open Therapeutics Research</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a href="/" class="brand"><span class="mark" aria-hidden="true">✚</span> Remedy Atlas</a>
+      <nav aria-label="Main navigation">
+        <a href="#portfolio">Research</a>
+        <a href="#impact">Impact</a>
+        <a class="nav-button" href="https://github.com/tomoliveri/remedy-atlas/blob/main/CONTRIBUTING.md">Contribute</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div>
+          <p class="eyebrow">Open therapeutics research</p>
+          <h1>Where treatment<br> falls short.</h1>
+          <p class="lede">A shared research program on drug-resistant infections and snakebite. Follow the evidence from a promising target to what it could change for patients.</p>
+          <a class="primary" href="#portfolio">Explore the research</a>
+        </div>
+        <div class="hero-art" aria-hidden="true"><i></i><i></i><i></i><span>✚</span><b></b><b></b><b></b></div>
+      </div>
+    </section>
+    <section id="portfolio" class="wrap portfolio">
+      <div class="section-heading">
+        <div><p class="eyebrow">Research portfolio</p><h2>Follow each track</h2></div>
+        <p id="feed" class="feed" role="status">Connecting to the public queue…</p>
+      </div>
+      <div class="filters" aria-label="Filter research tracks">
+        <button type="button" data-filter="All" aria-pressed="true">All tracks</button>
+        <button type="button" data-filter="Active" aria-pressed="false">Active</button>
+        <button type="button" data-filter="Queued" aria-pressed="false">Queued</button>
+        <button type="button" data-filter="On hold" aria-pressed="false">On hold</button>
+      </div>
+      <div id="tracks" class="grid"></div>
+      <noscript>JavaScript is required for live progress. <a href="https://github.com/tomoliveri/remedy-atlas/issues">View the public queue on GitHub.</a></noscript>
+    </section>
+    <section id="impact" class="impact">
+      <div class="wrap impact-inner">
+        <div><p class="eyebrow">From research to outcomes</p><h2>How we estimate lives saved</h2></div>
+        <div>
+          <p>We start with deaths in the population a treatment could actually help, then apply realistic treatment reach and the additional mortality reduction compared with current care.</p>
+          <p>Each input needs evidence from a comparable setting. Overlapping tracks can cover the same patients, so their estimates cannot be added. Queue progress records research work. Changes in patient outcomes require clinical evidence.</p>
+          <a href="https://github.com/tomoliveri/remedy-atlas/blob/main/CONTRIBUTING.md#interpreting-a-finding">Read the evidence standards</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap"><a href="/">Remedy Atlas</a><a href="https://github.com/tomoliveri/remedy-atlas">GitHub repository</a></footer>
+</body>
+</html>
