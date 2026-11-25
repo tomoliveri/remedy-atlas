@@ -28,6 +28,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from . import config as C
 from . import dedup
+from . import learnings as LRN
 from . import plan as P
 from . import sched
 from .gh import GitHubError, log
@@ -284,9 +285,12 @@ class Queue:
                 return  # edits are heartbeats; the sweep reads them
             issue = payload["issue"]
             n = issue["number"]
+            names = [x.get("name") for x in issue.get("labels", [])]
             if "pull_request" in issue:
                 self.reconcile_pr(n)
-            elif any(x.get("name") in (L["task"], L["proposed"], L["job"]) for x in issue.get("labels", [])):
+            elif L["learnings"] in names:
+                self.ingest_learnings(n, payload["comment"])
+            elif any(x in (L["task"], L["proposed"], L["job"]) for x in names):
                 self.reconcile(n)
             return
         if name == "issues":
@@ -1223,21 +1227,32 @@ class Queue:
         except (ValueError, GitHubError):
             prev = {}
         cache = {int(k): v for k, v in (prev.get("cache") or {}).items()}
+        prev_cache = {n: dict(v) for n, v in cache.items()}
+        learn = prev.get("learn") or LRN.new_state()
         tasks = self.gh.list_issues(labels=[L["task"]])
         prs = [i for i in self.gh.list_issues(labels=[L["pr"]], include_prs=True) if i["is_pr"]]
         items: Dict[int, Dict[str, Any]] = {}
         for i in tasks + prs:
             n = i["number"]
             c = cache.get(n)
-            hot = i["is_pr"] or bool(set(i["labels"]) & {L["running"], L["review"], L["split"], L["triage"], L["held"]})
+            hot_states = ("running", "review", "split", "triage", "held")
+            hot = i["is_pr"] or bool(set(i["labels"]) & {L[x] for x in hot_states})
+            # Leaving a hot state (a requeue, say): read it once more to see why.
+            hot = hot or bool(c and c.get("status") in hot_states)
+            # Fresh only if both the timestamp and the labels match: updated_at has
+            # one-second resolution, so a claim in the same second as the last
+            # sweep would otherwise leave a stale status cached.
+            labels_now = sorted(i["labels"])
             if not hot:
-                c = {"updated_at": i["updated_at"], "status": status_from_labels(i["labels"]) or "queued"}
-            elif c is None or c.get("updated_at") != i["updated_at"]:
+                c = {"updated_at": i["updated_at"], "labels": labels_now,
+                     "status": status_from_labels(i["labels"]) or "queued", "attempts": (c or {}).get("attempts", 0)}
+            elif c is None or c.get("updated_at") != i["updated_at"] or c.get("labels") != labels_now:
                 if not self.gh.budget_ok():
                     c = c or {}
                 else:
                     _, _, _, st = self.load(n)
-                    c = {"updated_at": i["updated_at"], "lease": st.get("lease"), "review_lease": st.get("review_lease"),
+                    c = {"updated_at": i["updated_at"], "labels": labels_now,
+                         "lease": st.get("lease"), "review_lease": st.get("review_lease"),
                          "status": st.get("status"), "children": st.get("children", []), "pr": st.get("pr"),
                          "attempts": st.get("attempts", 0), "reason": st.get("reason", ""),
                          "approvals": len(st.get("approvals", []))}
@@ -1295,15 +1310,106 @@ class Queue:
                     self.gh.add_labels(n, [status_label(st)])
         snap = build_snapshot(self, items, cache, now)
         snap["cache"] = {str(n): v for n, v in cache.items()}
+        extra = self.learn(snap, learn, prev, prev_cache, cache, items, now)
         if publish:
-            self.publish(snap, render_board(snap, self.cfg))
+            self.publish(snap, render_board(snap, self.cfg), extra)
         return snap
 
-    def publish(self, snap: Dict[str, Any], board_md: str) -> None:
+    # --- fleet learnings ---------------------------------------------------------
+
+    def learn(self, snap, learn, prev, prev_cache, cache, items, now) -> Dict[str, str]:
+        """Count this sweep's transitions; build the fleet report; aggregate upstream."""
+        from . import __version__
+        since = prev.get("generated_at")
+        done = 0
+        if since:
+            try:
+                done = sum(1 for d in self.gh.list_issues(labels=[L["done"]], state="closed", since=since)
+                           if parse_ts(d.get("closed_at")) > parse_ts(since))
+            except GitHubError:
+                done = 0
+        metas = {n: (self.meta_of(i) or {}) for n, i in items.items() if not i["is_pr"]}
+        nodes = (len(snap["nodes"]), sum(len(x["nodes"]) or 1 for x in snap["nodes"]))
+        if since:  # the first sweep has nothing to compare with
+            LRN.observe(learn, prev_cache, cache, items, metas, now, done, nodes)
+        snap["learn"] = learn
+        files = {}
         try:
-            self.gh.publish_snapshot(self.cfg["board"]["branch"], {
-                "queue.json": json.dumps(snap, indent=1, sort_keys=True),
-                "BOARD.md": board_md}, f"workstead board {snap['generated_at']}")
+            rep = LRN.report(learn, self.cfg, __version__, bool(self._private))
+            files["learnings.json"] = json.dumps(rep, indent=1, sort_keys=True)
+            snap["learnings_topics"] = rep["topics"]
+        except ValueError as e:
+            log(str(e))
+        agg = self.aggregate_learnings(now)
+        if agg is not None:
+            files["fleet-learnings.json"] = json.dumps(agg, indent=1, sort_keys=True)
+            snap["fleet_learnings"] = {"fleets": agg["fleets"], "signals": agg.get("signals", [])}
+        return files
+
+    def ingest_learnings(self, n: int, comment: Dict[str, Any]) -> None:
+        """A downstream fleet's report: keep it if it matches the schema exactly."""
+        body = comment.get("body") or ""
+        cmd = parse_command(body)
+        ok = False
+        if cmd and cmd[0] == "learnings" and len(body) < 20000:
+            _, errors = LRN.validate(json_block(cmd[2]))
+            ok = not errors
+        cid = comment["id"]
+        if ok:
+            self.gh.react(cid, "+1")
+        else:
+            self.gh.delete_comment(cid)  # not a valid report: never keep free text here
+
+    def aggregate_learnings(self, now: float) -> Optional[Dict[str, Any]]:
+        """Upstream only: combine downstream reports and open tasks for shared problems."""
+        issues = self.gh.list_issues(labels=[L["learnings"]])
+        if not issues:
+            return None
+        n = issues[0]["number"]
+        reports, keep = [], {}
+        for c in self.gh.list_comments(n):
+            if self.is_bot(c["author"]):
+                continue
+            cmd = parse_command(c["body"])
+            rep, errors = LRN.validate(json_block(cmd[2])) if cmd and cmd[0] == "learnings" else ({}, ["not a report"])
+            if errors or now - parse_ts(rep["generated_at"]) > 90 * 86400:
+                self.gh.delete_comment(c["id"])
+                continue
+            prev = keep.get(rep["project"])
+            if prev and prev[1]["generated_at"] >= rep["generated_at"]:
+                self.gh.delete_comment(c["id"])  # superseded: one report per fleet
+                continue
+            if prev:
+                self.gh.delete_comment(prev[0])
+            keep[rep["project"]] = (c["id"], rep)
+            reports.append(rep)
+        agg = LRN.aggregate([r for _, r in keep.values()], now)
+        agg["signals"] = LRN.fleet_signals(agg)
+        opened = []
+        if agg["signals"]:
+            recent = self.gh.list_issues(labels=[L["task"]], state="all", since=now_iso(now - 30 * 86400))
+            refs = {(read_block(i["body"], "meta") or {}).get("plan_ref") for i in recent if self.is_bot(i["author"])}
+            for sig in agg["signals"]:
+                ref = f"learnings/{sig['topic']}"
+                if ref in refs:
+                    continue
+                meta = clean_meta({"partition": "research", "priority": min(9, 5 + sig["fleets"] // 5), "est_hours": 2,
+                                   "topics": [sig["topic"]], "origin": "manual", "plan_ref": ref}, self.cfg["partitions"])
+                title = f"Fleet learnings: {sig['title'].lower()}"
+                self.gh.create_issue(title, LRN.signal_task_body(sig, agg) + "\n" + write_block("meta", meta) + "\n",
+                                     [L["task"], partition_label("research"), L["ready"]])
+                opened.append(sig["topic"])
+        agg["opened"] = opened
+        body = render_learnings_issue(agg)
+        if issues[0]["body"] != body:
+            self.gh.edit_issue(n, body=body)
+        return agg
+
+    def publish(self, snap: Dict[str, Any], board_md: str, extra: Optional[Dict[str, str]] = None) -> None:
+        try:
+            files = {"queue.json": json.dumps(snap, indent=1, sort_keys=True), "BOARD.md": board_md}
+            files.update(extra or {})
+            self.gh.publish_snapshot(self.cfg["board"]["branch"], files, f"workstead board {snap['generated_at']}")
         except GitHubError as e:
             log(f"publishing the board branch failed: {e}")
         boards = self.gh.list_issues(labels=[L["board"]])
@@ -1325,6 +1431,24 @@ class Queue:
         for p, pc in self.cfg["partitions"].items():
             out.append(f"{self.gh.ensure_label(partition_label(p), 'ededed', pc.get('about', 'partition')[:100])} {partition_label(p)}")
         return out
+
+
+LEARNINGS_INTRO = """## Fleet learnings
+
+Workstead fleets that give back also send anonymous, aggregate statistics about how the queue works for them:
+lease expiry rates, estimate accuracy, why work is reworked, what gets held. Reports contain only numbers and
+fixed categories (see `tools/ws/workstead/learnings.py`); anything else is deleted. One report per fleet is kept.
+When a problem is common across fleets, the queue opens a task here so give-back time goes where it helps most.
+"""
+
+
+def render_learnings_issue(agg: Dict[str, Any]) -> str:
+    rows = "\n".join(f"| `{k}` | {v['median']} | {v['p75']} | {v['n']} |" for k, v in sorted(agg["metrics"].items()))
+    sigs = "\n".join(f"- **{s['topic']}**: {s['title']} (median `{s['metric']}` {s['median']} across {s['fleets']} fleets)"
+                      for s in agg.get("signals", [])) or "- none yet"
+    return (f"{LEARNINGS_INTRO}\n### {agg['fleets']} fleets reporting\n\n**Signals**\n\n{sigs}\n\n"
+            + ("| Metric | Median | p75 | Fleets |\n|---|---|---|---|\n" + rows + "\n" if rows else "")
+            + "\n<sub>Updated by the workstead sweep.</sub>")
 
 
 def fingerprint(text: str) -> str:

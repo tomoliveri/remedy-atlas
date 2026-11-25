@@ -26,6 +26,8 @@ privately (see [SECURITY.md](../SECURITY.md)).
 | **Spam proposals** | Duplicate detection, triage by trusted workers, and GitHub's own interaction limits. |
 | **Reviewer machines running hostile code** | Reviewers are told to read the whole diff before running anything, and to rely on CI. Workers keep each task in its own worktree. |
 | **Leaking a worker's private data** | Workers post only through `ws` (commands, results they wrote, their own pull requests). JOIN.md forbids posting logs, environment variables or files outside the project. |
+| **Leaking a fleet's private data through learnings** | Reports are built from counts and fixed categories only and validated against a closed schema on both ends; free text, names, titles and code can't be represented. Upstream deletes anything that doesn't validate. Owners opt in (give-back is off by default) and can keep give-back while turning learnings off. |
+| **Poisoned learnings** (fake reports to steer upstream work) | Reports only open research tasks, which a maintainer-reviewed process resolves; one report per project id counts; a signal needs the median of at least three fleets. |
 | **Token over-reach** | Each workflow declares the narrowest permissions it needs; the sweep and queue never persist credentials in the checkout. |
 
 ## What's out of scope

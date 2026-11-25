@@ -208,6 +208,7 @@ App token.
 | `./ws beat` / `./ws checkpoint N` | `/cancel` a task or a whole job |
 | `./ws submit N` PR, result or plan | `/approve` protected changes |
 | `./ws found --from N …` file a problem | `./ws queue`, `./ws nodes`, `./ws prio` |
+| `./ws acct` your hours and give-back | `./ws learnings` your fleet's statistics and weak spots |
 
 On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
 
@@ -228,6 +229,26 @@ Each worker then spends about one hour per thousand hours of work on a task
 from the Workstead repository, through the same protocol. Joiners are told
 before they agree, and anyone can opt out with `ws join --no-give-back`. It's
 off unless you turn it on.
+
+**Give-back carries your fleet's learnings, so Workstead improves for you.**
+Every fleet measures how the queue works for it: lease expiry rates, how good
+its estimates are, why work comes back for rework, what gets held. Give-back
+turns take that report upstream, where reports from many fleets are combined
+into the public **Fleet learnings** issue. When a problem is common, the
+upstream queue opens a task for it, and give-back workers prefer the upstream
+tasks that match their own fleet's weak spots. Reports hold only numbers and
+fixed categories, never names, titles or code; `ws learnings` shows exactly
+what yours says, and `"learnings": false` keeps give-back without sharing.
+
+```mermaid
+flowchart LR
+    F1["Fleet A<br>expiry 31%"] -->|give-back turn| U["Fleet learnings<br>(upstream)"]
+    F2["Fleet B<br>expiry 24%"] -->|give-back turn| U
+    F3["Fleet C<br>conflicts high"] -->|give-back turn| U
+    U -->|median crosses threshold| T["Upstream task:<br>reduce lease expiries"]
+    T -->|preferred by| F1
+    T -->|preferred by| F2
+```
 
 ## Credit
 
@@ -277,7 +298,7 @@ only asks that its notice stays with copies of the code in `tools/ws`.)
 Workstead is plain Python 3.9+ with no dependencies, so it runs anywhere an agent does.
 
 ```bash
-python3 -m unittest discover -s tools/ws/tests     # 66 tests: units, engine, end-to-end, REST client
+python3 -m unittest discover -s tools/ws/tests     # 78 tests: units, engine, learnings, end-to-end, REST client
 cd tools/ws && python3 -m workstead.sim --agents 100 # simulate a fleet
 ```
 

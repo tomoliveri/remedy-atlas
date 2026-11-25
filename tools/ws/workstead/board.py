@@ -133,6 +133,12 @@ def render_board(snap: Dict[str, Any], cfg: Dict[str, Any]) -> str:
     lines += [f"### Workers (sinfo, {len(snap['nodes'])} accounts)", ""]
     lines += table([f"| @{n['login']} | {len(n['nodes']) or 1} | {n['leases']} |" for n in snap["nodes"][:40]],
                    "| Account | Nodes | Leases |")
+    fl = snap.get("fleet_learnings")
+    if fl:
+        sig = ", ".join(s["topic"] for s in fl.get("signals", [])) or "none"
+        lines += [f"### Fleet learnings", "", f"{fl['fleets']} downstream fleets reporting. Shared problems: {sig}.", ""]
+    if snap.get("learnings_topics"):
+        lines += [f"This fleet's weak spots (from its own statistics): {', '.join(snap['learnings_topics'])}.", ""]
     lines.append(f"<sub>Generated {snap['generated_at']}. Machine-readable: `queue.json` on the "
                  f"`{cfg['board']['branch']}` branch.</sub>")
     return "\n".join(lines)

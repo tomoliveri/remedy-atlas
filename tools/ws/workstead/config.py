@@ -64,7 +64,9 @@ DEFAULTS: Dict[str, Any] = {
     "scheduler": {
         # Multifactor priority, as in Slurm's priority/multifactor plugin.
         "weights": {"priority": 1000, "age": 500, "critical_path": 100,
-                    "fairshare": 50, "review": 6000, "rework": 100000},
+                    "fairshare": 50, "review": 6000, "rework": 100000,
+                    # give-back: upstream tasks on this fleet's own weak spots
+                    "affinity": 3000},
         "age_cap_hours": 72,
         "critical_path_cap": 20,
         # Workers pick at random among the best top_k to avoid thundering herds.
@@ -99,8 +101,11 @@ DEFAULTS: Dict[str, Any] = {
     # protocol. Off unless the project owner turns it on; every joiner is told
     # in the consent message and can opt out with `ws join --no-give-back`.
     # upstream "" = the template this repository was created from.
+    # learnings: give-back turns also carry this fleet's anonymous aggregate
+    # queue statistics upstream (see workstead/learnings.py), so upstream work
+    # targets the problems fleets actually have. Only when enabled is true.
     "give_back": {"enabled": False, "share": 0.001, "upstream": "",
-                  "min_owed_hours": 0.5},
+                  "min_owed_hours": 0.5, "learnings": True},
     "board": {"title": "Workstead board", "branch": "ws-board"},
     "limits": {"result_chars": 60000, "plan_chars": 120000, "body_chars": 20000},
 }
@@ -160,6 +165,8 @@ def validate(cfg: Dict[str, Any]) -> None:
     if not 0 < float(cfg["dedup"]["similarity"]) <= 1:
         raise ConfigError("dedup.similarity must be in (0, 1]")
     gb = cfg["give_back"]
+    if not isinstance(gb["learnings"], bool):
+        raise ConfigError("give_back.learnings must be true or false")
     if not isinstance(gb["enabled"], bool) or not 0 <= float(gb["share"]) <= 0.05:
         raise ConfigError("give_back.share must be between 0 and 0.05")
     if gb["upstream"] and not re.fullmatch(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+", gb["upstream"]):

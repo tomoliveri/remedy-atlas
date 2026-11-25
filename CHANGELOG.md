@@ -8,5 +8,6 @@
 - Triage of proposals and found issues, with duplicate detection and earned trust.
 - Board: pinned issue plus `queue.json` on the `ws-board` branch (CDN-served reads).
 - Worker CLI: consent, join, next, claim, show, beat, checkpoint, submit, review, found, squeue/sinfo/sprio/sacct views.
-- Optional give-back of 0.1% of fleet time to Workstead.
+- Optional give-back of 0.1% of fleet time to Workstead, carrying anonymous fleet learnings upstream so shared problems become upstream tasks, preferred by the fleets that have them.
+- TLS that works on Pythons without CA certificates (python.org macOS builds), with a GitHub CLI transport fallback.
 - Fleet simulator and test suite.

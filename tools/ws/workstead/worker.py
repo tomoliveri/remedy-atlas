@@ -281,7 +281,7 @@ def avoid(repo: str, n: int, seconds: int = 3600) -> None:
 
 def pick(ctx: Ctx, max_hours: Optional[float] = None, rng: Optional[random.Random] = None,
          snap: Optional[Dict[str, Any]] = None, avoid: Optional[set] = None,
-         live: bool = False) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+         live: bool = False, topics: Optional[List[str]] = None) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
     snap = None if live else (snap if snap is not None else ctx.snapshot())
     if snap is not None:
         tasks, reviews = snap["tasks"], snap["reviews"]
@@ -289,6 +289,9 @@ def pick(ctx: Ctx, max_hours: Optional[float] = None, rng: Optional[random.Rando
         tasks, reviews = ctx.live_items()
     skip = avoid if avoid is not None else avoided(ctx.repo)
     items = [it for it in candidates(ctx, tasks, reviews) if it["kind"] == "resume" or it["number"] not in skip]
+    for it in items:  # give-back: prefer upstream tasks on our own fleet's weak spots
+        if topics and set((it.get("meta") or {}).get("topics", [])) & set(topics):
+            it["affinity"] = True
     ranked = sched.rank(items, tasks, worker_profile(ctx, max_hours), ctx.cfg, time.time())
     choice = None
     for _ in range(4):
@@ -327,6 +330,47 @@ def give_back_target(ctx: Ctx) -> Optional[str]:
     led = ledger(ctx.repo)
     owed_h = (float(gb["share"]) * led["work"] - led["give"]) / 3600
     return up if owed_h >= float(gb["min_owed_hours"]) else None
+
+
+def own_report(ctx: Ctx) -> Optional[Dict[str, Any]]:
+    """This fleet's learnings report, as the sweep published it on the board branch."""
+    from . import learnings as LRN
+    raw = ctx.gh.read_snapshot(ctx.cfg["board"]["branch"], "learnings.json", public=not ctx.info["private"])
+    try:
+        rep, errors = LRN.validate(json.loads(raw)) if raw else ({}, ["missing"])
+    except ValueError:
+        return None
+    return None if errors else rep
+
+
+def send_learnings(ctx: Ctx, uctx: Ctx, rep: Optional[Dict[str, Any]]) -> bool:
+    """Carry this fleet's report upstream, at most weekly. True if sent."""
+    if not rep or not ctx.cfg["give_back"]["learnings"] or profile().get("give_back") is False:
+        return False
+    marker = HOME / f"learnings-sent-{slug(ctx.repo)}.json"
+    if time.time() - _read_json(marker, {}).get("at", 0) < 6 * 86400:
+        return False
+    issues = uctx.gh.list_issues(labels=[L["learnings"]])
+    if not issues:
+        return False
+    uctx.gh.create_comment(issues[0]["number"], "/learnings\n```json\n" + json.dumps(rep, indent=1, sort_keys=True) + "\n```")
+    _write_json(marker, {"at": time.time(), "issue": issues[0]["number"], "repo": uctx.repo})
+    print(f"ws: sent this fleet's learnings to {uctx.repo}#{issues[0]['number']}", file=sys.stderr)
+    return True
+
+
+def cmd_learnings(ctx: Ctx, args) -> int:
+    """Show exactly what this fleet would share upstream, and its own weak spots."""
+    from . import learnings as LRN
+    rep = own_report(ctx)
+    gb = ctx.cfg["give_back"]
+    sharing = gb["enabled"] and gb["learnings"] and profile().get("give_back") is not False
+    if not rep:
+        print(json.dumps({"status": "none", "message": "No report yet: the sweep builds one after it has seen some work."}))
+        return 0
+    print(json.dumps({"shared_upstream": sharing, "weak_spots": [{"topic": t, "why": w} for t, w in LRN.own_signals(rep)],
+                      "report": rep}, indent=1))
+    return 0
 
 
 def upstream_ctx(ctx: Ctx, repo: str) -> Ctx:
@@ -369,7 +413,11 @@ def cmd_next(ctx: Ctx, args) -> int:
     if up:
         try:
             uctx = upstream_ctx(ctx, up)
-            choice, info = pick(uctx, args.max_hours)
+            rep = own_report(ctx)
+            send_learnings(ctx, uctx, rep)
+            choice, info = pick(uctx, args.max_hours, topics=(rep or {}).get("topics"))
+            if not choice:
+                choice, info = pick(uctx, args.max_hours, live=True, topics=(rep or {}).get("topics"))
             if choice and choice["kind"] in ("task", "resume"):
                 return emit_choice(uctx, choice, info, give_back=ctx.repo)
         except (GitHubError, WsError, C.ConfigError) as e:
@@ -463,7 +511,16 @@ def cmd_claim(ctx: Ctx, args) -> int:
             c.gh.delete_comment(comment["id"])  # keep contested threads tidy
         except GitHubError:
             pass  # tidying only; a leftover claim comment is harmless
-        print(json.dumps({"status": "lost", "ref": f"{repo}#{n}", "message": "Someone else got it first. Run `ws next`."}))
+        # A reply from the queue addressed to us means it declined (and why);
+        # silence means we simply lost a race.
+        why = ""
+        for com in c.gh.list_comments(n):
+            if com["id"] > comment["id"] and com["author"] in c.cfg["bots"] and f"@{c.me}" in com["body"]:
+                why = re.sub(r"<!--.*?-->", "", com["body"], flags=re.S).strip()
+        if why:
+            print(json.dumps({"status": "declined", "ref": f"{repo}#{n}", "message": why[:500]}))
+        else:
+            print(json.dumps({"status": "lost", "ref": f"{repo}#{n}", "message": "Someone else got it first. Run `ws next`."}))
         return EXIT_LOST
     rec = {"repo": repo, "number": n, "comment": comment["id"], "node": node, "since": now_iso(),
            "title": issue["title"], "review": review, "on_behalf": ctx.repo if repo != ctx.repo else None}
@@ -987,10 +1044,12 @@ def consent_text(ctx: Ctx) -> str:
         "anything outside the project."),
     ]
     if gb["enabled"]:
+        learn = (" Those turns also share this fleet's anonymous queue statistics (counts and rates only: no names, "
+                 "titles or code) so that Workstead improves where fleets struggle." if gb["learnings"] else "")
         points.append(f"**Give back {float(gb['share']) * 100:g}%.** The project owner chose to give "
                       f"{float(gb['share']) * 100:g}% of fleet time to improving Workstead, the tool that coordinates this "
                       f"fleet ({up}). About once per {round(1 / float(gb['share'])):,} hours of work, I'll do one task there "
-                      "instead. Say \"no give-back\" to skip this.")
+                      f"instead.{learn} Say \"no give-back\" to skip this.")
     lines = [(f"I'd like to join this computer to the **{name}** fleet and keep contributing until the project is "
              "finished or you tell me to stop. One yes from you covers all of this:"), ""]
     lines += [f"{i}. {p}" for i, p in enumerate(points, 1)]

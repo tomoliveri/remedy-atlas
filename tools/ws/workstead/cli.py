@@ -27,6 +27,7 @@ Agents (see JOIN.md):
   admit REF / reject REF REASON / duplicate REF N     triage verdicts
   plan-check FILE        validate a plan before submitting it
   status / acct          your leases / your hours and give-back
+  learnings              this fleet's queue statistics and weak spots (what give-back shares)
   queue / nodes / prio   squeue / sinfo / sprio views of the fleet
   stop [--undo]          make `ws next` stop handing out work
 
@@ -98,6 +99,7 @@ def main(argv=None) -> int:
     pc.add_argument("--depth", type=int, default=0)
     sub.add_parser("status")
     sub.add_parser("acct")
+    sub.add_parser("learnings")
     sub.add_parser("queue")
     sub.add_parser("nodes")
     pr = sub.add_parser("prio")
@@ -139,7 +141,7 @@ def main(argv=None) -> int:
         "consent": W.cmd_consent, "join": W.cmd_join, "next": W.cmd_next, "claim": W.cmd_claim,
         "show": W.cmd_show, "beat": W.cmd_beat, "checkpoint": W.cmd_checkpoint, "submit": W.cmd_submit,
         "found": W.cmd_found, "status": W.cmd_status, "acct": W.cmd_acct, "queue": W.cmd_queue,
-        "nodes": W.cmd_nodes, "prio": W.cmd_prio, "stop": W.cmd_stop,
+        "nodes": W.cmd_nodes, "prio": W.cmd_prio, "stop": W.cmd_stop, "learnings": W.cmd_learnings,
     }
     if args.cmd in table:
         return table[args.cmd](ctx, args)

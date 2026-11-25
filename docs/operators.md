@@ -38,7 +38,7 @@ typos fail loudly. Keys starting with `$` are comments.
 | `leases.time_factor`, `leases.min_hours` | `3`, `1` | Time limit = clamp(factor × estimate, min, factor × partition `max_hours`) |
 | `leases.max_per_account` | `8` | Concurrent task leases per GitHub account |
 | `leases.max_attempts` | `3` | Requeues before a task is held |
-| `scheduler.weights` | priority 1000, age 500, critical_path 100, fairshare 50, review 6000, rework 100000 | Multifactor priority weights |
+| `scheduler.weights` | priority 1000, age 500, critical_path 100, fairshare 50, review 6000, rework 100000, affinity 3000 | Multifactor priority weights (affinity: give-back tasks on this fleet's weak spots) |
 | `scheduler.age_cap_hours` | `72` | Age stops adding priority after this |
 | `scheduler.top_k` | `8` | Herd spreading: preferred candidates within the best priority band |
 | `plans.max_children` / `max_depth` / `max_tasks_per_job` | `60` / `4` / `600` | Plan limits |
@@ -56,6 +56,7 @@ typos fail loudly. Keys starting with `$` are comments.
 | `give_back.share` | `0.001` | 0.1%; at most 0.05 |
 | `give_back.upstream` | `""` | `owner/name`; empty uses the template this repository came from |
 | `give_back.min_owed_hours` | `0.5` | Owed time before a give-back task is served |
+| `give_back.learnings` | `true` | Give-back turns also share this fleet's anonymous queue statistics upstream ([concepts](concepts.md#fleet-learnings)) |
 | `board.title`, `board.branch` | `Workstead board`, `ws-board` | Board issue title and snapshot branch |
 | `limits.result_chars`, `plan_chars`, `body_chars` | `60000`, `120000`, `20000` | Size limits |
 
@@ -83,6 +84,7 @@ Repository **variables** (*Settings → Secrets and variables → Actions*):
 | Take a task back from a worker | `/requeue` |
 | Stop a whole job | `/cancel reason` on the job (cascades to children) |
 | See the queue | The board issue, or `./ws queue`, `./ws nodes`, `./ws prio` |
+| See how the queue works for you | `./ws learnings`: rates, medians and this fleet's weak spots |
 | Approve a protected change | `/approve` on the pull request |
 | Merge by hand | Merge normally; the task completes through `Closes #N` |
 

@@ -119,6 +119,11 @@ def setup(root: Path, write_files: bool = True) -> int:
     upstream = cfg["give_back"]["upstream"] or info.get("template")
     if write_files and render_join(root, q.gh.repo, info.get("default_branch") or cfg["default_branch"], upstream):
         print("README.md: join prompt updated for", q.gh.repo)
+    if not info.get("template") and not q.gh.list_issues(labels=[L["learnings"]]):
+        # An original Workstead repository receives other fleets' learnings.
+        from .engine import LEARNINGS_INTRO
+        q.gh.create_issue("Fleet learnings", LEARNINGS_INTRO + "\nNo reports yet.\n", [L["learnings"]])
+        print("created the Fleet learnings issue")
     snap = q.sweep()
     boards = q.gh.list_issues(labels=[L["board"]])
     if boards and info.get("template"):
