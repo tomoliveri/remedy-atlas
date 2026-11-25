@@ -13,7 +13,7 @@
   },
   "setup": {
     "tools": [],
-    "command": ""
+    "command": "python3 research/env.py setup core --quiet"
   },
   "trust": {
     "mode": "auto",
@@ -77,5 +77,33 @@
       "about": "Independently rerun reviewed scripts and verify computed results."
     }
   },
-  "default_partition": "compute"
+  "default_partition": "compute",
+  "toolbox": {
+    "allow_imports": [
+      "numpy",
+      "scipy",
+      "pandas",
+      "sklearn",
+      "statsmodels",
+      "threadpoolctl",
+      "numba",
+      "rdkit",
+      "roadrunner",
+      "pymc",
+      "arviz",
+      "torch",
+      "torchdiffeq"
+    ],
+    "python": ".ws/research-venv/bin/python",
+    "ignore": [
+      "tools/ws/",
+      ".ws/",
+      ".github/",
+      "tests/",
+      "test_*.py",
+      "site/",
+      "node_modules/",
+      ".venv/"
+    ]
+  }
 }

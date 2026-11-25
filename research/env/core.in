@@ -1,0 +1,7 @@
+# Numerical core: arrays, ODE solvers and optimisers, tables, statistics, held-out ML baselines.
+numpy
+scipy
+pandas
+scikit-learn
+statsmodels
+threadpoolctl

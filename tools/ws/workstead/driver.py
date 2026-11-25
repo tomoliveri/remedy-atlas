@@ -441,6 +441,9 @@ def cmd_show(ctx, args, home: Path) -> int:
     extra = ("### Verification contract\n\n" + "\n".join(f"- {r}" for r in rules) + "\n\n" if rules else "")
     extra += ("### Already tried by the fleet (don't repeat a dead end; build on partials)\n\n" + known + "\n\n"
               if known else "")
+    from .toolbox import show_context
+    tools = show_context(ctx.root, ctx.cfg)
+    extra += "\n".join(tools) + ("\n" if tools else "")
     extra += ("When an approach fails, record it: `ws finding " + args.ref[:12] + " --approach \"...\" "
               "--outcome dead-end --step \"the first unjustified step\"`.\n\n")
     print(f"# Task {args.ref[:12]}: {spec.get('title')}\n\n{spec.get('body', '')}\n\n### Acceptance criteria\n\n{acc}\n\n"
