@@ -151,7 +151,7 @@ def main(argv=None) -> int:
     v.add_argument("ref")
     rl = sub.add_parser("relay")
     rl.add_argument("what", choices=["serve", "publish", "status", "endorse", "ban"])
-    rl.add_argument("keys", nargs="*", help="endorse/ban: hex or npub keys")
+    rl.add_argument("npubs", nargs="*", metavar="KEY", help="endorse/ban: hex or npub public keys")
     rl.add_argument("--host", default="::")
     rl.add_argument("--port", type=int, default=8080)
     rl.add_argument("--state", default="")

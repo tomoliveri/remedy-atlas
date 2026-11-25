@@ -561,12 +561,12 @@ def cmd_relay(ctx, args, home: Path) -> int:
         _out({"status": "published", "task": ev["id"], "base": base})
         return 0
     if what == "endorse":
-        ev = N.endorse_event(sk, url, [schnorr.parse_pubkey(k) for k in args.keys], now, ttl=ttl)
+        ev = N.endorse_event(sk, url, [schnorr.parse_pubkey(k) for k in args.npubs], now, ttl=ttl)
         relays.publish(ev)
-        _out({"status": "endorsed", "event": ev["id"], "keys": len(args.keys)})
+        _out({"status": "endorsed", "event": ev["id"], "keys": len(args.npubs)})
         return 0
     if what == "ban":
-        ev = N.ban_event(sk, url, [schnorr.parse_pubkey(k) for k in args.keys], args.reason, now)
+        ev = N.ban_event(sk, url, [schnorr.parse_pubkey(k) for k in args.npubs], args.reason, now)
         relays.publish(ev)
         _out({"status": "banned", "event": ev["id"]})
         return 0
