@@ -39,8 +39,8 @@ def scaffold(track, partition, ref, task=None):
 
 def starter(track):
     specifications = [
-        ("model", "compute", "Run the Python model", track["next"], []),
-        ("sensitivity", "compute", "Run the Python sensitivity analysis", track["stress_test"], []),
+        ("model", "compute", "Run the model", track["next"], []),
+        ("sensitivity", "compute", "Run the sensitivity analysis", track["stress_test"], []),
         ("reproduce", "replicate", "Reproduce the computed results",
          "Rerun both merged studies locally and compare results against the stated baseline.",
          ["model", "sensitivity"]),
@@ -52,13 +52,13 @@ def starter(track):
             f"Read the current task scaffold: "
             f"`python3 research/atlas.py scaffold {track['id']} {partition} --latest --task NUMBER`. "
             "Replace NUMBER with this issue number. Work in the leased worktree. "
-            "Submit Python code, a result JSON and its run receipt."
+            "Submit study code, a result JSON and its run receipt."
         )
         tasks.append({
             "key": key, "title": f"{track['name']}: {action}", "partition": partition,
             "priority": track["priority"], "body": body, "deps": dependencies,
             "acceptance": [
-                "Run Python locally and report the exact command, input source, result and run receipt.",
+                "Run the study locally and report the exact command, input source, result and run receipt.",
                 "Include a baseline or control and state what the results cannot establish.",
             ],
         })
@@ -69,7 +69,7 @@ def job_body(track):
     return (
         f"{track['question']}\n\n{track['next']}\n\n"
         f"Starter plan: `python3 research/atlas.py plan {track['id']}`. "
-        "This job splits local Python modelling and sensitivity analysis into independent tasks, "
+        "This job splits local modelling and sensitivity analysis into independent tasks, "
         "followed by reproduction. Use the public numerical data and scope in docs/PROJECT.md.\n\n"
         f"<!-- atlas:track {track['id']} -->"
     )

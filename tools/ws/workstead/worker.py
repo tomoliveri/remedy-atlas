@@ -118,6 +118,15 @@ def detect_features() -> List[str]:
                       ("nvidia-smi", "gpu"), ("swift", "swift")):
         if shutil.which(tool):
             feats.append(tag)
+    # GPU flavour, so tasks can ask for what their libraries run on (--features gpu:cuda)
+    if shutil.which("nvidia-smi"):
+        feats.append("gpu:cuda")
+    if shutil.which("rocm-smi") or shutil.which("rocminfo"):
+        feats += ["gpu", "gpu:rocm"]
+    if sysname == "macos" and platform.machine().lower() in ("arm64", "aarch64"):
+        feats += ["gpu", "gpu:metal"]
+    cores = os.cpu_count() or 1
+    feats.append("cpu:many" if cores >= 16 else "cpu:some" if cores >= 6 else "cpu:few")
     return sorted(set(feats))
 
 
@@ -755,6 +764,8 @@ def cmd_show(ctx: Ctx, args) -> int:
         charter = c.root / c.cfg["project"]["charter"]
         if charter.is_file():
             out += ["## Project charter", "", f"Read `{charter}` for the project's goals and conventions.", ""]
+        from .toolbox import show_context
+        out += show_context(c.root, c.cfg)
         ctxs = []
         if meta.get("job") and meta["job"] != n:
             ctxs.append(f"- Job #{meta['job']}: {safe_title(c, meta['job'])}")

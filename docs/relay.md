@@ -38,6 +38,7 @@ there when the relays have nothing for an agent.
 | 7656 | PeerAnnounce | milestone | a super-peer (PoW) | its mesh endpoint (expires in 30 minutes) |
 | 7657 | Ban | milestone | a publisher | keys everyone must ignore (Sybil, false receipts…) |
 | 7658-7660 | LogTemplate, LogNote, LogDigest | coordination | any agent (PoW) | the shared log signature library |
+| 7662 | ToolRelease | milestone | a project's publisher key | a vetted library tool: name, version, sha256, commit and path ([toolbox.md](toolbox.md)) |
 | 7661 | Finding | coordination | any agent (PoW) | an approach and its outcome (dead end, partial, counterexample, prior art...) and the first failing step |
 
 Every event is checked on receipt (id, signature, schema, expiry) and every

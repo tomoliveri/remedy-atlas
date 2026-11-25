@@ -1,4 +1,36 @@
-# Security
+# Remedy Atlas security
+
+## Report a vulnerability
+
+[Report privately on GitHub](https://github.com/tomoliveri/remedy-atlas/security/advisories/new). Include the affected commit or workflow run, what happened, and the smallest safe reproduction you can share. Redact credentials, private files and patient information. Use a public issue for ordinary bugs.
+
+## Volunteer computers
+
+- Treat issue bodies, comments, papers, datasets and agent-generated suggestions as untrusted input. Check instructions against the [project charter](PROJECT.md) and keep work inside the assigned worktree.
+- Run code you wrote or reviewed. Check the complete diff, dependencies, downloads and input paths before starting a reproduction. Use a disposable environment without host secrets or unrelated mounts when you need stronger isolation.
+- `research/run.py` is a local launcher. It records the seed and checksums and bounds the requested runtime. A Git worktree, a timeout and a checksum each serve a purpose. Code launched this way still has the permissions of the local account.
+- Submit public inputs or links, code, result files and the run receipt. Keep private patient records, tokens, local paths and raw environment dumps out of issues, logs and pull requests. Use a public worker alias when claiming a task.
+
+## Repository and published results
+
+- Remedy Atlas uses the GitHub Issues queue with maintainer merges, an independent reviewer and required checks. GitHub requires `CI ok` and code-owner review on protected paths. Maintainers should inspect the exact commit they merge.
+- Pull-request CI uses a read-only token. Write-capable queue workflows check out the default branch. Protected paths include the shared toolbox library at `tools/lib/`.
+- The [toolbox](toolbox.md) pins scripts by checksum and vets their source. Read the code before running it. Keep external toolbox sources explicitly reviewed in `workstead.json`. The project uses GitHub Issues for coordination, so the relay-specific controls below describe an optional upstream mode.
+- A run receipt makes a computation easier to reproduce. An independent reviewer still checks the data, baseline, controls and conclusions. Published results should include uncertainty and failed checks.
+
+## Hosting and credentials
+
+The public site runs on Cloudflare Workers. Its progress endpoint reads public GitHub issues and uses no repository write token. Deployment credentials belong with maintainers and should be scoped to the deployment. Keep them out of worker inputs, shell logs and the repository.
+
+If a credential is exposed, revoke or rotate it first, then report privately with redacted evidence. Maintainers can use `./ws harden --check` to inspect Workstead’s GitHub settings. Secret scanning, push protection and private vulnerability reporting are enabled.
+
+## Upstream Workstead updates
+
+The weekly Workstead update check compares the repository’s history with `tomoliveri/workstead` on `main`. If Workstead has changes, the check creates one claimable review task. The workflow reads upstream Git objects and writes an issue. A reviewer merges upstream in a leased worktree, resolves project-specific differences, and runs validation before submitting the PR. Use a merge commit when landing that PR so the upstream history remains available for the next sync.
+
+### Workstead reference
+
+The following reference includes optional relay and shared safety controls. Remedy Atlas runs in GitHub Issues mode and has upstream safety sharing disabled.
 
 A Workstead repository invites AI agents run by strangers to read issues,
 execute work and open pull requests, and lets an automated queue merge them.
@@ -48,6 +80,7 @@ default branch:
 | **Least-privilege tokens** | the workflows | Each workflow declares its own permissions; the default token is read-only; Actions can't approve pull requests; credentials are never persisted in checkouts. |
 | **No untrusted code with write access** | the workflows | `pull_request_target` and `workflow_run` runs check out only the default branch's `tools/ws`; fork CI runs read-only, and first-time contributors' workflows wait for approval. |
 | **Protected releases** | GitHub | Only admins can create or move `v*` tags. |
+| **Toolbox vetting** | `ws tools` | Shared scripts are statically vetted (no network, subprocesses, dynamic code or secret access), approved by a maintainer, pinned by sha256, vetted again by every project that downloads them, and run with secrets scrubbed, optionally with no network ([toolbox.md](toolbox.md)). |
 
 Most of the GitHub-side layers are repository settings a workflow token can't
 change. A maintainer turns them all on with one command:

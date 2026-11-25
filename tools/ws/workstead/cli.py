@@ -51,6 +51,25 @@ REF is an issue number or owner/name#N.
 """
 
 
+def _tool_flags(args, rest):
+    """`ws tools` takes its flags anywhere; for `run`, everything after NAME (and an optional --) is the tool's."""
+    if args.what == "run":
+        if len(rest) >= 2 and rest[1] == "--":
+            rest = [rest[0]] + rest[2:]
+        return rest
+    p = argparse.ArgumentParser(prog="ws tools", add_help=False)
+    for flag in ("--name", "--version", "--summary", "--ref"):
+        p.add_argument(flag)
+    p.add_argument("--from", dest="source")
+    p.add_argument("--offline", action="store_true")
+    p.add_argument("--json", action="store_true")
+    ns, pos = p.parse_known_args(rest)
+    for k, v in vars(ns).items():
+        if v not in (None, False):
+            setattr(args, k, v)
+    return [x for x in pos if x != "--"]
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="ws", description=HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("-R", "--repo", help="owner/name (default: workstead.json or the git remote)")
@@ -132,7 +151,7 @@ def main(argv=None) -> int:
     v.add_argument("ref")
     rl = sub.add_parser("relay")
     rl.add_argument("what", choices=["serve", "publish", "status", "endorse", "ban"])
-    rl.add_argument("keys", nargs="*", help="endorse/ban: hex or npub keys")
+    rl.add_argument("npubs", nargs="*", metavar="KEY", help="endorse/ban: hex or npub public keys")
     rl.add_argument("--host", default="::")
     rl.add_argument("--port", type=int, default=8080)
     rl.add_argument("--state", default="")
@@ -164,6 +183,16 @@ def main(argv=None) -> int:
     fs = sub.add_parser("findings")
     fs.add_argument("ref", nargs="?", default="")
     fs.add_argument("--json", action="store_true")
+    tl = sub.add_parser("tools", help="vetted reusable scripts: scan, vet, promote, list, find, get, run")
+    tl.add_argument("what", choices=["scan", "vet", "promote", "list", "find", "get", "run", "announce"])
+    tl.add_argument("paths", nargs=argparse.REMAINDER, help="files, a tool name, or NAME -- ARGS for run")
+    tl.add_argument("--name")
+    tl.add_argument("--version")
+    tl.add_argument("--summary")
+    tl.add_argument("--from", dest="source", help="owner/name of the sharing project")
+    tl.add_argument("--ref", help="commit to fetch (default: its default branch, pinned on download)")
+    tl.add_argument("--offline", action="store_true", help="find: GitHub sources only, no relays")
+    tl.add_argument("--json", action="store_true")
     sub.add_parser("setup")
     hd = sub.add_parser("harden")
     hd.add_argument("--check", action="store_true", help="report without changing anything")
@@ -196,6 +225,10 @@ def main(argv=None) -> int:
 
     ctx = W.Ctx(root, repo=args.repo)
     from . import driver as DRV
+    if args.cmd == "tools":
+        from .toolbox import cmd_tools
+        args.paths = _tool_flags(args, list(args.paths))
+        return cmd_tools(ctx, args, W.HOME)
     if args.cmd in ("finding", "findings"):
         return {"finding": DRV.cmd_finding, "findings": DRV.cmd_findings}[args.cmd](ctx, args, W.HOME)
     if args.cmd in ("keygen", "relay", "logs"):
