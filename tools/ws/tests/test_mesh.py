@@ -4,7 +4,7 @@ import random
 import time
 import unittest
 
-from harness import L, Repo
+from harness import Repo
 from workstead import config as C, dag as D, directory as DIR, logs as LG, mesh as M, nostr as N, schnorr as S
 from workstead.relay import LocalRelay, RelayConn, RelayError, WebSocket
 from workstead.relayd import Relayd
@@ -39,8 +39,8 @@ class Dag(unittest.TestCase):
         c = cfg(trusted_agents=[S.pubkey(key(i)).hex() for i in range(2, 9)])
         t1 = N.task_event(PUB, REPO, "a" * 40, {"title": "T1"}, 5, 2, 1000)
         t2 = N.task_event(PUB, REPO, "a" * 40, {"title": "T2"}, 5, 2, 1001)
-        r = lambda sk, t, out, role, at, **kw: N.receipt_event(sk, t["id"], REPO, "a" * 40, out, "c" * 64, "d" * 64,
-                                                             "pass", role, at, pow_bits=4, **kw)
+        def r(sk, t, out, role, at, **kw):
+            return N.receipt_event(sk, t["id"], REPO, "a" * 40, out, "c" * 64, "d" * 64, "pass", role, at, pow_bits=4, **kw)
         ref = "https://x.example/r.git#b"
         # First producer: nothing existed to verify, so no fee is owed (bootstrap).
         p1 = r(key(2), t1, "1" * 40, "produce", 1100, ref=ref)
@@ -182,9 +182,9 @@ class Gate(unittest.TestCase):
         out = "f" * 40
         pr = r.as_("worker").open_pr("T", "Done.\n\n<!-- ws:relay " + json.dumps({"task": t["id"]}) + " -->",
                                     "ws/relay-x", ["src/app.py"], sha=out)
-        rc = lambda sk, role, at: N.receipt_event(sk, t["id"], "https://github.com/acme/project", "a" * 40, out,
-                                                  "c" * 64, "d" * 64, "pass", role, at,
-                                                  ref="https://x.example/r.git#b" if role == "produce" else None)
+        def rc(sk, role, at):
+            return N.receipt_event(sk, t["id"], "https://github.com/acme/project", "a" * 40, out, "c" * 64, "d" * 64,
+                                   "pass", role, at, ref="https://x.example/r.git#b" if role == "produce" else None)
         events = [t, rc(key(2), "produce", now - 400)]
         q = r.fresh_queue()
         self.assertEqual(settle_pr(q, None, pr, events)["decision"], "waiting")

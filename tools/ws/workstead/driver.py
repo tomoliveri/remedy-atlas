@@ -478,8 +478,8 @@ def cmd_logs(ctx, args, home: Path) -> int:
         if ctx.cfg["driver"] == "nostr" and args.share:
             try:
                 relays = relays_for(ctx.cfg, home, probe=False)
-                lib.ingest([e for e in relays.coordination.query([{"kinds": [N.K_LOGT, N.K_LOGN],
-                                                                    "#r": [repo_url(ctx.repo)]}])])
+                lib.ingest(list(relays.coordination.query([{"kinds": [N.K_LOGT, N.K_LOGN],
+                                                             "#r": [repo_url(ctx.repo)]}])))
                 sk, _ = load_or_create_key(home)
                 d = LG.digest(text)
                 for ev in LG.template_events(sk, repo_url(ctx.repo), d, lib, int(time.time()),

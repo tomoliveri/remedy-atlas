@@ -96,11 +96,13 @@ class FakeGit(GitOps):
 class ZeroGitHubCalls(unittest.TestCase):
     def test_claim_and_verify_touch_no_github_api(self):
         t0 = [1_800_000_000]
-        clock = lambda: t0[0]
+        def clock():
+            return t0[0]
         keys = [bytes([20 + i]) * 32 for i in range(4)]
         c = cfg(trusted_agents=[S.pubkey(k).hex() for k in keys], confirm_delay_seconds=0)
         relays = [MemRelay(f"r{i}", clock) for i in range(3)]
-        net = lambda: Relays(mem_pool(relays, clock), mem_pool(relays[:2], clock))
+        def net():
+            return Relays(mem_pool(relays, clock), mem_pool(relays[:2], clock))
         gh = FakeGitHub(World(), "watcher")  # any GitHub call would count here
         pub = net()
         for i in range(3):

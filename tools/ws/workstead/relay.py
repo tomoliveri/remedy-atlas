@@ -76,7 +76,7 @@ class WebSocket:
 
     @classmethod
     def connect(cls, url: str, timeout: float = 10.0, tls: Optional[ssl.SSLContext] = None,
-                headers: Optional[Dict[str, str]] = None) -> "WebSocket":
+                headers: Optional[Dict[str, str]] = None) -> WebSocket:
         u = urllib.parse.urlparse(url)
         if u.scheme not in ("ws", "wss"):
             raise RelayError(f"not a websocket URL: {url}")
@@ -96,7 +96,7 @@ class WebSocket:
         ws = cls(raw, client=True)
         head = ws._read_until(b"\r\n\r\n", timeout)
         lines = head.decode("latin-1").split("\r\n")
-        if not lines[0].split(" ")[1:2] == ["101"]:
+        if lines[0].split(" ")[1:2] != ["101"]:
             raw.close()
             raise RelayError(f"handshake refused: {lines[0]}")
         want = base64.b64encode(hashlib.sha1((key + WS_GUID).encode()).digest()).decode()
@@ -107,7 +107,7 @@ class WebSocket:
         return ws
 
     @classmethod
-    def accept(cls, sock: socket.socket, http=None, check=None) -> Optional["WebSocket"]:
+    def accept(cls, sock: socket.socket, http=None, check=None) -> Optional[WebSocket]:
         """Server side. http(sock, path, headers) answers plain requests;
         check(headers) may refuse a handshake by returning an HTTP status."""
         ws = cls(sock, client=False)
@@ -463,7 +463,7 @@ class Relays:
         self.coordination = coordination
 
     @classmethod
-    def from_config(cls, cfg: Dict[str, Any], clock: Callable[[], float] = time.time) -> "Relays":
+    def from_config(cls, cfg: Dict[str, Any], clock: Callable[[], float] = time.time) -> Relays:
         rc = cfg["relay"]
         t = float(rc["timeout_seconds"])
         return cls(RelayPool(rc["milestone_urls"], t, rc["min_relays_ok"], clock=clock),
@@ -474,7 +474,7 @@ class Relays:
         """No mesh: claims fall back to milestone relays (one per task, no renewals)."""
         return not self.coordination.urls
 
-    def set_coordination(self, pool: "RelayPool") -> None:
+    def set_coordination(self, pool: RelayPool) -> None:
         old, self.coordination = self.coordination, pool
         if old is not pool:
             old.close()

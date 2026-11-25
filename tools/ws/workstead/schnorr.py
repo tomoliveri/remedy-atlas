@@ -174,9 +174,7 @@ def verify(msg: bytes, pub: bytes, sig: bytes) -> bool:
     # R = s*G - e*P
     rj = _add(_mul_g(s), _mul((pt[0], P - pt[1], 1), e))
     ra = _affine(rj)
-    if ra is None or ra[1] % 2 != 0 or ra[0] != r:
-        return False
-    return True
+    return ra is not None and ra[1] % 2 == 0 and ra[0] == r
 
 
 def generate() -> Tuple[bytes, bytes]:

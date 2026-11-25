@@ -110,7 +110,7 @@ class Relayd:
         os.replace(tmp, self.state / "events.jsonl")
         if self._log:
             self._log.close()
-        self._log = open(self.state / "events.jsonl", "a")
+        self._log = open(self.state / "events.jsonl", "a")  # noqa: SIM115 (kept open: append-only log)
 
     def _persist(self, ev: Dict[str, Any]) -> None:
         if self._log:
@@ -160,7 +160,7 @@ class Relayd:
                 continue
             threading.Thread(target=self._serve, args=(sock,), daemon=True).start()
 
-    def start(self) -> "Relayd":
+    def start(self) -> Relayd:
         threading.Thread(target=self.serve_forever, daemon=True).start()
         return self
 
