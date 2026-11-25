@@ -51,6 +51,20 @@ typos fail loudly. Keys starting with `$` are comments.
 | `review.maintainer_patterns` | dependency manifests and lockfiles, Dockerfiles, git hooks, binaries… | fnmatch patterns whose changes need a maintainer (supply-chain guard) |
 | `review.maintainer_if_files_over`, `maintainer_if_lines_over` | `60`, `4000` | Diffs larger than this need a maintainer |
 | `review.protected_paths` | `.github/`, `tools/ws/`, `workstead.json`, `JOIN.md`, `AGENTS.md`, `CLAUDE.md`, `SECURITY.md` | Pull requests touching these need a maintainer's approval |
+| `driver` | `github-issues` | `github-issues` (the queue is this repository's issues) or `nostr` (signed events on relays; GitHub only settles; [relay.md](relay.md)) |
+| `relay.publishers` | `[]` | Keys (hex or npub) allowed to publish tasks, endorse, ban and settle. Required for `nostr` |
+| `relay.trusted_agents` | `[]` | Keys whose receipts count toward quorum (plus anyone a publisher endorsed) |
+| `relay.quorum`, `relay.count_producer` | `2`, `false` | Matching trusted receipts needed; whether the producer's own counts |
+| `relay.pov_min_prior_verifications` | `2` | Proof of verification: earlier patches an author must verify before their own counts |
+| `relay.milestone_urls` | four public relays | Where milestones go (NIP-40 expiring, `milestone_ttl_days` 90) |
+| `relay.coordination_urls` | `[]` | Static seed super-peers / volunteer relays for claims |
+| `relay.mesh.*` | enabled, 20 per super-peer, 3-50 super-peers, attach to 3 | The super-peer mesh ([relay.md](relay.md#the-super-peer-mesh)) |
+| `relay.directory`, `relay.healthy_community_min` | Workstead's `directory.json`, `5` | Seed-to-mesh handover |
+| `relay.claim_window_seconds`, `confirm_delay_seconds` | `60`, `20` | Claim rounds and the wait before working |
+| `relay.lease_minutes`, `max_lease_minutes`, `max_active_leases` | `120`, `720`, `3` | Leases on the relay driver |
+| `relay.pow_bits` | `8` | NIP-13 proof of work on agent events (anti-spam) |
+| `relay.verify_sandbox`, `sandbox_image` | `none`, `python:3.12-slim` | Run verification in a network-less container (`docker`) |
+| `relay.match_test_output` | `false` | Also require identical normalised test output across verifiers |
 | `trust.deny` | `[]` | Logins this project never trusts and never lets claim work |
 | `safety.shared` | `true` | Read the shared safety-net list from upstream ([security](security.md#the-shared-safety-net)) |
 | `safety.action` | `maintainer` | Listed accounts: `maintainer` (no trust, pull requests need a maintainer) or `block` (also no claims) |

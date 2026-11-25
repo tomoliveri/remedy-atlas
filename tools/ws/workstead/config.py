@@ -17,6 +17,11 @@ DEFAULTS: Dict[str, Any] = {
     # owner/name. Empty means: GITHUB_REPOSITORY in Actions, else the git remote.
     "repo": "",
     "default_branch": "main",
+    # Queue driver. github-issues: the queue is this repository's issues (the
+    # default; best up to a few hundred agents). nostr: tasks, claims and
+    # verification receipts travel over public Nostr relays as signed events,
+    # and GitHub is only the pull-request settlement layer (docs/relay.md).
+    "driver": "github-issues",
     # Logins with full authority, in addition to anyone with write access.
     "maintainers": [],
     # Logins whose comments are the queue's own (state comments, bot tasks).
@@ -135,6 +140,64 @@ DEFAULTS: Dict[str, Any] = {
     "give_back": {"enabled": False, "share": 0.001, "upstream": "",
                   "min_owed_hours": 0.5, "learnings": True},
     "board": {"title": "Workstead board", "branch": "ws-board"},
+    "relay": {
+        # Milestones (TaskPublished, VerificationReceipt, Endorsement,
+        # TaskSettled): two or three tiny events per completed task, so free
+        # public relays are fine. Every event carries a NIP-40 expiration.
+        "milestone_urls": ["wss://relay.damus.io", "wss://nos.lol", "wss://relay.primal.net", "wss://offchain.pub"],
+        # Coordination chatter (claims, lease renewals) never goes to public
+        # social relays. It travels agent to agent through the super-peer
+        # mesh below. These optional static seeds (a volunteer strfry, or
+        # `ws relay serve`) help a new fleet bootstrap.
+        "coordination_urls": [],
+        "mesh": {
+            "enabled": True,
+            # agents per super-peer, and the bounds on how many super-peers exist
+            "peers_per_super": 20, "min_supers": 3, "max_supers": 50,
+            # super-peers each agent attaches to (rendezvous hashing)
+            "connect_to": 3,
+            "sync_seconds": 5, "announce_minutes": 10,
+            "listen_host": "0.0.0.0", "listen_port": 0,
+            # set when this machine is reachable at a known address (a VPS, a port forward)
+            "public_url": "",
+            # LAN or dev fleets with no super-peer to probe against
+            "assume_reachable": False,
+        },
+        "milestone_ttl_days": 90,
+        "claim_ttl_grace_hours": 24,
+        # hex or npub keys allowed to publish tasks, endorse agents and settle
+        "publishers": [],
+        # keys whose receipts count toward quorum (plus anyone a publisher endorsed)
+        "trusted_agents": [],
+        "quorum": 2,
+        # does the producer's own receipt count toward the quorum? (no: two
+        # independent verifiers back every patch)
+        "count_producer": False,
+        # Tangle-style admission: a producer must have verified this many
+        # earlier patches by others before its own patch counts (dag.py)
+        "pov_min_prior_verifications": 2,
+        # where agents find seeds and community relays (seed-to-mesh handover)
+        "directory": "https://tomoliveri.github.io/workstead/directory.json",
+        # once this many community relays/super-peers are healthy, seeds are fallback only
+        "healthy_community_min": 5,
+        # require identical normalised test output across verifiers (strict)
+        "match_test_output": False,
+        "claim_window_seconds": 60,
+        "confirm_delay_seconds": 20,
+        "lease_minutes": 120,
+        "max_lease_minutes": 720,
+        "max_active_leases": 3,
+        # NIP-13 proof of work (leading zero bits) on claims and receipts: anti-spam
+        "pow_bits": 8,
+        "max_skew_seconds": 300,
+        "min_relays_ok": 1,
+        "timeout_seconds": 8,
+        # where workers push result branches; "" = their fork of the repository
+        "push_remote": "",
+        # run verification inside a container without network ("docker") or not ("none")
+        "verify_sandbox": "none",
+        "sandbox_image": "python:3.12-slim",
+    },
     "limits": {"result_chars": 60000, "plan_chars": 120000, "body_chars": 20000},
 }
 
@@ -193,6 +256,20 @@ def validate(cfg: Dict[str, Any]) -> None:
     if not 0 < float(cfg["dedup"]["similarity"]) <= 1:
         raise ConfigError("dedup.similarity must be in (0, 1]")
     gb = cfg["give_back"]
+    if cfg["driver"] not in ("github-issues", "nostr"):
+        raise ConfigError("driver must be github-issues or nostr")
+    rc = cfg["relay"]
+    for key in ("milestone_urls", "coordination_urls"):
+        if not isinstance(rc[key], list) or not all(isinstance(u, str) and re.match(r"^wss?://", u) for u in rc[key]):
+            raise ConfigError(f"relay.{key} must be a list of ws:// or wss:// URLs")
+    if not 1 <= int(rc["quorum"]) <= 9:
+        raise ConfigError("relay.quorum must be 1-9")
+    if not 0 <= int(rc["pow_bits"]) <= 32:
+        raise ConfigError("relay.pow_bits must be 0-32")
+    if rc["verify_sandbox"] not in ("none", "docker"):
+        raise ConfigError("relay.verify_sandbox must be none or docker")
+    if cfg["driver"] == "nostr" and not rc["publishers"]:
+        raise ConfigError("driver nostr needs relay.publishers (the keys allowed to publish tasks)")
     if cfg["safety"]["action"] not in ("maintainer", "block"):
         raise ConfigError("safety.action must be maintainer or block")
     if not isinstance(gb["learnings"], bool):

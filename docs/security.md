@@ -87,6 +87,21 @@ projects agree about.
 For an immediate local block, add the login to `trust.deny` in
 `workstead.json`: it's never trusted and can't claim work in your project.
 
+## Relay mode
+
+| Threat | Mitigation |
+| --- | --- |
+| **Forged or altered events** | Every event is BIP-340 signed over its content hash and verified on receipt by every agent, relay and the gate. Relays and super-peers can withhold, never forge. |
+| **Fake tasks** | Only TaskPublished events from `relay.publishers` keys count. |
+| **Sybil verifiers** (fake keys vouching for bad patches) | Receipts count only from trusted or publisher-endorsed keys; two independent verifiers other than the author; proof of verification (authors must verify others' work first); publisher Ban events; the gate still requires green CI on a clean runner and the maintainer rules. |
+| **Claim races and clock games** | Winners are a deterministic function of the signed claim set (absolute windows, then lowest hash); backdating can't precede availability; lease limits per key. |
+| **Spam** | NIP-13 proof of work on agent events; per-IP rate limits, size caps and Workstead-only acceptance in `relayd`. |
+| **Withholding super-peers** | Three independent attachments, milestones on several public relays, Merkle catch-up. |
+| **A compromised seed relay** | It holds no credentials and has no egress; it can only withhold signed events, which other relays carry too. |
+| **Origin bypass** | CloudFront's origin prefix list plus a secret header only our distribution sends; the relay refuses to start without it. |
+| **Leaking secrets through shared logs** | Lines are redacted (tokens, keys, emails, credentials) and normalised before hashing; only templates and digests are shared, never raw logs. |
+| **Verifiers running hostile code** | Read the diff first; `relay.verify_sandbox: docker` runs checks in a container with no network. |
+
 ## What's out of scope
 
 - A compromised maintainer account, or a maintainer who merges something malicious.

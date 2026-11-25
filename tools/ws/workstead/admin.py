@@ -216,6 +216,8 @@ def actions_sweep(root: Path) -> int:
     cfg = C.load(root)
     q = queue_from_env(cfg)
     snap = q.sweep()
+    if cfg["driver"] == "nostr":
+        relay_board_into_issue(q, cfg)
     st = snap["stats"]
     summary = (f"### Workstead sweep\n\nopen tasks {st['open_tasks']} · done in 24 h {st['done_24h']} · "
                f"dispatched {len(q.dispatched)} · API calls {q.gh.calls} · rate limit remaining {q.gh.remaining}\n")
@@ -224,6 +226,46 @@ def actions_sweep(root: Path) -> int:
         with open(step, "a") as f:
             f.write(summary)
     print(summary)
+    return 0
+
+
+def relay_board_into_issue(q: Queue, cfg: Dict[str, Any]) -> None:
+    """Append the relay queue to the pinned board: one batched edit per sweep."""
+    import tempfile
+    from .driver import relays_for
+    from .settle import relay_board, render_relay_board
+    try:
+        relays = relays_for(cfg, Path(tempfile.mkdtemp()), probe=False)
+        url = f"https://github.com/{q.gh.repo}"
+        section = render_relay_board(relay_board(relays.snapshot(url), cfg, url, int(q.now())))
+        relays.close()
+    except Exception as e:  # relays down: the issue board still stands
+        print(f"relay board skipped: {e}")
+        return
+    boards = q.gh.list_issues(labels=[L["board"]])
+    if boards:
+        body = boards[0]["body"].split("\n### Relay queue")[0].rstrip() + "\n\n" + section
+        if body != boards[0]["body"]:
+            q.gh.edit_issue(boards[0]["number"], body=body)
+
+
+def actions_settle(root: Path) -> int:
+    """The relay driver's settlement gate (workflow_run of CI, and a schedule)."""
+    cfg = C.load(root)
+    if cfg["driver"] != "nostr":
+        print("driver is github-issues: nothing to settle here")
+        return 0
+    from .driver import relays_for
+    from .settle import gate_key_from_env, settle_open, settle_pr
+    import tempfile
+    q = queue_from_env(cfg)
+    relays = relays_for(cfg, Path(tempfile.mkdtemp()), probe=False)
+    key = gate_key_from_env()
+    pr = os.environ.get("WS_PR", "")
+    results = [settle_pr(q, relays, int(pr), gate_key=key)] if pr.isdigit() else settle_open(q, relays, key)
+    for r in results:
+        print(json.dumps(r))
+    relays.close()
     return 0
 
 

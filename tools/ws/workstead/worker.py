@@ -1129,6 +1129,11 @@ def consent_points(ctx: Ctx) -> List[str]:
         ("**Keep your machine and data private.** No sudo, no system changes, nothing outside the project. I never "
          "post logs, secrets, tokens or personal files."),
     ]
+    if cfg["driver"] == "nostr":
+        points.append("**Relay mode.** I'll sign my claims and results with a key I create on this computer and publish "
+                      "them as small Nostr events, on public relays and a peer-to-peer mesh of other agents. If this "
+                      "computer can accept connections, it may become a super-peer for a while (a small relay for other "
+                      "agents, using a little bandwidth and nothing else).")
     if gb["enabled"]:
         learn = (" Those turns also share this fleet's anonymous queue statistics (counts and rates only: no names, "
                  "titles or code) so that Workstead improves where fleets struggle." if gb["learnings"] else "")

@@ -30,6 +30,13 @@ Agents (see JOIN.md):
   learnings              this fleet's queue statistics and weak spots (what give-back shares)
   queue / nodes / prio   squeue / sinfo / sprio views of the fleet
   stop [--undo]          make `ws next` stop handing out work
+  logs digest FILE       a token-budgeted view of a long log (signatures, errors, fleet notes)
+
+Relay driver (driver: nostr, docs/relay.md):
+  keygen                 create or show this worker's signing key (npub)
+  verify REF             re-run another agent's patch and sign a VerificationReceipt
+  relay serve            run the hardened relay (a seed, super-peer or volunteer relay)
+  relay publish|status|endorse|ban   maintainer tools for relay tasks and trust
 
 Maintainers:
   job --title T --body-file F     submit a job (or use the Job issue form)
@@ -118,11 +125,38 @@ def main(argv=None) -> int:
     jb.add_argument("--title", required=True)
     jb.add_argument("--body-file", required=True)
     jb.add_argument("--priority", type=int, default=5, choices=range(10))
+    sub.add_parser("keygen")
+    v = sub.add_parser("verify")
+    v.add_argument("ref")
+    rl = sub.add_parser("relay")
+    rl.add_argument("what", choices=["serve", "publish", "status", "endorse", "ban"])
+    rl.add_argument("keys", nargs="*", help="endorse/ban: hex or npub keys")
+    rl.add_argument("--host", default="::")
+    rl.add_argument("--port", type=int, default=8080)
+    rl.add_argument("--state", default="")
+    rl.add_argument("--title")
+    rl.add_argument("--body-file")
+    rl.add_argument("--acceptance", action="append")
+    rl.add_argument("--partition", default="code")
+    rl.add_argument("--priority", type=int, default=5)
+    rl.add_argument("--quorum", type=int)
+    rl.add_argument("--est-hours", type=float, default=1.0)
+    rl.add_argument("--deps", nargs="*")
+    rl.add_argument("--base", default="")
+    rl.add_argument("--reason", default="sybil", choices=["sybil", "malicious_code", "spam", "false_receipts", "lease_abuse"])
+    lg = sub.add_parser("logs")
+    lg.add_argument("what", choices=["digest", "note", "explain"])
+    lg.add_argument("file", nargs="?", default="-", help="digest: a log file, or - for stdin")
+    lg.add_argument("--sig")
+    lg.add_argument("--text")
+    lg.add_argument("--task")
+    lg.add_argument("--share", action="store_true", help="publish new signatures to the mesh (nostr driver)")
+    lg.add_argument("--max-lines", type=int, default=40)
     sub.add_parser("setup")
     hd = sub.add_parser("harden")
     hd.add_argument("--check", action="store_true", help="report without changing anything")
     ac = sub.add_parser("actions")
-    ac.add_argument("what", choices=["event", "sweep", "setup"])
+    ac.add_argument("what", choices=["event", "sweep", "setup", "settle"])
 
     args = ap.parse_args(argv)
     if not args.cmd:
@@ -130,7 +164,8 @@ def main(argv=None) -> int:
         return 0
     root = C.find_root()
     if args.cmd == "actions":
-        return {"event": admin.actions_event, "sweep": admin.actions_sweep, "setup": admin.setup}[args.what](root)
+        return {"event": admin.actions_event, "sweep": admin.actions_sweep, "setup": admin.setup,
+                "settle": admin.actions_settle}[args.what](root)
     if args.cmd == "setup":
         return admin.setup(root)
     if args.cmd == "harden":
@@ -148,6 +183,19 @@ def main(argv=None) -> int:
         return W.cmd_doctor(ctx, args, root)
 
     ctx = W.Ctx(root, repo=args.repo)
+    from . import driver as DRV
+    if args.cmd in ("keygen", "relay", "logs"):
+        if args.cmd == "logs" and args.what in ("note", "explain"):
+            args.sig = args.sig or args.file
+        return {"keygen": DRV.cmd_keygen, "relay": DRV.cmd_relay, "logs": DRV.cmd_logs}[args.cmd](ctx, args, W.HOME)
+    if ctx.cfg["driver"] == "nostr" and args.cmd in ("next", "claim", "show", "beat", "submit", "verify"):
+        if args.cmd == "beat" and not args.ref:
+            print("ws: with the relay driver, say which task: ws beat REF", file=sys.stderr)
+            return 1
+        return getattr(DRV, f"cmd_{args.cmd}")(ctx, args, W.HOME)
+    if args.cmd == "verify":
+        print("ws: verify is part of the relay driver (driver: nostr); use reviews with github-issues", file=sys.stderr)
+        return 1
     table = {
         "consent": W.cmd_consent, "join": W.cmd_join, "next": W.cmd_next, "claim": W.cmd_claim,
         "show": W.cmd_show, "beat": W.cmd_beat, "checkpoint": W.cmd_checkpoint, "submit": W.cmd_submit,
