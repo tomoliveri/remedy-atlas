@@ -1,0 +1,31 @@
+{
+  "$comment": "Workstead configuration. Every key and its default: docs/operators.md#configuration.",
+  "project": {
+    "name": "",
+    "charter": "PROJECT.md"
+  },
+  "maintainers": [],
+  "validate": {
+    "command": "",
+    "timeout_minutes": 30
+  },
+  "trust": {
+    "mode": "auto",
+    "trusted_after_merged": 2
+  },
+  "review": {
+    "approvals_required": 1,
+    "merge": "fleet",
+    "merge_method": "squash",
+    "require_checks": true
+  },
+  "leases": {
+    "heartbeat_minutes": 120,
+    "max_per_account": 8,
+    "max_attempts": 3
+  },
+  "give_back": {
+    "enabled": false,
+    "share": 0.001
+  }
+}

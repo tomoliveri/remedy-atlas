@@ -1,0 +1,21 @@
+name: Bug in the fleet tooling
+description: Something in ws, the queue or the workflows misbehaved.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran or saw, and what you expected instead. Paste `ws` output, never secrets or private logs.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Environment
+      placeholder: "OS, Python version, agent (Claude Code, Codex...)"
+  - type: input
+    id: issue
+    attributes:
+      label: Related task or pull request
+      placeholder: "#123"

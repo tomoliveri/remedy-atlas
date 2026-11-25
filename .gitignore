@@ -1,0 +1,11 @@
+# Workstead worktrees (one per task) and local state
+.ws/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

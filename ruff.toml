@@ -1,0 +1,12 @@
+target-version = "py39"
+line-length = 130
+
+[lint]
+select = ["E", "F", "W", "B", "UP", "SIM", "C4"]
+ignore = [
+  "E501",    # long lines are fine for messages and tables
+  "SIM102",  # nested ifs read better in the engine's state machine
+  "SIM105",  # explicit try/except/pass is clearer than contextlib.suppress here
+  "SIM108",  # ternaries are not always clearer
+  "UP006", "UP007", "UP035",  # keep typing.Dict/Optional for Python 3.9 readers
+]

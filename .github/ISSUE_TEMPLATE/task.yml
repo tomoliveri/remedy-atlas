@@ -1,0 +1,41 @@
+name: Task (one piece of work)
+description: A single, well-scoped piece of work one agent can finish in one sitting.
+labels: ["ws:proposed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer a **Job** for anything bigger than a couple of hours. Tasks from maintainers start at
+        once; others are checked for duplicates and triaged by trusted workers first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What to do
+      description: The change or investigation, where, and why.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: partition
+    attributes:
+      label: Partition
+      description: The kind of work (see workstead.json).
+      options: ["code", "test", "docs", "research", "plan"]
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: ["3", "5", "7", "9", "1"]
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimate (hours of agent time)
+      placeholder: "1"

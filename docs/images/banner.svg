@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-label="Workstead: a GitHub-native work queue for fleets of AI agents">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d1117"/><stop offset="0.55" stop-color="#121a2f"/><stop offset="1" stop-color="#1c1438"/></linearGradient>
+<radialGradient id="glow" cx="0.72" cy="0.5" r="0.45"><stop offset="0" stop-color="#a371f7" stop-opacity="0.22"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></radialGradient>
+<linearGradient id="title" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c9b8ff"/></linearGradient>
+<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+<pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" fill="#ffffff" fill-opacity="0.06"/></pattern>
+</defs>
+<rect width="1280" height="400" rx="24" fill="url(#bg)"/>
+<rect width="1280" height="400" rx="24" fill="url(#dots)"/>
+<rect width="1280" height="400" rx="24" fill="url(#glow)"/>
+<path d="M760 120 C820.0 120, 820.0 90, 880 90" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M760 120 C820.0 120, 820.0 170, 880 170" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M760 200 C820.0 200, 820.0 170, 880 170" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M760 200 C820.0 200, 820.0 250, 880 250" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M760 280 C820.0 280, 820.0 330, 880 330" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M760 280 C820.0 280, 820.0 250, 880 250" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M880 90 C940.0 90, 940.0 130, 1000 130" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M880 170 C940.0 170, 940.0 130, 1000 130" fill="none" stroke="#c9d1d9" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M880 250 C940.0 250, 940.0 210, 1000 210" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M880 330 C940.0 330, 940.0 290, 1000 290" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M880 250 C940.0 250, 940.0 290, 1000 290" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M1000 130 C1060.0 130, 1060.0 170, 1120 170" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M1000 210 C1060.0 210, 1060.0 170, 1120 170" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M1000 210 C1060.0 210, 1060.0 250, 1120 250" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M1000 290 C1060.0 290, 1060.0 250, 1120 250" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M1120 170 C1170.0 170, 1170.0 210, 1220 210" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M1120 250 C1170.0 250, 1170.0 210, 1220 210" fill="none" stroke="#8b949e" stroke-opacity="0.35" stroke-width="2"/>
+<circle cx="760" cy="120" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="3"/>
+<path d="M755 120 l3.5 3.5 l6.5 -7" fill="none" stroke="#3fb950" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="760" cy="200" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="3"/>
+<path d="M755 200 l3.5 3.5 l6.5 -7" fill="none" stroke="#3fb950" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="760" cy="280" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="3"/>
+<path d="M755 280 l3.5 3.5 l6.5 -7" fill="none" stroke="#3fb950" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="880" cy="90" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="3"/>
+<path d="M875 90 l3.5 3.5 l6.5 -7" fill="none" stroke="#3fb950" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="880" cy="170" r="20" fill="#a371f7" opacity="0.55" filter="url(#soft)"/>
+<circle cx="880" cy="170" r="13" fill="#0d1117" stroke="#a371f7" stroke-width="3"/>
+<circle cx="880" cy="170" r="5" fill="#a371f7"/>
+<circle cx="880" cy="250" r="20" fill="#a371f7" opacity="0.55" filter="url(#soft)"/>
+<circle cx="880" cy="250" r="13" fill="#0d1117" stroke="#a371f7" stroke-width="3"/>
+<circle cx="880" cy="250" r="5" fill="#a371f7"/>
+<circle cx="880" cy="330" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="3"/>
+<path d="M875 330 l3.5 3.5 l6.5 -7" fill="none" stroke="#3fb950" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1000" cy="130" r="20" fill="#a371f7" opacity="0.55" filter="url(#soft)"/>
+<circle cx="1000" cy="130" r="13" fill="#0d1117" stroke="#a371f7" stroke-width="3"/>
+<circle cx="1000" cy="130" r="5" fill="#a371f7"/>
+<circle cx="1000" cy="210" r="13" fill="#0d1117" stroke="#58a6ff" stroke-width="3"/>
+<circle cx="1000" cy="210" r="4" fill="none" stroke="#58a6ff" stroke-width="2"/>
+<circle cx="1000" cy="290" r="13" fill="#0d1117" stroke="#58a6ff" stroke-width="3"/>
+<circle cx="1000" cy="290" r="4" fill="none" stroke="#58a6ff" stroke-width="2"/>
+<circle cx="1120" cy="170" r="13" fill="#0d1117" stroke="#6e7681" stroke-width="3"/>
+<circle cx="1120" cy="250" r="13" fill="#0d1117" stroke="#6e7681" stroke-width="3"/>
+<circle cx="1220" cy="210" r="13" fill="#0d1117" stroke="#6e7681" stroke-width="3"/>
+<text x="72" y="168" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="84" font-weight="800" letter-spacing="-2" fill="url(#title)">Workstead</text>
+<text x="76" y="218" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="27" font-weight="500" fill="#c9d1d9">A work queue for fleets of AI agents,</text>
+<text x="76" y="254" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="27" font-weight="500" fill="#c9d1d9">built on GitHub issues and Actions.</text>
+<rect x="76" y="296" width="70" height="34" rx="17" fill="#58a6ff" fill-opacity="0.14" stroke="#58a6ff" stroke-opacity="0.55"/>
+<text x="111.0" y="318" text-anchor="middle" font-family="'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" fill="#58a6ff">plan</text>
+<text x="161" y="319" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#6e7681">→</text>
+<rect x="176" y="296" width="81" height="34" rx="17" fill="#a371f7" fill-opacity="0.14" stroke="#a371f7" stroke-opacity="0.55"/>
+<text x="216.5" y="318" text-anchor="middle" font-family="'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" fill="#a371f7">claim</text>
+<text x="272" y="319" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#6e7681">→</text>
+<rect x="287" y="296" width="92" height="34" rx="17" fill="#d29922" fill-opacity="0.14" stroke="#d29922" stroke-opacity="0.55"/>
+<text x="333.0" y="318" text-anchor="middle" font-family="'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" fill="#d29922">review</text>
+<text x="394" y="319" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#6e7681">→</text>
+<rect x="409" y="296" width="81" height="34" rx="17" fill="#3fb950" fill-opacity="0.14" stroke="#3fb950" stroke-opacity="0.55"/>
+<text x="449.5" y="318" text-anchor="middle" font-family="'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" fill="#3fb950">merge</text>
+<circle cx="760" cy="368" r="5" fill="#3fb950"/>
+<text x="772" y="373" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#8b949e">done</text>
+<circle cx="830" cy="368" r="5" fill="#a371f7"/>
+<text x="842" y="373" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#8b949e">running</text>
+<circle cx="920" cy="368" r="5" fill="#58a6ff"/>
+<text x="932" y="373" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#8b949e">ready</text>
+<circle cx="994" cy="368" r="5" fill="#6e7681"/>
+<text x="1006" y="373" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#8b949e">pending</text>
+</svg>

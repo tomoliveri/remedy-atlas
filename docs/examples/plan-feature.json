@@ -1,0 +1,59 @@
+{
+  "summary": "CSV and JSON export from the settings page, built interface-first so most work runs in parallel.",
+  "tasks": [
+    {
+      "key": "api-contract",
+      "title": "Define the export API contract and stub endpoint",
+      "partition": "code",
+      "est_hours": 1,
+      "priority": 7,
+      "licenses": ["api-routes"],
+      "body": "Add GET /api/export?format=csv|json returning 501, with request/response types and an OpenAPI entry. This unblocks the other tasks.",
+      "acceptance": ["Types and OpenAPI entry merged", "Endpoint returns 501 with a test proving it"]
+    },
+    {
+      "key": "serializer",
+      "title": "Streaming {item} serializer for account data",
+      "array": ["CSV", "JSON"],
+      "partition": "code",
+      "est_hours": 1.5,
+      "deps": ["api-contract"],
+      "body": "Implement a streaming {item} serializer in src/export/ that handles 100k rows in constant memory.",
+      "acceptance": ["Streams 100k rows under 50 MB RSS", "Unit tests for escaping and empty accounts"]
+    },
+    {
+      "key": "wire-endpoint",
+      "title": "Wire the serializers into the export endpoint",
+      "partition": "code",
+      "est_hours": 1,
+      "deps": ["serializer"],
+      "licenses": ["api-routes"],
+      "acceptance": ["Both formats download with the right content type", "Integration test per format"]
+    },
+    {
+      "key": "settings-ui",
+      "title": "Export buttons on the settings page",
+      "partition": "code",
+      "est_hours": 1.5,
+      "deps": ["api-contract"],
+      "acceptance": ["Buttons for CSV and JSON", "Loading and error states", "Component test"]
+    },
+    {
+      "key": "docs",
+      "title": "Document data export",
+      "partition": "docs",
+      "est_hours": 0.5,
+      "deps": ["api-contract"],
+      "acceptance": ["User guide page", "API reference entry"]
+    },
+    {
+      "key": "verify",
+      "title": "Verify export end to end against the job's acceptance criteria",
+      "partition": "research",
+      "est_hours": 1,
+      "deps": ["wire-endpoint", "settings-ui", "docs"],
+      "body": "Check every acceptance criterion of the job on the merged default branch. Report evidence. File anything missing with `ws found`.",
+      "acceptance": ["Each job criterion checked with evidence", "Gaps filed as found issues"]
+    }
+  ]
+}

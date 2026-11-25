@@ -1,0 +1,123 @@
+# CI: the checks the queue waits for before it merges fleet work, and the
+# checks that keep the workstead tool itself healthy.
+#
+# "Project checks" runs validate.command from workstead.json, the same command
+# `ws submit` runs on the worker's machine. Add your toolchain setup above it.
+# Keep the workflow name "CI": the queue listens for its completion. Require
+# the "CI ok" check in branch protection; it passes only if everything did.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Ruff
+        run: pipx run ruff==0.8.4 check tools/ws
+      - name: Shellcheck
+        run: shellcheck ws
+      - name: Actionlint
+        uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -color
+
+  test:
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        include:
+          - { os: macos-latest, python: "3.13" }
+          - { os: windows-latest, python: "3.9" }
+          - { os: windows-latest, python: "3.13" }
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit, engine and end-to-end tests
+        run: python -m unittest discover -s tools/ws/tests -t tools/ws/tests -v
+      - name: CLI smoke test
+        run: |
+          python tools/ws/ws.py --help
+          python tools/ws/ws.py plan-check docs/examples/plan-feature.json
+          python tools/ws/ws.py plan-check docs/examples/plan-mapreduce.json
+
+  simulate:
+    name: Fleet simulation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: 150 agents, 4 jobs, random agent deaths (fails on any duplicate lease or merge)
+        working-directory: tools/ws
+        run: |
+          for seed in 1 2 3; do
+            python -m workstead.sim --agents 150 --accounts 90 --jobs 4 --seed "$seed" --die 0.003 | tee "sim-$seed.json"
+          done
+
+  project:
+    name: Project checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      # Add toolchain setup here, for example:
+      # - uses: actions/setup-node@v4
+      #   with: { node-version: 22 }
+      - name: Run validate.command from workstead.json
+        run: |
+          cmd=$(python3 -c "import json; print(json.load(open('workstead.json')).get('validate', {}).get('command', ''))")
+          if [ -z "$cmd" ]; then
+            echo "::notice::No validate.command in workstead.json yet. Set one so the fleet can prove its changes work."
+            exit 0
+          fi
+          echo "+ $cmd"
+          bash -c "$cmd"
+
+  ok:
+    name: CI ok
+    if: always()
+    needs: [lint, test, simulate, project]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: All checks passed
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "Some checks failed: ${{ join(needs.*.result, ', ') }}"
+            exit 1
+          fi

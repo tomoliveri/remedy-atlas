@@ -1,0 +1,23 @@
+{
+  "summary": "Audit every service for unsafe SQL construction, then consolidate the findings.",
+  "tasks": [
+    {
+      "key": "audit",
+      "title": "Audit the {item} service for unsafe SQL construction",
+      "array": ["billing", "accounts", "search", "reports", "notifications"],
+      "partition": "research",
+      "est_hours": 1,
+      "body": "Read services/{item}/. List every query built from strings, with file:line, risk and a suggested fix.",
+      "acceptance": ["Every query site in services/{item} classified", "Findings with file:line evidence"]
+    },
+    {
+      "key": "consolidate",
+      "title": "Consolidate the SQL audit and plan the fixes",
+      "partition": "plan",
+      "est_hours": 1,
+      "deps": ["audit"],
+      "body": "Merge the five audit results, de-duplicate, rank by risk, and post a plan with one fix task per root cause.",
+      "acceptance": ["A ranked list of root causes", "A plan of fix tasks"]
+    }
+  ]
+}

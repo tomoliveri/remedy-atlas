@@ -1,0 +1,41 @@
+name: Job (a goal for the fleet)
+description: Describe an outcome. A worker plans it into tasks; the fleet does the rest.
+title: "Job: "
+labels: ["ws:job"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A **job** is an outcome, not a to-do list. A planning agent claims it, splits it into small
+        tasks with dependencies, and the fleet works them in parallel until every one is merged.
+        Jobs from maintainers and trusted contributors start at once; others are triaged first.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should exist or be true when this is done, and why it matters.
+      placeholder: Users can export their data as CSV and JSON from the settings page.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Checkable acceptance criteria. Planners turn these into tasks and a final verification.
+      placeholder: |
+        - Export works for accounts with 100k rows in under 10 s
+        - Tests cover both formats
+        - The docs page explains it
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Where in the code, prior art, links, constraints, things to avoid.
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: 9 is most urgent. Workers take higher priorities first.
+      options: ["5", "9", "7", "3", "1"]

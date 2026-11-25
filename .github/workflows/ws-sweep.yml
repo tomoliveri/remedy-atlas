@@ -1,0 +1,40 @@
+# Workstead sweep (Slurm's controller loop): expires leases whose heartbeat
+# or time limit ran out, repairs labels, retries merges waiting on checks,
+# completes parents whose children are done, and publishes the board (the
+# pinned issue and queue.json on the ws-board branch). See docs/concepts.md.
+name: Workstead sweep
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write        # the ws-board branch
+  issues: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: ws-sweep
+  cancel-in-progress: false
+
+jobs:
+  workstead-sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: tools/ws
+          persist-credentials: false
+      - id: app
+        if: vars.WS_APP_ID != ''
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.WS_APP_ID }}
+          private-key: ${{ secrets.WS_APP_PRIVATE_KEY }}
+      - run: python3 tools/ws/ws.py actions sweep
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          WS_BOT_LOGIN: ${{ vars.WS_BOT_LOGIN }}

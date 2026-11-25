@@ -1,0 +1,39 @@
+# Workstead setup: runs once when a repository is created from the template
+# (and again whenever workstead.json changes). Creates the labels and the
+# pinned board, and writes this repository's own join prompt into README.md.
+# Safe to re-run: every step is idempotent.
+name: Workstead setup
+
+on:
+  push:
+    branches: [main, master]
+    paths: ["workstead.json", ".github/workflows/ws-setup.yml", "README.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: ws-setup
+  cancel-in-progress: false
+
+jobs:
+  workstead-setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 tools/ws/ws.py actions setup
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WS_BOT_LOGIN: ${{ vars.WS_BOT_LOGIN }}
+      - name: Commit the join prompt
+        run: |
+          if git diff --quiet -- README.md; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: set this repository's join prompt" -- README.md
+          git push
