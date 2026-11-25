@@ -99,3 +99,4 @@ changing them needs a maintainer.
 | `toolbox.min_score`, `duplicate_similarity` | `5`, `0.8` | Thresholds for candidates and near-duplicates |
 | `toolbox.announce` | `true` | Relay mode: the sweep signs ToolRelease events |
 | `toolbox.image` | `""` | Container for `ws tools run` (default `relay.sandbox_image`) |
+| `toolbox.python` | `""` | Interpreter for `ws tools run`, for example a project venv `.ws/research-venv/bin/python` (relative to the main checkout) |

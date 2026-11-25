@@ -278,6 +278,8 @@ def candidates(root: Path, cfg: Dict[str, Any], files: Optional[List[str]] = Non
     tb = cfg["toolbox"]
     lib = tb["path"].rstrip("/") + "/"
     paths = files if files is not None else _git_files(root)
+    local = {Path(p).stem for p in paths if p.endswith(".py")} | {p.split("/")[-2] for p in paths
+                                                                 if p.endswith("/__init__.py") and "/" in p}
     pool = []
     for rel in paths:
         if not rel.endswith(".py") or rel.startswith(lib) or _ignored(rel, tb["ignore"]):
@@ -288,7 +290,8 @@ def candidates(root: Path, cfg: Dict[str, Any], files: Optional[List[str]] = Non
             text = (root / rel).read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        v = vet_source(text, tb["allow_imports"], rel)
+        v = vet_source(text, list(tb["allow_imports"]) + sorted(local), rel)
+        v["requires"] = [m for m in v["requires"] if m not in local]
         score, why = reusability(text, v)
         pool.append({"path": rel, "score": score, "why": why, "verdict": v["verdict"], "requires": v["requires"],
                      "shape": shape(text), "_tokens": _tokens(text), "refs": 0})
@@ -300,7 +303,9 @@ def candidates(root: Path, cfg: Dict[str, Any], files: Optional[List[str]] = Non
             except OSError:
                 continue
             for stem, p in stems.items():
-                if rel != p["path"] and len(stem) > 3 and re.search(rf"\b{re.escape(stem)}\b", body):
+                s_ = re.escape(stem)
+                if rel != p["path"] and re.search(rf"\b{s_}\.py\b|^\s*(from\s+\S*\b{s_}\s+import|import\s+(\S+\.)?{s_}\b)",
+                                                  body, re.M):
                     p["refs"] += 1
     clusters: List[List[str]] = []
     seen = set()
@@ -605,7 +610,7 @@ def announce(root: Path, cfg: Dict[str, Any], relays, seckey: bytes, repo: str, 
 
 # --- running ---------------------------------------------------------------------------
 
-SAFE_ENV = ("PATH", "LANG", "LC_ALL", "TZ", "TMPDIR", "TEMP", "TMP", "SYSTEMROOT", "OMP_NUM_THREADS",
+SAFE_ENV = ("PATH", "HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "LANG", "LC_ALL", "TZ", "TMPDIR", "TEMP", "TMP", "SYSTEMROOT", "OMP_NUM_THREADS",
             "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMBA_NUM_THREADS", "CUDA_VISIBLE_DEVICES",
             "HIP_VISIBLE_DEVICES", "PYTORCH_ENABLE_MPS_FALLBACK", "VIRTUAL_ENV", "CONDA_PREFIX", "PYTHONHASHSEED")
 
@@ -614,7 +619,6 @@ def scrubbed_env() -> Dict[str, str]:
     """No tokens, keys or credentials reach a tool: only what numerical code needs."""
     env = {k: v for k, v in os.environ.items() if k in SAFE_ENV}
     env["PYTHONDONTWRITEBYTECODE"] = "1"
-    env["HOME"] = env.get("TMPDIR", "/tmp")
     return env
 
 
@@ -624,7 +628,27 @@ def run_command(cfg: Dict[str, Any], file: Path, args: List[str], workdir: Path)
                 "no-new-privileges", "--read-only", "--tmpfs", "/tmp", "-v", f"{workdir}:/work", "-w", "/work",
                 "-v", f"{file.parent}:/tool:ro", cfg["toolbox"]["image"] or cfg["relay"]["sandbox_image"],
                 "python", "-I", "-B", f"/tool/{file.name}", *args]
-    return [sys.executable, "-I", "-B", str(file), *args]
+    return [tool_python(cfg), "-I", "-B", str(file), *args]
+
+
+def tool_python(cfg: Dict[str, Any], root: Optional[Path] = None) -> str:
+    """toolbox.python (a project venv), resolved against the main checkout; else this interpreter."""
+    p = cfg["toolbox"].get("python") or ""
+    if not p:
+        return sys.executable
+    path = Path(p)
+    if not path.is_absolute():
+        try:
+            common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                                    cwd=root or Path.cwd(), capture_output=True, text=True, check=True).stdout.strip()
+            path = Path(common).parent / path
+        except (OSError, subprocess.SubprocessError):
+            path = (root or Path.cwd()) / path
+    if os.name == "nt" and path.suffix != ".exe" and path.with_suffix(".exe").exists():
+        path = path.with_suffix(".exe")
+    if not path.exists():
+        raise ValueError(f"toolbox.python {p} doesn't exist yet: set up the project's environment first")
+    return str(path)
 
 
 def show_context(root: Path, cfg: Dict[str, Any], limit: int = 12) -> List[str]:
@@ -786,7 +810,12 @@ def cmd_tools(ctx, args, home: Path) -> int:
         if cfg["relay"]["verify_sandbox"] != "docker":
             print("ws: running without a container (set relay.verify_sandbox: docker for no network); "
                   "tokens and keys are removed from its environment", file=sys.stderr)
-        return subprocess.run(run_command(cfg, f, extra, Path.cwd()), env=scrubbed_env()).returncode
+        try:
+            cmd = run_command(cfg, f, extra, Path.cwd())
+        except ValueError as e:
+            print(f"ws: {e}", file=sys.stderr)
+            return 1
+        return subprocess.run(cmd, env=scrubbed_env()).returncode
     if what == "announce":
         from .settle import gate_key_from_env
         from .driver import relays_for

@@ -155,12 +155,14 @@ DEFAULTS: Dict[str, Any] = {
     # scan` looks for candidates. allow_imports: third-party modules tools
     # may use (numpy, scipy...). sources: other projects (owner/name) whose
     # libraries this one trusts, besides itself and its template. image: the
-    # container for `ws tools run` with relay.verify_sandbox docker.
+    # container for `ws tools run` with relay.verify_sandbox docker. python:
+    # the interpreter tools run with (a project venv with NumPy...), relative
+    # to the main checkout; empty uses the one running ws.
     "toolbox": {"path": "tools/lib/", "scan": ["**/*.py"],
                 "ignore": ["tools/ws/", ".ws/", ".github/", "tests/", "test_*.py", "*_test.py", "conftest.py",
                            "setup.py", "node_modules/", ".venv/", "venv/"],
                 "allow_imports": [], "sources": [], "min_score": 5, "duplicate_similarity": 0.8,
-                "announce": True, "image": ""},
+                "announce": True, "image": "", "python": ""},
     "relay": {
         # Milestones (TaskPublished, VerificationReceipt, Endorsement,
         # TaskSettled): two or three tiny events per completed task, so free
