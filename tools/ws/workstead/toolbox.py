@@ -461,10 +461,8 @@ API = "https://api.github.com"
 def _http(url: str, limit: int = 2_000_000) -> bytes:
     if not url.startswith(("https://raw.githubusercontent.com/", "https://api.github.com/")):
         raise ValueError("toolbox downloads only come from GitHub")
+    # Unauthenticated on purpose: public reads need no token, and no credential ever goes near a download.
     req = urllib.request.Request(url, headers={"User-Agent": "workstead-toolbox", "Accept": "*/*"})
-    tok = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
-    if tok and url.startswith(API):
-        req.add_header("Authorization", f"Bearer {tok}")
     with urllib.request.urlopen(req, timeout=30) as r:  # nosec: fixed GitHub hosts
         data = r.read(limit + 1)
     if len(data) > limit:
