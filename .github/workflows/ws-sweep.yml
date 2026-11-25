@@ -28,7 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
-          sparse-checkout: tools/ws
+          sparse-checkout: |
+            tools/ws
+            research
           persist-credentials: false
       - id: app
         if: vars.WS_APP_ID != ''
@@ -42,3 +44,8 @@ jobs:
           WS_BOT_LOGIN: ${{ vars.WS_BOT_LOGIN }}
           # relay mode: the gate key publishes ready task issues to the relays (bridge.py)
           WS_NOSTR_KEY: ${{ secrets.WS_NOSTR_KEY }}
+      - name: Replenish portfolio review
+        run: python3 research/portfolio.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WS_BOT_LOGIN: ${{ vars.WS_BOT_LOGIN }}

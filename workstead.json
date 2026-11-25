@@ -8,7 +8,7 @@
     "tomoliveri"
   ],
   "validate": {
-    "command": "python3 research/atlas.py check && node --test site/edge/progress.test.mjs && node --check site/public/app.js",
+    "command": "python3 research/atlas.py check && python3 -m unittest discover -s research && node --test site/edge/progress.test.mjs && node --check site/public/app.js",
     "timeout_minutes": 30
   },
   "setup": {

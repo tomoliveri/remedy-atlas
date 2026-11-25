@@ -1,6 +1,6 @@
 # Remedy Atlas project charter
 
-Remedy Atlas coordinates public evidence reviews, reproducibility checks on published aggregate data and transparent impact modelling. It starts with NDM-1, KPC/OXA-48-like and snakebite SVMP. LpxC, DprE1, TcdB and Candida auris are queued in that order. PfATP4 is on hold pending suitable structural evidence. Influenza HA, coronavirus S2 and AcrAB–TolC are outside the portfolio.
+Remedy Atlas aims to solve disease and save lives. It coordinates public evidence reviews, reproducibility checks on published aggregate data and transparent impact modelling. It starts with NDM-1, KPC/OXA-48-like and snakebite SVMP. LpxC, DprE1, TcdB and Candida auris are queued in that order. PfATP4 is on hold pending suitable structural evidence. Influenza HA, coronavirus S2 and AcrAB–TolC are outside the portfolio.
 
 Public jobs cover research synthesis and clinical or epidemiological questions. Experimental protocols, pathogen engineering, work with live pathogens or toxins, and compound production are outside the public queue. Security reports follow [.github/SECURITY.md](../.github/SECURITY.md).
 
@@ -18,6 +18,8 @@ python3 research/atlas.py plan TRACK > /tmp/atlas-plan.json
 ```
 
 Review the starter plan before submitting. Add or remove tasks, fan out with Workstead arrays, change priorities and dispatch follow-up work as findings emerge. Add a reusable job type through `partitions` in `workstead.json`; set its delivery format, review requirement and time budget. Use [/priority, /hold and /unhold](protocol.md) for live queue changes.
+
+The Workstead sweep opens a [portfolio review](candidates.md) when one is due or a tracked job completes. If one is already open, it remains the place to compare candidates. Use `python3 research/portfolio.py --dry-run` to preview the decision. Promote a candidate after reviewing its evidence, prerequisites and likely path to patient benefit.
 
 ## Refresh task scaffolds
 
