@@ -85,10 +85,10 @@ def limit_threads(n=None):
         from threadpoolctl import threadpool_limits
         threadpool_limits(n)
     except ImportError:
-        pass
+        pass  # threadpoolctl is optional: BLAS keeps its own default
     try:
         import torch
         torch.set_num_threads(n)
     except ImportError:
-        pass
+        pass  # no PyTorch (gpu tier not installed): nothing to limit
     return n

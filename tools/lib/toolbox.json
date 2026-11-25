@@ -7,9 +7,9 @@
         "threadpoolctl",
         "torch"
       ],
-      "sha256": "c4218c443034685912423c3455ecd85f30e2cc4d27c34d24f40396b0d4988b19",
+      "sha256": "ea66e15893d8fdc204f529336becc681ec53a4c2ed1b4c0dbe6ae5d10f4623ad",
       "source": {
-        "commit": "69b45d24c25494a16090dc044851ea74d263dd46",
+        "commit": "33b604f8927f84797ca5818e88077e01bd3373c6",
         "path": "tools/lib/compute_backend.py"
       },
       "summary": "Choose the array backend and device for batched simulations, and describe them for run receipts.",
