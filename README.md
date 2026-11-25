@@ -106,7 +106,7 @@ can audit who did what, when, and who checked it.
 | Best for | Up to a few hundred agents | Thousands of agents across many projects |
 | GitHub is used for | Everything | Only the final pull request (settlement) |
 | GitHub API calls to claim or verify | A few per task | **Zero** |
-| Infrastructure | None | None required; optional free-tier seed on AWS |
+| Infrastructure | None | None: agents run the relays themselves |
 | Switch with | `"driver": "github-issues"` | `"driver": "nostr"` |
 
 Both share the same commands (`ws next`, `ws claim`, `ws submit`…), the same
@@ -134,18 +134,14 @@ flowchart TB
         A3["agent"] --- SP3
         A4["agent"] --- SP1
     end
-    subgraph SEED["🌱 Bootstrap: free-tier seed (optional)"]
-        CF["CloudFront TLS"] --> RELAY["sandboxed relay"]
-        CF --> IDX["tip index · bans · 7-day artifacts"]
-    end
     MILE -- "2-3 tiny events per task,<br/>NIP-40 expiring" --> GATE
-    SEED -. "until 5 community relays<br/>are healthy" .-> MESH
+    MILE -. "PeerAnnounce:<br/>how agents find super-peers" .-> MESH
 ```
 
 - **Milestones** (a task was published; a patch was produced; it was verified) are a few hundred bytes each and go to free public relays. They carry a NIP-40 expiration, so relays don't keep history forever. GitHub's merged pull request is the permanent record.
 - **Chatter** (claims, lease renewals, shared log digests) never touches public relays. It flows through a **super-peer mesh**: agents that can accept connections automatically promote themselves to super-peers, everyone else attaches to three of them, and super-peers sync with each other by comparing Merkle roots.
 - **Settlement** is the only time GitHub is involved: one pull request per task, merged only when the signed evidence checks out.
-- **The seed** helps a new network start. It's designed to become unnecessary (see [seed-to-mesh handover](#seed-to-mesh-handover)).
+- **No servers to run.** The project hosts nothing. The first agents with a public address become the first super-peers, announce themselves on the milestone relays, and the mesh grows from there (see [how the mesh starts itself](#how-the-mesh-starts-itself)).
 
 ### A task, step by step (relay mode)
 
@@ -225,40 +221,35 @@ measured 2,351-line log became 449 characters, about 400 times smaller, with
 the one real error shown verbatim. When another agent has already seen that
 error, its note ("fails when the import fixture is missing: run make
 fixtures") comes with it. Only templates and digests travel over the mesh;
-raw logs stay on the machine, or sit in a 7-day artifact store by content
-hash.
+raw logs never leave the machine.
 
-### Seed-to-mesh handover
+### How the mesh starts itself
 
 ```mermaid
 flowchart LR
-    D["directory.json<br/>on GitHub Pages"] --> AG["every agent"]
-    AG --> H{"≥ 5 healthy<br/>community relays?"}
-    H -- "not yet" --> MIX["community + AWS seed"]
-    H -- "yes" --> COM["community only<br/>seed = last resort"]
+    A["agent starts"] --> S{"super-peers<br/>announced?"}
+    S -- "yes" --> P{"one can dial<br/>me back?"}
+    S -- "no: new fleet" --> G{"public IPv6 / IPv4<br/>address?"}
+    P -- "yes" --> SP(("can become<br/>a super-peer"))
+    G -- "yes" --> SP
+    P -- "no" --> AT["attach to 3<br/>super-peers"]
+    G -- "no" --> FB["claims go to milestone relays<br/>(one per task, until a super-peer appears)"]
+    SP --> AN["announce on milestone relays"] --> AT
 ```
 
-Agents start from a `directory.json` listing the project's seed endpoints and
-volunteer relays, measure each one's round-trip time and success rate, and
-**stop using the seed as soon as five community relays are healthy**.
-Nothing is trusted because of who hosts it (every event is signed and
-verified), so retiring the seed is deleting two lines from `directory.json`.
+There's no project server. Agents that can accept connections promote
+themselves to super-peers (a small relay inside the agent) as the fleet
+needs them: in a brand-new fleet, the first ones with a publicly routable
+address (most home connections give every machine a global IPv6 address);
+after that, anyone an existing super-peer can dial back. They announce
+themselves with short-lived signed events on the public milestone relays,
+which is how everyone else finds them. Nothing is trusted because of who
+hosts it: every event is signed and verified, so a super-peer can withhold
+but never forge.
 
-### The free-tier seed, locked down
-
-The project's seed runs on AWS within the free tier, built by
-[`infra/aws/deploy.py`](infra/aws/deploy.py):
-
-| Piece | What it is | Why it's safe |
-| --- | --- | --- |
-| Relay | `t4g.small`, our stdlib relay under a strict systemd sandbox | No IAM role, no SSH, no public IPv4, metadata service off, **no outbound network at all**; only CloudFront can reach it, and only with a secret header |
-| Edge | CloudFront | Free TLS and DDoS protection, caching for the index |
-| Index | Lambda + DynamoDB | Tip index, verification assignments, bans; reserved concurrency 5, so a runaway loop gets HTTP 429, not a bill |
-| Artifacts | S3 | Compressed logs and patch bundles by content hash, deleted after 7 days, trusted keys only |
-| Brake | AWS Budget + Lambda | Alerts at $1, $5 and $10; at $10 it throttles the index and stops the relay automatically |
-
-Even if the relay were fully compromised, it has no credentials and no route
-to anything: not your network, not other AWS resources, not the internet.
+Volunteers can add always-on relays with `./ws relay serve` and list them in
+[`docs/directory.json`](docs/directory.json); agents measure every endpoint and prefer the
+healthiest.
 
 ### What it guarantees
 
@@ -268,7 +259,7 @@ to anything: not your network, not other AWS resources, not the internet.
 | **No result merges twice** | Only the verified commit can be the pull request's head; a settled task rejects every other pull request. |
 | **Crashed agents don't lose work** | Leases expire without heartbeats; the task returns to the queue with the last pushed checkpoint. |
 | **Strangers can't push bad code** | Two independent trusted verifiers, proof-of-verification, green CI on a clean runner, protected paths, a supply-chain guard on dependencies, a shared ban list. |
-| **Nobody's in charge** | Relays are dumb pipes, super-peers can only withhold (never forge), and the seed is optional. |
+| **Nobody's in charge** | Relays are dumb pipes, super-peers can only withhold (never forge), and there's no project server to take down. |
 
 ### Measured
 
@@ -360,7 +351,7 @@ On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
 | --- | --- |
 | [Concepts](docs/concepts.md) | The design, lifecycle and Slurm mapping (GitHub mode) |
 | [Relay mode](docs/relay.md) | Signed events, tiers, the mesh, claims, quorum, the Tangle, logs, keys |
-| [AWS seed](docs/aws.md) | The free-tier seed: sandboxing, guardrails, costs, retiring it |
+| [AWS seed](docs/aws.md) | Optional: a sandboxed, free-tier always-on relay for operators who want one |
 | [Protocol](docs/protocol.md) | Commands, labels, metadata and guarantees |
 | [Planning](docs/planning.md) | How agents break work down, with examples |
 | [Operators](docs/operators.md) | Setup, every configuration key, steering, troubleshooting |
@@ -380,7 +371,7 @@ On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
 | `ws`, `ws.cmd` | The CLI launchers |
 | `tools/ws/workstead/` | Queue engines, worker client, scheduler, crypto, relays, mesh, DAG, logs, simulator |
 | `tools/ws/tests/` | Units, engine, relay, mesh, crypto vectors, end-to-end and REST client tests |
-| `infra/aws/` | The free-tier seed: deploy script, index and brake Lambdas |
+| `infra/aws/` | Optional always-on seed relay on AWS (`deploy.py up` / `down`) |
 | `.github/workflows/` | Queue, sweep, setup, settlement gate, CI, CodeQL, Scorecard, release |
 | `docs/` | Everything else, plus `directory.json` (served by GitHub Pages) |
 

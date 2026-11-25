@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+- No project-run servers: agents with a publicly routable address found a new fleet's super-peer mesh themselves; super-peers listen on IPv6 and IPv4; dial-back probes work over IPv6.
+- The project's AWS seed is retired and `docs/directory.json` lists no seeds. `infra/aws/deploy.py down` deletes an operator's seed completely; the AWS seed stays available as an option.
+
 ## 1.0.0
 
 - Queue engine: event-sourced leases with per-issue serialisation, heartbeats, time limits, requeue and hold.

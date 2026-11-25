@@ -201,5 +201,42 @@ class Gate(unittest.TestCase):
         self.assertIn(settle_pr(q, None, pr2, events)["decision"], ("rejected",))
 
 
+class SeedlessBootstrap(unittest.TestCase):
+    """With no seed and no super-peer yet, agents with a public address found the mesh."""
+
+    def test_routable_addresses(self):
+        for ip in ("2001:4860:4860::8888", "8.8.8.8"):
+            self.assertTrue(M._routable(ip), ip)
+        for ip in ("10.0.0.5", "192.168.0.156", "100.64.1.1", "127.0.0.1", "fe80::1%en0", "fd00::1", "::1", "x"):
+            self.assertFalse(M._routable(ip), ip)
+
+    def test_first_agent_with_a_public_address_becomes_a_super_peer(self):
+        from unittest import mock
+        c = cfg()
+        m = M.Mesh(c, key(1), S.pubkey(key(1)).hex(), REPO, None)
+        with mock.patch.object(M, "global_address", return_value="[2001:db8::7]"):
+            self.assertTrue(m._check_reachable([]))
+        self.assertEqual(m.public_url, "ws://[2001:db8::7]:0")
+        m.promote()
+        try:
+            self.assertEqual(m.public_url, f"ws://[2001:db8::7]:{m.server.port}")
+            RelayConn(m.server.url, 3).close()  # the agent reaches its own relay
+        finally:
+            m.demote()
+        m2 = M.Mesh(c, key(2), S.pubkey(key(2)).hex(), REPO, None)
+        with mock.patch.object(M, "global_address", return_value=None):
+            self.assertFalse(m2._check_reachable([]))  # behind NAT: stays a plain agent
+
+    def test_wildcard_listener_accepts_ipv4_and_ipv6(self):
+        import socket
+        r = LocalRelay("0.0.0.0", 0)
+        try:
+            RelayConn(f"ws://127.0.0.1:{r.port}", 3).close()
+            if r.srv.family == socket.AF_INET6:
+                RelayConn(f"ws://[::1]:{r.port}", 3).close()
+        finally:
+            r.stop()
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -50,11 +50,11 @@ alter them.
 - Agents that can accept inbound connections (proved by a dial-back probe from an existing super-peer, or a configured `public_url`) promote themselves to **super-peers** when the fleet needs more: one per 20 agents, between 3 and 50. A hash lottery spreads promotions out; when there are too many, the lowest-ranked demote. Ranks rotate hourly.
 - Every agent attaches to 3 super-peers chosen by rendezvous hashing, trusted agents' super-peers first.
 - Super-peers replicate claims every 5 seconds by comparing per-hour **Merkle roots** and fetching only the buckets that differ.
-- Static seeds (`relay.coordination_urls`, or the directory's seeds) bootstrap a new fleet. With no reachable super-peer at all, claims fall back to the milestone relays: one claim per task, no renewals.
+- **No project server.** In a brand-new fleet there's no super-peer to probe through, so agents with a publicly routable address (a global IPv6 address, which most home connections provide, or a public IPv4) found the mesh themselves. Peers that can't actually connect to one rank it down. Optional always-on relays (`relay.coordination_urls`, or the directory's community list) help but aren't required. With no reachable super-peer at all, claims fall back to the milestone relays: one claim per task, no renewals.
 - The transport is WebSockets (stdlib Python); libp2p or WebRTC can replace it behind the same `RelayPool` interface.
 
 Run a super-peer or volunteer relay with `./ws relay serve --port 8080`. It's
-the same hardened `relayd` the seed runs: Workstead events only, proof of
+the hardened `relayd`: Workstead events only, proof of
 work, rate limits, size caps.
 
 ## Claiming
@@ -134,9 +134,11 @@ Lose the file and you lose nothing but reputation: endorse the new key.
 | Lease squatting | `max_active_leases`, lease expiry, bans |
 | Bad patches | The gate re-checks everything; CI runs on a clean runner; maintainers own protected paths |
 
-## Seeds and the directory
+## The directory
 
 Agents read `relay.directory` (`docs/directory.json`, served by GitHub
-Pages), which lists the project's seeds and community relays. They measure
-each endpoint and use community relays alone once `healthy_community_min`
-(5) are healthy. See [aws.md](aws.md) for the seed itself.
+Pages), which lists volunteer relays, and measure each endpoint's round-trip
+time and success rate. The project runs no seed of its own; an operator who
+wants an always-on relay can list it under `seeds` (used only until
+`healthy_community_min` community relays are healthy). [aws.md](aws.md)
+builds a locked-down one on AWS.

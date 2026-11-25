@@ -779,6 +779,87 @@ def resume():
     say(f"resumed: index concurrency 5, started {ids}")
 
 
+def down():
+    """Delete every resource `up` created. Nothing else in the account is touched."""
+    region, account = ctx()
+    st = load_state()
+    gone = lambda *a: aws(*a, check=False)  # noqa: E731  (already-deleted is fine)
+    gone("budgets", "delete-budget", "--account-id", account, "--budget-name", "workstead-monthly")
+    gone("scheduler", "delete-schedule", "--name", "workstead-cost-tag")
+    topic = f"arn:aws:sns:{region}:{account}:workstead-brake"
+    gone("sns", "delete-topic", "--topic-arn", topic)
+    for fn in ("workstead-index", "workstead-brake"):
+        gone("lambda", "delete-function", "--function-name", fn)
+        gone("logs", "delete-log-group", "--log-group-name", f"/aws/lambda/{fn}")
+    for role in ("workstead-index-role", "workstead-brake-role", "workstead-scheduler-role"):
+        gone("iam", "delete-role-policy", "--role-name", role, "--policy-name", "workstead")
+        gone("iam", "delete-role", "--role-name", role)
+    gone("dynamodb", "delete-table", "--table-name", "workstead-index")
+    gone("ssm", "delete-parameter", "--name", "/workstead/seed/origin-secret")
+    ids = [i["InstanceId"] for i in instances() if i["State"]["Name"] != "terminated"]
+    if ids:
+        aws("ec2", "terminate-instances", "--instance-ids", *ids)
+        say(f"terminating {ids}")
+    cf = st.get("cf_id")
+    if cf and gone("cloudfront", "get-distribution", "--id", cf):
+        cur = aws("cloudfront", "get-distribution-config", "--id", cf)
+        if cur["DistributionConfig"]["Enabled"]:
+            cfg = cur["DistributionConfig"]
+            cfg["Enabled"] = False
+            with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+                json.dump(cfg, f)
+            aws("cloudfront", "update-distribution", "--id", cf, "--if-match", cur["ETag"],
+                "--distribution-config", f"file://{f.name}")
+            os.unlink(f.name)
+            say(f"disabled CloudFront {cf}; waiting for it to deploy (up to ~15 minutes)...")
+        aws("cloudfront", "wait", "distribution-deployed", "--id", cf)
+        etag = aws("cloudfront", "get-distribution", "--id", cf)["ETag"]
+        aws("cloudfront", "delete-distribution", "--id", cf, "--if-match", etag)
+        say(f"deleted CloudFront {cf}")
+    for o in aws("cloudfront", "list-origin-access-controls")["OriginAccessControlList"].get("Items", []):
+        if o["Name"] == "workstead-index":
+            etag = aws("cloudfront", "get-origin-access-control", "--id", o["Id"])["ETag"]
+            gone("cloudfront", "delete-origin-access-control", "--id", o["Id"], "--if-match", etag)
+    for p in aws("cloudfront", "list-cache-policies", "--type", "custom")["CachePolicyList"].get("Items", []):
+        if p["CachePolicy"]["CachePolicyConfig"]["Name"] == "workstead-api":
+            pid = p["CachePolicy"]["Id"]
+            etag = aws("cloudfront", "get-cache-policy", "--id", pid)["ETag"]
+            gone("cloudfront", "delete-cache-policy", "--id", pid, "--if-match", etag)
+    if ids:
+        aws("ec2", "wait", "instance-terminated", "--instance-ids", *ids)
+    tagf = ["Name=tag:project,Values=workstead", f"Name=tag:Name,Values={NAME}"]
+    for vpc in [v["VpcId"] for v in find("vpcs", tagf)]:
+        inv = [f"Name=vpc-id,Values={vpc}"]
+        for ep in find("vpc-endpoints", inv):
+            gone("ec2", "delete-vpc-endpoints", "--vpc-endpoint-ids", ep["VpcEndpointId"])
+        for sg in find("security-groups", inv):
+            if sg["GroupName"] != "default":
+                gone("ec2", "delete-security-group", "--group-id", sg["GroupId"])
+        for sn in find("subnets", inv):
+            gone("ec2", "delete-subnet", "--subnet-id", sn["SubnetId"])
+        for rt in find("route-tables", inv):
+            if not any(a.get("Main") for a in rt.get("Associations", [])):
+                gone("ec2", "delete-route-table", "--route-table-id", rt["RouteTableId"])
+        for igw in find("internet-gateways", [f"Name=attachment.vpc-id,Values={vpc}"]):
+            gone("ec2", "detach-internet-gateway", "--internet-gateway-id", igw["InternetGatewayId"], "--vpc-id", vpc)
+            gone("ec2", "delete-internet-gateway", "--internet-gateway-id", igw["InternetGatewayId"])
+        for _ in range(12):
+            if gone("ec2", "delete-vpc", "--vpc-id", vpc) is not None:
+                break
+            time.sleep(10)  # endpoint deletion takes a moment
+        say(f"deleted VPC {vpc}")
+    bucket = f"workstead-artifacts-{account}-{region}"
+    if gone("s3api", "head-bucket", "--bucket", bucket) is not None:
+        subprocess.run(["aws", "s3", "rm", f"s3://{bucket}", "--recursive", "--quiet"], check=False)
+        gone("s3api", "delete-bucket", "--bucket", bucket)
+        say(f"deleted bucket {bucket}")
+    if STATE.exists():
+        STATE.unlink()
+    left = aws("resourcegroupstaggingapi", "get-resources", "--tag-filters", "Key=project,Values=workstead")
+    arns = [r["ResourceARN"] for r in left.get("ResourceTagMappingList", [])]
+    say("down. nothing tagged project=workstead remains" if not arns else f"still listed (may lag): {arns}")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
-    {"up": up, "status": status, "brake": brake, "resume": resume}[cmd]()
+    {"up": up, "status": status, "brake": brake, "resume": resume, "down": down}[cmd]()

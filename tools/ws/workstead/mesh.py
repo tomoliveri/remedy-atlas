@@ -14,7 +14,9 @@ and have promoted themselves to run a small relay (``relay.LocalRelay``).
 * **Replication.** Super-peers pull claims from one another every
   ``sync_seconds``, so the mesh converges well inside the claim confirm delay.
 * **Election.** An agent that a super-peer can dial back (a STUN-like probe),
-  or that has a configured ``public_url``, promotes itself when the fleet has
+  or that has a configured ``public_url``, or (in a brand-new fleet with no
+  super-peer to probe through) has a publicly routable IPv6/IPv4 address,
+  promotes itself when the fleet has
   fewer super-peers than it needs (one per ``peers_per_super`` agents, within
   ``min_supers``..``max_supers``). Promotions are spread out by a hash
   lottery so a hundred agents don't all promote at once; when there are too
@@ -37,6 +39,37 @@ import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
 from . import nostr as N
+
+
+def _routable(ip: str) -> bool:
+    import ipaddress
+    try:
+        a = ipaddress.ip_address(ip.split("%", 1)[0])
+    except ValueError:
+        return False
+    if a.version == 4 and a in ipaddress.ip_network("100.64.0.0/10"):
+        return False  # carrier-grade NAT
+    return a.is_global
+
+
+def global_address() -> Optional[str]:
+    """This machine's publicly routable address, if it has one (no packets are sent).
+
+    Connecting a UDP socket only picks the outbound route and source address.
+    IPv6 is preferred: most home connections give every machine a global IPv6
+    address, while IPv4 usually sits behind NAT.
+    """
+    import socket
+    for fam, target, fmt in ((socket.AF_INET6, "2001:4860:4860::8888", "[{}]"), (socket.AF_INET, "8.8.8.8", "{}")):
+        try:
+            with socket.socket(fam, socket.SOCK_DGRAM) as s:
+                s.connect((target, 53))
+                ip = s.getsockname()[0]
+        except OSError:
+            continue
+        if _routable(ip):
+            return fmt.format(ip)
+    return None
 
 
 def _h(*parts: str) -> int:
@@ -157,7 +190,17 @@ class Mesh:
         from .relay import LocalRelay, RelayConn, RelayError
         helpers = [s["url"] for s in supers] + list(self.cfg["relay"]["coordination_urls"])
         if not helpers:
-            return bool(self.m["assume_reachable"])
+            # No super-peer exists yet (a brand-new fleet, no seed): the first
+            # agents with a publicly routable address found the mesh. Others
+            # dial-back-probe through them from then on, and peers that can't
+            # actually connect rank them down (directory.Health).
+            if self.m["assume_reachable"]:
+                return True
+            addr = global_address()
+            if addr:
+                self.public_url = f"ws://{addr}:0"
+                return True
+            return False
         probe_server = LocalRelay(self.m["listen_host"], self.m["listen_port"])
         try:
             for url in helpers[:3]:

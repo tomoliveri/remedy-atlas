@@ -562,6 +562,27 @@ class Store:
         return list({e["id"]: e for e in out}.values())
 
 
+def _listen(host: str, port: int) -> socket.socket:
+    """A listening socket. Wildcard hosts listen on IPv6 and IPv4 together where possible,
+    so a super-peer is reachable at its global IPv6 address as well as through IPv4."""
+    if host in ("0.0.0.0", "::", "") and socket.has_ipv6:
+        try:
+            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+            s.bind(("::", port))
+            s.listen(128)
+            return s
+        except OSError:
+            s.close()  # no IPv6 stack: fall back to IPv4 only
+    fam = socket.AF_INET6 if ":" in host else socket.AF_INET
+    s = socket.socket(fam, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((host, port))
+    s.listen(128)
+    return s
+
+
 class LocalRelay:
     """A real Nostr relay over WebSockets: for tests, and for `ws relay serve`.
 
@@ -571,12 +592,10 @@ class LocalRelay:
 
     def __init__(self, host: str = "127.0.0.1", port: int = 0, clock: Callable[[], float] = time.time):
         self.store = Store(clock)
-        self.srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.srv.bind((host, port))
-        self.srv.listen(128)
+        self.srv = _listen(host, port)
         self.port = self.srv.getsockname()[1]
-        self.url = f"ws://{host}:{self.port}"
+        local = "127.0.0.1" if host in ("0.0.0.0", "::", "") else (f"[{host}]" if ":" in host else host)
+        self.url = f"ws://{local}:{self.port}"  # how this machine reaches its own relay
         self.clients: List[WebSocket] = []
         self.running = True
         self.received = 0
@@ -630,7 +649,9 @@ class LocalRelay:
                     # STUN-like dial-back: is the asking peer reachable at our
                     # view of its address? Lets a peer decide to be a super-peer.
                     host = sock.getpeername()[0]
-                    url = f"ws://{host}:{m[1]}"
+                    if host.startswith("::ffff:"):
+                        host = host[7:]  # IPv4 peer on a dual-stack socket
+                    url = f"ws://[{host}]:{m[1]}" if ":" in host else f"ws://{host}:{m[1]}"
                     ok = False
                     try:
                         WebSocket.connect(url, timeout=4).close()

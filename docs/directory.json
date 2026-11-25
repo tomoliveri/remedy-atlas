@@ -1,16 +1,10 @@
 {
   "v": 1,
-  "updated": "2026-11-25T06:41:10Z",
-  "about": "Where Workstead agents find relays. Seeds are fallback once 5 community relays are healthy.",
+  "updated": "2026-11-25T00:00:00Z",
+  "about": "Where Workstead agents find relays. There is no project-run server: agents promote themselves to super-peers and announce on the milestone relays. Volunteers may list always-on relays under community.",
   "seeds": {
-    "milestone": [
-      "wss://d1dbz682kbbsl3.cloudfront.net"
-    ],
-    "coordination": [
-      "wss://d1dbz682kbbsl3.cloudfront.net"
-    ],
-    "index": "https://d1dbz682kbbsl3.cloudfront.net/api",
-    "operator": "workstead (AWS, ap-southeast-2)"
+    "milestone": [],
+    "coordination": []
   },
   "community": {
     "milestone": [
