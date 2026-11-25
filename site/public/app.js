@@ -19,36 +19,6 @@ function link(label, href) {
   return node;
 }
 
-function formatRange(values, options) {
-  const format = new Intl.NumberFormat(undefined, options);
-  const [low, high] = values.map(value => format.format(value));
-  return low === high ? low : `${low}–${high}`;
-}
-
-function impactValue(impact) {
-  const inputs = [impact.annualCases ?? impact.baselineDeaths, impact.eligibleFraction, impact.reach, impact.mortalityReduction];
-  const totals = [0, 1].map(bound => inputs.reduce((product, input) => product * input[bound], 1));
-  return formatRange(totals, {maximumSignificantDigits: 2, maximumFractionDigits: 1, roundingPriority: "lessPrecision"});
-}
-
-function impactDetails(track) {
-  const impact = track.impact;
-  const caseBased = Boolean(impact.annualCases);
-  const percent = values => formatRange(values, {style: "percent"});
-  const details = element("details", "", "assumptions");
-  details.append(element("summary", "How this was calculated"));
-  const baseline = formatRange(impact.annualCases ?? impact.baselineDeaths);
-  const effect = caseBased
-    ? `${formatRange(impact.mortalityReduction.map(value => value * 100))} percentage points lower mortality`
-    : `${percent(impact.mortalityReduction)} relative reduction in mortality`;
-  details.append(
-    element("p", `${baseline} annual ${caseBased ? "clinical detections" : "baseline deaths"} × ${percent(impact.eligibleFraction)} eligible × ${percent(impact.reach)} reached × ${effect} versus current care.`, "secondary"),
-    element("p", track.gap, "secondary"),
-  );
-  impact.sources.forEach((source, index) => details.append(link(index ? `Baseline source ${index + 1}` : "Baseline source", source), " "));
-  return details;
-}
-
 function card(track) {
   const issueData = snapshot?.tracks[track.id];
   const tasks = issueData?.tasks ?? [];
@@ -60,17 +30,10 @@ function card(track) {
   const top = element("div", "", "card-top");
   const phase = trackPhase(track);
   top.append(element("p", track.area, "category"), element("span", phase, `phase ${phase.toLowerCase().replace(" ", "-")}`));
-  const impact = element("div", "", "metrics");
-  const context = element("div", "", "metric");
-  context.append(element("p", "Reported burden", "metric-label"),
-    element("strong", track.burden.value), element("p", track.burden.label, "secondary"),
-    link("Source", track.burden.source));
-  const potential = element("div", "", "metric");
-  potential.append(element("p", "Potential lives saved / year", "metric-label"),
-    element("strong", track.impact ? impactValue(track.impact) : "Unestimated"),
-    element("p", track.impact ? `${track.impact.illustrative ? "Illustrative scenario" : "Conditional estimate"} · ${track.impact.population}` : track.gap, "secondary"));
-  if (track.impact) potential.append(impactDetails(track));
-  impact.append(context, potential);
+  const burden = element("div", "", "burden");
+  burden.append(element("p", track.burden.label, "metric-label"),
+    element("strong", track.burden.value), link("Source", track.burden.source));
+  const gap = element("p", track.gap, "secondary");
 
   const queue = element("div", "", "queue");
   queue.append(element("p", track.next, "next"));
@@ -93,7 +56,7 @@ function card(track) {
     details.append(list);
     queue.append(details);
   }
-  article.append(top, element("h3", track.name), element("p", track.question), impact, queue);
+  article.append(top, element("h3", track.name), element("p", track.question), burden, gap, queue);
   return article;
 }
 

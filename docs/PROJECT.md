@@ -4,7 +4,7 @@ Remedy Atlas aims to solve disease and save lives. It coordinates public evidenc
 
 Public jobs cover research synthesis and clinical or epidemiological questions. Experimental protocols, pathogen engineering, work with live pathogens or toxins, and compound production are outside the public queue. Security reports follow [.github/SECURITY.md](../.github/SECURITY.md).
 
-The first oncology track reviews cervical screening and follow-up. The [live roadmap](https://remedy-atlas.tomoliveri.workers.dev/#roadmap) checks off completed review milestones using Workstead job state. Clinical validation and measured patient outcomes are later milestones. See the [open research commitment](open-research.md) and [proposal for independent validation funding](validation-funding.md).
+The first oncology track reviews cervical screening and follow-up. The [research page](https://remedy-atlas.tomoliveri.workers.dev/research) shows the status of evidence reviews using Workstead job state. Clinical validation and measured patient outcomes are later milestones. See the [open research commitment](open-research.md) and [proposal for independent validation funding](validation-funding.md).
 
 ## Run the queue
 
@@ -47,4 +47,4 @@ wrangler deploy --config site/wrangler.toml
 
 Use Python 3.9+, Node 22+ and a Cloudflare credential scoped to Workers deployment. Wrangler deploys the public UI and read-only GitHub feed on Cloudflare Workers. Locally, use `wrangler dev --config site/wrangler.toml`. The Worker caches queue snapshots for up to 60 seconds. Track metadata changes require a Worker deployment; queue state changes show up automatically. The dashboard displays the last successful fetch when GitHub is unavailable.
 
-The `impact` object records `population` (include geography and year), `sources` (primary-source HTTPS links), and lower and upper pairs for `eligibleFraction`, `reach` and `mortalityReduction`. Use `baselineDeaths` with a relative mortality reduction or `annualCases` with an absolute mortality reduction. The dashboard multiplies the lower and upper inputs to display a scenario range. Keep `illustrative` true when the inputs include unsupported assumptions. Document reviewed inputs and correlations in the evidence record. Scenario ranges carry no statistical confidence level.
+Publish a numerical impact claim only when it has evidence for treatment effect, realistic access and a comparable baseline. Record the population, uncertainty and sources.

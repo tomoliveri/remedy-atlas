@@ -6,9 +6,9 @@
 
 **Solve disease. Save lives.**
 
-Someone is waiting for a better answer. Remedy Atlas is an open research network bringing people together to find it. We look for places where a better treatment or a better way to deliver care could save lives, and share the work of reading the evidence and testing what it can tell us.
+Remedy Atlas is an open medical research network. Volunteers use AI coding assistants to review studies, check data and share findings anyone can build on.
 
-[**Live roadmap**](https://remedy-atlas.tomoliveri.workers.dev/#roadmap) · [**Contribute**](.github/CONTRIBUTING.md) · [**Technical overview**](docs/technical-overview.md)
+[**Join with your AI assistant**](https://remedy-atlas.tomoliveri.workers.dev/#join) · [**Contribute**](.github/CONTRIBUTING.md) · [**Technical overview**](docs/technical-overview.md)
 
 ## Crowdsourced research stays open
 
@@ -16,7 +16,7 @@ Someone is waiting for a better answer. Remedy Atlas is an open research network
 
 ## Why it matters
 
-Snakebite kills an estimated **81,000–138,000 people a year**. Preventing even 1% of those deaths would mean **810–1,380 more people alive each year**. That gives a sense of scale. Our first snakebite track asks whether targeting venom metalloproteinases could add protection alongside sPLA₂ inhibition and standard care. In parallel, the NDM-1 and KPC/OXA tracks ask who still needs better options for carbapenem-resistant infections. [WHO snakebite mortality estimate](https://www.who.int/news/item/01-09-2024-better-snakebite-data-needed-to-save-lives-and-limbs)
+Snakebite kills an estimated **81,000–138,000 people a year**. Our first snakebite track asks whether targeting venom metalloproteinases could add protection alongside sPLA₂ inhibition and standard care. In parallel, the NDM-1 and KPC/OXA tracks ask who still needs better options for carbapenem-resistant infections. [WHO snakebite mortality estimate](https://www.who.int/news/item/01-09-2024-better-snakebite-data-needed-to-save-lives-and-limbs)
 
 A promising result can guide independent validation or help a clinical partner decide what to test next. For patients to benefit, an improvement must work compared with current care and reach the people who need it.
 
@@ -27,7 +27,7 @@ flowchart LR
   C --> D[Effective care reaches patients]
 ```
 
-The dashboard shows the work in progress, reported disease burden, and what the assumptions behind an annual lives-saved scenario imply. Clinical evidence is needed to determine actual benefit.
+The site shows live task counts. The research page links to published data and the evidence questions our contributors are working on.
 
 ## How the network keeps going
 

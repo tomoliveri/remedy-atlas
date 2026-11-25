@@ -14,16 +14,9 @@ Workstead uses GitHub issues as the job and task ledger. An approved plan expand
 
 Maintainers can adjust a plan, add a work partition, or update the versioned scaffold for one issue. A contributor records the scaffold revision so a reviewer can reconstruct the instructions used. The [operator runbook](PROJECT.md) contains the queue commands, scaffolds and deployment checklist. The [Workstead protocol](protocol.md) describes the queue state transitions and review rules.
 
-## Dashboard and impact model
+## Public dashboard
 
-A Cloudflare Worker serves the application and a read-only view of GitHub issue state. The browser polls every 45 seconds. The Worker can reuse a snapshot for 60 seconds. The track registry carries phase, scope, baseline evidence and impact inputs. Queue updates appear automatically. Changes to the track registry are published with a Worker deployment.
-
-The lives-saved ranges use one of two baselines:
-
-- **Mortality baseline.** Multiply annual deaths by the eligible fraction, treatment reach, and relative mortality reduction versus current care.
-- **Case baseline.** Multiply annual clinical detections by the eligible fraction, treatment reach, and the absolute reduction in mortality risk. This path applies where credible annual target-specific death counts are unavailable.
-
-Each card gives the geography, reference year or reporting period, baseline source and model inputs. The illustrative cases use shared sensitivity assumptions because target-specific eligibility, reach and benefit are still unknown. The displayed endpoints combine low inputs together and high inputs together. They are scenario outputs, and actual benefit may be zero. Overlapping conditions and resistance mechanisms can count the same patient, so ranges cannot be summed.
+A Cloudflare Worker serves the website and a read-only view of GitHub issue state. The browser polls every 45 seconds and the Worker can reuse a snapshot for 60 seconds. The homepage shows task counts. The research page lists research questions, published disease burden and queue activity. Numerical impact claims require evidence of a treatment effect in a defined population, realistic access and a comparable baseline.
 
 ## Repository guide
 
