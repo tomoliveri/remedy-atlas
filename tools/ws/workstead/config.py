@@ -29,7 +29,14 @@ DEFAULTS: Dict[str, Any] = {
         "mode": "auto",
         "trusted_after_merged": 2,
         "allow": [],
+        # Logins this project never trusts and never lets claim work.
+        "deny": [],
     },
+    # The shared safety net (workstead/safety.py): read the upstream list of
+    # accounts flagged by independent projects. action: maintainer (listed
+    # accounts lose trust; their pull requests need a maintainer) or block
+    # (they also can't claim work). upstream "" = the template's upstream.
+    "safety": {"shared": True, "upstream": "", "action": "maintainer"},
     # Slurm partitions: classes of work with their own limits and delivery.
     # deliver: pr (a pull request closes it), comment (/done with a result),
     #          plan (/plan splits it into child tasks).
@@ -112,6 +119,10 @@ DEFAULTS: Dict[str, Any] = {
     # One command that proves a change works, run locally by `ws submit` and
     # by the CI workflow. Empty means none.
     "validate": {"command": "", "timeout_minutes": 30},
+    # What a worker's machine needs. tools: executables that must be on PATH
+    # (named in the join message so the person approves installing them up
+    # front). command: project setup run in each new task worktree (npm ci...).
+    "setup": {"tools": [], "command": "", "timeout_minutes": 30},
     "drain": {"expiries": 3, "window_hours": 168, "pause_hours": 24},
     # Give back: workers spend `share` of their measured lease time (0.001 =
     # 0.1%) on tasks from the upstream Workstead repository, through the same
@@ -182,6 +193,8 @@ def validate(cfg: Dict[str, Any]) -> None:
     if not 0 < float(cfg["dedup"]["similarity"]) <= 1:
         raise ConfigError("dedup.similarity must be in (0, 1]")
     gb = cfg["give_back"]
+    if cfg["safety"]["action"] not in ("maintainer", "block"):
+        raise ConfigError("safety.action must be maintainer or block")
     if not isinstance(gb["learnings"], bool):
         raise ConfigError("give_back.learnings must be true or false")
     if not isinstance(gb["enabled"], bool) or not 0 <= float(gb["share"]) <= 0.05:

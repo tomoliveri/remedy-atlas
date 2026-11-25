@@ -29,6 +29,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from . import config as C
 from . import dedup
 from . import learnings as LRN
+from . import safety as SAFE
 from . import plan as P
 from . import sched
 from .gh import GitHubError, log
@@ -42,7 +43,8 @@ COLLAB = ("OWNER", "MEMBER", "COLLABORATOR")
 
 class Queue:
     def __init__(self, gh, cfg: Dict[str, Any], workflow: str = "ws-queue.yml", ref: str = "",
-                 clock: Callable[[], float] = time.time, private: Optional[bool] = None):
+                 clock: Callable[[], float] = time.time, private: Optional[bool] = None,
+                 flags_loader: Optional[Callable[[], Dict[str, Any]]] = None):
         self.gh = gh
         self.cfg = cfg
         self.workflow = workflow
@@ -53,6 +55,8 @@ class Queue:
         self._maint: Dict[str, bool] = {}
         self._issue_cache: Dict[int, Dict[str, Any]] = {}
         self.dispatched: List[Tuple[int, str]] = []
+        self.flags_loader = flags_loader
+        self._flags: Optional[Dict[str, Any]] = None
         self.bots = set(cfg["bots"]) | ({os.environ["WS_BOT_LOGIN"]} if os.environ.get("WS_BOT_LOGIN") else set())
 
     # --- time & identity ----------------------------------------------------
@@ -78,6 +82,51 @@ class Queue:
                 self._private = False
         return "open" if self._private else "earned"
 
+    # --- the shared safety net ---------------------------------------------------
+
+    def safety_upstream(self) -> Optional[str]:
+        s = self.cfg["safety"]
+        if s["upstream"]:
+            return s["upstream"]
+        try:
+            info = self.gh.repo_info()
+        except GitHubError:
+            return None
+        return self.cfg["give_back"]["upstream"] or info.get("template") or self.gh.repo
+
+    def shared_list(self) -> Dict[str, Any]:
+        """Accounts listed by the shared safety net, keyed by lowercase login."""
+        if self._flags is not None:
+            return self._flags
+        self._flags = {}
+        if self.flags_loader is not None:
+            self._flags = self.flags_loader() or {}
+            return self._flags
+        if not self.cfg["safety"]["shared"]:
+            return self._flags
+        up = self.safety_upstream()
+        if not up:
+            return self._flags
+        try:
+            src = self.gh if up.lower() == self.gh.repo.lower() else type(self.gh)(up)
+            raw = src.read_snapshot(self.cfg["board"]["branch"], "safety.json", public=True)
+            self._flags = (json.loads(raw) or {}).get("listed", {}) if raw else {}
+        except (GitHubError, ValueError, TypeError) as e:
+            log(f"safety list unavailable ({e}); continuing without it")
+        return self._flags
+
+    def flagged(self, login: str) -> Optional[Dict[str, Any]]:
+        """Why this account isn't trusted by the safety net, or None."""
+        if not login or self.is_bot(login):
+            return None
+        if login.lower() in {x.lower() for x in self.cfg["trust"]["deny"]}:
+            return {"status": "denied", "signals": ["local deny list"], "projects": 0}
+        return self.shared_list().get(login.lower())
+
+    def blocked(self, login: str) -> bool:
+        f = self.flagged(login)
+        return bool(f) and (f["status"] == "denied" or self.cfg["safety"]["action"] == "block")
+
     def is_maintainer(self, login: str, assoc: Optional[str] = None) -> bool:
         """Write access or listed. author_association answers most cases for free."""
         if login in self._maint:
@@ -100,6 +149,9 @@ class Queue:
         if login in self._trust:
             return self._trust[login]
         t = self.cfg["trust"]
+        if self.flagged(login):
+            self._trust[login] = False
+            return False
         ok = (self.is_bot(login) or login in t["allow"] or self.mode == "open" or self.is_maintainer(login, assoc))
         if not ok and t["trusted_after_merged"] > 0:
             try:
@@ -111,7 +163,9 @@ class Queue:
 
     def authored_by_trusted(self, issue: Dict[str, Any]) -> bool:
         a = issue["author"]
-        return self.is_bot(a) or a in self.cfg["maintainers"] or issue.get("author_association") in COLLAB
+        if self.is_bot(a):
+            return True
+        return (a in self.cfg["maintainers"] or issue.get("author_association") in COLLAB) and not self.flagged(a)
 
     # --- loading and saving -------------------------------------------------
 
@@ -290,6 +344,8 @@ class Queue:
                 self.reconcile_pr(n)
             elif L["learnings"] in names:
                 self.ingest_learnings(n, payload["comment"])
+            elif L["safety"] in names:
+                self.ingest_safety(n)
             elif any(x in (L["task"], L["proposed"], L["job"]) for x in names):
                 self.reconcile(n)
             return
@@ -479,6 +535,8 @@ class Queue:
                 return False, ""
             if meta is None:
                 return False, f"@{who} #{n} has no valid task metadata; a maintainer must fix it."
+            if self.blocked(who):
+                return False, f"@{who} this account can't claim work here (Workstead safety net). Maintainers can review the listing."
             ds, blocking = sched.deps_state(meta, self.dep_status)
             if ds != "ready":
                 return False, f"@{who} #{n} is waiting on {', '.join(f'#{b}' for b in blocking)} (Dependency)."
@@ -1110,6 +1168,9 @@ class Queue:
         """Why a pull request needs a maintainer's approval, or "" if it doesn't."""
         import fnmatch
         rv = self.cfg["review"]
+        fl = self.flagged(pr.get("author", ""))
+        if fl:
+            return "is from an account flagged by the Workstead safety net (" + ", ".join(fl.get("signals", [])) + ")"
         try:
             files = self.gh.pr_files(n)
         except GitHubError:
@@ -1377,11 +1438,82 @@ class Queue:
             snap["learnings_topics"] = rep["topics"]
         except ValueError as e:
             log(str(e))
+        safety = self.safety_snapshot(now)
+        if safety is not None:
+            files["safety.json"] = json.dumps(safety, indent=1, sort_keys=True)
         agg = self.aggregate_learnings(now)
         if agg is not None:
             files["fleet-learnings.json"] = json.dumps(agg, indent=1, sort_keys=True)
             snap["fleet_learnings"] = {"fleets": agg["fleets"], "signals": agg.get("signals", [])}
         return files
+
+    # --- the safety net (upstream side) -----------------------------------------
+
+    def _safety_state(self, n: int):
+        comments = self.gh.list_comments(n)
+        for c in comments:
+            if self.is_bot(c["author"]):
+                st = read_block(c["body"], "state")
+                if st is not None and st.get("kind") == "safety":
+                    return comments, c, st
+        return comments, None, SAFE.new_state()
+
+    def ingest_safety(self, n: int) -> None:
+        """Verify flags, maintainer confirmations, clears and appeals, in comment order."""
+        issue = self.gh.get_issue(n)
+        comments, sc, state = self._safety_state(n)
+        before = json.dumps(state, sort_keys=True) if sc else ""
+        replies: List[str] = []
+        now = self.now()
+        for c in comments:
+            if c["id"] <= state.get("cursor", 0) or self.is_bot(c["author"]):
+                continue
+            state["cursor"] = c["id"]
+            who = c["author"]
+            maint = self.is_maintainer(who, c.get("author_association"))
+            cmd = parse_command(c["body"])
+            name = cmd[0] if cmd else None
+            if name == "flag":
+                flag, errors = SAFE.validate_flag(json_block(cmd[2]))
+                why = "; ".join(errors) if errors else SAFE.verify(flag, who, self.gh, self.is_maintainer)
+                if why:
+                    self.gh.delete_comment(c["id"])
+                    replies.append(f"@{who} a flag was not accepted: {why}.")
+                    continue
+                state["flags"] = [f for f in state["flags"]
+                                  if not (f["subject"].lower() == flag["subject"].lower() and f["project"].lower() == flag["project"].lower())]
+                state["flags"].append(dict(flag, reporter=who, at=c["created_at"], comment=c["id"]))
+                self.gh.react(c["id"], "+1")
+            elif name in ("confirm", "clear") and maint:
+                key = cmd[1]["login"].lower()
+                state["confirmed" if name == "confirm" else "cleared"][key] = {"by": who, "at": c["created_at"]}
+                if name == "clear":
+                    state["appeals"].pop(key, None)
+                self.gh.react(c["id"], "+1")
+            elif name == "appeal":
+                state["appeals"][who.lower()] = c["created_at"]
+                self.gh.react(c["id"], "eyes")
+            elif not maint:
+                self.gh.delete_comment(c["id"])  # no free-text accusations or noise here
+        listed = SAFE.listing(state, now)
+        body = SAFE.render_issue(state, listed, now)
+        if issue["body"] != body:
+            self.gh.edit_issue(n, body=body)
+        if replies:
+            self.gh.create_comment(n, "\n\n".join(replies))
+        if json.dumps(state, sort_keys=True) != before or sc is None:
+            text = "Workstead safety-net record (maintained by the queue).\n\n" + write_block("state", state)
+            if sc is None:
+                self.gh.create_comment(n, text)
+            else:
+                self.gh.edit_comment(sc["id"], text)
+
+    def safety_snapshot(self, now: float) -> Optional[Dict[str, Any]]:
+        issues = self.gh.list_issues(labels=[L["safety"]])
+        if not issues:
+            return None
+        _, _, state = self._safety_state(issues[0]["number"])
+        return SAFE.snapshot(SAFE.listing(state, now), now)
 
     def ingest_learnings(self, n: int, comment: Dict[str, Any]) -> None:
         """A downstream fleet's report: keep it if it matches the schema exactly."""

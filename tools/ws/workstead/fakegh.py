@@ -45,6 +45,9 @@ class World:
         self.merged_by_login: Dict[str, int] = {}
         self.template: Optional[str] = None
         self.fail_next: List[str] = []  # method names that raise once (fault injection)
+        # Other repositories, for safety-net verification:
+        # {"owner/name": {"owner": login, "type": "User"|"Organization", "members": [...], "issues": {n: author}}}
+        self.foreign: Dict[str, Dict[str, Any]] = {}
 
     def advance(self, seconds: float) -> None:
         self.t += seconds
@@ -346,6 +349,21 @@ class FakeGitHub:
     def pr_files(self, n: int) -> List[str]:
         self._call("pr_files")
         return list(self.w.prs[n]["files"])
+
+    def repo_owner(self, full: str):
+        self._call("repo_owner")
+        f = self.w.foreign.get(full)
+        if not f or f.get("private"):
+            raise GitHubError(404, "Not Found")
+        return f["owner"], f.get("type", "User")
+
+    def public_member(self, org: str, login: str) -> bool:
+        self._call("public_member")
+        return any(f["owner"] == org and login in f.get("members", []) for f in self.w.foreign.values())
+
+    def foreign_author(self, full: str, n: int) -> str:
+        self._call("foreign_author")
+        return self.w.foreign[full]["issues"][n]
 
     def pr_reviews(self, n: int) -> List[Dict[str, Any]]:
         self._call("pr_reviews")

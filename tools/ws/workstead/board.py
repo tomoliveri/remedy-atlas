@@ -100,7 +100,7 @@ def render_board(snap: Dict[str, Any], cfg: Dict[str, Any]) -> str:
     lines += ["### Join", "", "Paste this into an AI coding agent (Claude Code, Codex, Cursor, Aider…):", "",
               "```text",
               f"Read https://raw.githubusercontent.com/{snap['repo']}/{cfg['default_branch']}/JOIN.md and follow it to "
-              "contribute to this project. Ask me once before you install or post anything, then keep working until "
+              "contribute to this project. Ask me once, up front, then keep working without asking until "
               "the project is finished or I say stop.",
               "```", ""]
 

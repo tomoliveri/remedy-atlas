@@ -17,7 +17,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 API = os.environ.get("GITHUB_API_URL", "https://api.github.com")
 UA = "workstead/1"
@@ -246,6 +246,7 @@ class GitHub:
                 "can_push": bool((d.get("permissions") or {}).get("push")), "fork": d.get("fork", False),
                 "template": (d.get("template_repository") or {}).get("full_name"),
                 "owner": (d.get("owner") or {}).get("login"), "owner_type": (d.get("owner") or {}).get("type"),
+                "description": d.get("description") or "",
                 "parent": (d.get("parent") or {}).get("full_name")}
 
     def permission(self, login: str) -> str:
@@ -367,6 +368,24 @@ class GitHub:
 
     def pr_files(self, n: int) -> List[str]:
         return [f["filename"] for f in self.paginate(f"{self.r}/pulls/{n}/files?", limit=3000)]
+
+    # --- other repositories (safety-net verification) ---------------------------
+
+    def repo_owner(self, full: str) -> Tuple[str, str]:
+        d = self.request("GET", f"/repos/{full}")
+        if d.get("private"):
+            raise GitHubError(403, "private repository", full)
+        return d["owner"]["login"], d["owner"]["type"]
+
+    def public_member(self, org: str, login: str) -> bool:
+        try:
+            self.request("GET", f"/orgs/{org}/public_members/{login}")
+            return True
+        except GitHubError:
+            return False
+
+    def foreign_author(self, full: str, n: int) -> str:
+        return (self.request("GET", f"/repos/{full}/issues/{n}").get("user") or {}).get("login", "")
 
     def pr_reviews(self, n: int) -> List[Dict[str, Any]]:
         """Native GitHub reviews: [{login, state, sha}]."""

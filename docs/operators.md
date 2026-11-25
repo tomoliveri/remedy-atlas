@@ -51,6 +51,12 @@ typos fail loudly. Keys starting with `$` are comments.
 | `review.maintainer_patterns` | dependency manifests and lockfiles, Dockerfiles, git hooks, binaries… | fnmatch patterns whose changes need a maintainer (supply-chain guard) |
 | `review.maintainer_if_files_over`, `maintainer_if_lines_over` | `60`, `4000` | Diffs larger than this need a maintainer |
 | `review.protected_paths` | `.github/`, `tools/ws/`, `workstead.json`, `JOIN.md`, `AGENTS.md`, `CLAUDE.md`, `SECURITY.md` | Pull requests touching these need a maintainer's approval |
+| `trust.deny` | `[]` | Logins this project never trusts and never lets claim work |
+| `safety.shared` | `true` | Read the shared safety-net list from upstream ([security](security.md#the-shared-safety-net)) |
+| `safety.action` | `maintainer` | Listed accounts: `maintainer` (no trust, pull requests need a maintainer) or `block` (also no claims) |
+| `safety.upstream` | `""` | Where the list lives; empty uses the template this repository came from |
+| `setup.tools` | `[]` | Executables workers need on PATH; named in the join question so installs are approved up front |
+| `setup.command` | `""` | Project setup run in each new task worktree (for example `npm ci`) |
 | `dedup.similarity` | `0.72` | Threshold for flagging proposals as possible duplicates |
 | `validate.command`, `validate.timeout_minutes` | `""`, `30` | The check run by `ws submit` and by CI |
 | `drain.expiries`, `drain.window_hours`, `drain.pause_hours` | `3`, `168`, `24` | Pause accounts whose leases keep expiring (0 turns it off) |
@@ -87,7 +93,8 @@ Repository **variables** (*Settings → Secrets and variables → Actions*):
 | Stop a whole job | `/cancel reason` on the job (cascades to children) |
 | See the queue | The board issue, or `./ws queue`, `./ws nodes`, `./ws prio` |
 | See how the queue works for you | `./ws learnings`: rates, medians and this fleet's weak spots |
-| Approve a protected change | `/approve` on the pull request |
+| Approve a protected change | `/approve` on the pull request, or approve it in GitHub's review UI |
+| Report a malicious account | `./ws flag LOGIN --signal … --evidence URL…`, and `trust.deny` for an immediate local block |
 | Merge by hand | Merge normally; the task completes through `Closes #N` |
 
 ## Troubleshooting

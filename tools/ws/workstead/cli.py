@@ -35,6 +35,7 @@ Maintainers:
   job --title T --body-file F     submit a job (or use the Job issue form)
   setup                           labels, board, README join prompt, CODEOWNERS
   harden [--check]                turn on GitHub's protections for this repository (admin)
+  flag LOGIN --signal S --evidence URL...   report a malicious account to the shared safety net
   actions event|sweep|setup       entry points for the GitHub workflows
 
 REF is an issue number or owner/name#N.
@@ -101,6 +102,11 @@ def main(argv=None) -> int:
     sub.add_parser("status")
     sub.add_parser("acct")
     sub.add_parser("learnings")
+    fl = sub.add_parser("flag")
+    fl.add_argument("login")
+    fl.add_argument("--signal", required=True, choices=["malicious_code", "secret_exfiltration", "prompt_injection",
+                                                         "dependency_injection", "ci_tampering", "sockpuppet_review", "spam"])
+    fl.add_argument("--evidence", nargs="+", required=True, help="issue or pull request URLs in this project")
     sub.add_parser("queue")
     sub.add_parser("nodes")
     pr = sub.add_parser("prio")
@@ -146,7 +152,7 @@ def main(argv=None) -> int:
         "consent": W.cmd_consent, "join": W.cmd_join, "next": W.cmd_next, "claim": W.cmd_claim,
         "show": W.cmd_show, "beat": W.cmd_beat, "checkpoint": W.cmd_checkpoint, "submit": W.cmd_submit,
         "found": W.cmd_found, "status": W.cmd_status, "acct": W.cmd_acct, "queue": W.cmd_queue,
-        "nodes": W.cmd_nodes, "prio": W.cmd_prio, "stop": W.cmd_stop, "learnings": W.cmd_learnings,
+        "nodes": W.cmd_nodes, "prio": W.cmd_prio, "stop": W.cmd_stop, "learnings": W.cmd_learnings, "flag": W.cmd_flag,
     }
     if args.cmd in table:
         return table[args.cmd](ctx, args)

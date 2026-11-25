@@ -50,6 +50,7 @@ L = {
     "duplicate": "ws:duplicate",
     "possible_duplicate": "ws:possible-duplicate",
     "learnings": "ws:learnings",
+    "safety": "ws:safety",
 }
 
 STATE_LABELS = [L[k] for k in ("triage", "pending", "ready", "running", "review",
@@ -81,6 +82,7 @@ LABEL_INFO = {
     L["duplicate"]: ("cfd3d7", "Duplicate of another issue"),
     L["possible_duplicate"]: ("fef2c0", "Looks like an existing task"),
     L["learnings"]: ("5319e7", "Fleet learnings reports from downstream fleets"),
+    L["safety"]: ("b60205", "The shared safety net: verified flags of malicious accounts"),
 }
 
 
@@ -238,6 +240,10 @@ COMMANDS = {
     "requeue": re.compile(r"^$"),
     "priority": re.compile(r"^(?P<priority>[0-9])$"),
     "learnings": re.compile(r"^$"),
+    "flag": re.compile(r"^$"),
+    "confirm": re.compile(r"^@?(?P<login>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))$"),
+    "clear": re.compile(r"^@?(?P<login>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))$"),
+    "appeal": re.compile(r"^$"),
 }
 _HEAD = re.compile(r"^\s*/([a-z-]+)[ \t]*(.*?)\s*$")
 

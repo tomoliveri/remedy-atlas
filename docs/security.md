@@ -64,6 +64,29 @@ protection (required `CI ok`, code-owner review on the fleet-control paths,
 no force pushes) and a ruleset reserving release tags for admins. Ordinary
 fleet merges keep working: code-owner review applies only to the owned paths.
 
+## The shared safety net
+
+Each project's queue protects that project. The upstream Workstead repository
+also protects **every** project: maintainers who catch an account acting
+maliciously flag it, and every fleet stops trusting accounts that independent
+projects agree about.
+
+```bash
+./ws flag mallory --signal dependency_injection --evidence https://github.com/you/project/pull/42
+```
+
+| Step | What happens |
+| --- | --- |
+| **File** | `ws flag` posts a `/flag` with a login, one signal (`malicious_code`, `secret_exfiltration`, `prompt_injection`, `dependency_injection`, `ci_tampering`, `sockpuppet_review`, `spam`), the project and 1-5 evidence links. There's no free-text field, so there are no free-text accusations. |
+| **Verify** | The upstream queue checks that the project is public, that the reporter is its owner, a public member of its organisation or an upstream maintainer, and that at least one evidence link was written by the flagged account. Anything else is deleted with the reason. |
+| **Record** | Accepted flags go into the queue's own state comment, so a reporter can't edit a flag afterwards. One project counts once per account. |
+| **List** | An account is listed when flags from **two independent projects** agree, or an upstream maintainer `/confirm`s it. Uncorroborated flags are never shown by name. |
+| **Protect** | Every fleet reads `safety.json` from the upstream board (CDN). A listed account isn't trusted anywhere: it can't review or triage, its proposals go to triage, and its pull requests need a maintainer. With `safety.action: block` it can't claim work either. |
+| **Correct** | Listed accounts can `/appeal`; an upstream maintainer can `/clear` an entry. Entries expire 180 days after the last flag. |
+
+For an immediate local block, add the login to `trust.deny` in
+`workstead.json`: it's never trusted and can't claim work in your project.
+
 ## What's out of scope
 
 - A compromised maintainer account, or a maintainer who merges something malicious.

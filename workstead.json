@@ -9,6 +9,10 @@
     "command": "",
     "timeout_minutes": 30
   },
+  "setup": {
+    "tools": [],
+    "command": ""
+  },
   "trust": {
     "mode": "auto",
     "trusted_after_merged": 2
