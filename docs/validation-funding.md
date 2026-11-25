@@ -1,22 +1,17 @@
-# Fund independent validation
+# Funding a study
 
-[Live roadmap](https://remedy-atlas.tomoliveri.workers.dev/#validation-funding) · [Open research commitment](open-research.md)
+If you’re here because someone you love is ill, thank you for taking the time to read this. A gift should come with a clear answer about what it will pay for.
 
-**No campaign is open.** The cervical cancer launch compares published evidence on screening and follow-up. It has no wet-lab budget. When a qualified partner identifies a defined experiment that can change a decision, the partner would publish a scope, cost, and funding target before asking for donations.
+**There’s no study asking for donations right now.** We’re reading and checking the evidence first. If a lab study could answer a question that matters, we’ll share what the researchers want to learn, who will do the work, and what it costs.
 
-## Recommended platform
+## Where your gift would go
 
-Use the **research partner’s hospital or university foundation checkout**, with a dedicated restricted fund and a written gift agreement. Donors should see the legal recipient and exact study name at checkout and receive receipts from that recipient. The foundation must own the account and control disbursements. Remedy Atlas and its maintainers would hold no bank accounts, payout credentials, donor payment data, spending authority, or reimbursement rights for the campaign.
+You’d give directly to the hospital or university foundation running the study. The foundation would hold it in a fund set aside for that study, pay the approved bills, and issue your receipt. The people who run Remedy Atlas would have no access to the money, payment details or payouts.
 
-A Melbourne example to evaluate is **Austin Medical Research Foundation**. Its public materials describe project-specific giving and external audits. Its charity registration is public. These are examples of the structure to seek. A Remedy Atlas campaign would require a separate agreement and an official, study-specific checkout. [Foundation project giving](https://www.austinmrf.org.au/support-great-research) · [ACNC charity register](https://www.acnc.gov.au/charity/charities/6dcdb104-39af-e811-a960-000d3ad24282)
+Before we share a donation link, you’ll be able to see who receives the money, what the budget covers, and what happens if the study changes or has money left over. Afterward, we’ll share what the foundation spent and what the study found, including when the answer was disappointing. Findings we have permission to share will stay [free to read](open-research.md).
 
-For an eligible U.S. partner, **Every.org Projects** is an alternative checkout if the host keeps control of its bank account and the restricted fund. Its project reporting can identify donations by campaign. The host’s written agreement must establish restrictions on spending. [Every.org Projects](https://support.every.org/hc/en-us/articles/27357055044755-Projects-overview)
+## How we’d set it up
 
-## Before publishing a donation link
+Our first choice is an official checkout run by the research partner’s foundation, backed by written spending restrictions and reporting. Austin Medical Research Foundation is a Melbourne example of project-specific giving. A Remedy Atlas campaign would need its own agreement. For an eligible U.S. foundation, Every.org Projects is another checkout option if the foundation controls the account and has agreed to the same restrictions. [Austin Medical Research Foundation](https://www.austinmrf.org.au/support-great-research) · [ACNC charity register](https://www.acnc.gov.au/charity/charities/6dcdb104-39af-e811-a960-000d3ad24282) · [Every.org Projects](https://support.every.org/hc/en-us/articles/27357055044755-Projects-overview)
 
-- Publish the named study, responsible institution, evidence question, independent validation plan, approval status, budget, overhead, and funding goal.
-- Publish the host’s written terms for eligible expenses, how unused or excess funds will be handled, and how donors can verify the restriction and recipient.
-- Link directly to the host-controlled campaign. Ask the host to report receipts, approved spending, and the study’s outcome, including negative results. Report aggregate financial information.
-- Agree on public reporting and affordable access commitments. A restricted gift funds the stated research and carries no promise that a treatment will succeed.
-
-A checkout is a payment channel. Donor protection comes from an independently controlled account, written spending restrictions, and reporting that donors can verify.
+[See the funding page](https://remedy-atlas.tomoliveri.workers.dev/funding.html)

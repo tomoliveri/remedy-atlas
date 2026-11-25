@@ -34,16 +34,17 @@ Each card gives the geography, reference year or reporting period, baseline sour
 
 ## How the queue finds new research
 
-The Workstead sweep checks for an open portfolio-review task. With no live review, the sweep creates one if seven days have passed since the last review was opened or a tracked research job was marked complete after that review. A review that is already open takes precedence, so the queue has at most one automatically generated review at a time.
+The Workstead sweep checks for an open portfolio-review task. With no live review, the sweep creates one if seven days have passed since the last review was opened or a tracked research job was marked complete after that review. Each week it searches Europe PMC for recent clinical and public-health papers and attaches the leads to the review. It opens the highest-priority approved backlog track when fewer than four are open. Maintainers approve new tracks by adding them to the registry as queued.
 
 ```mermaid
 flowchart LR
   A[Workstead sweep] --> B{Review already open?}
-  B -->|Yes| C[Keep the existing review]
+  B -->|Yes| C[Add fresh literature leads weekly]
   B -->|No| D{Weekly review due or job completed?}
   D -->|Yes| E[Open one research task]
   E --> F[Review candidate recommendation]
-  F --> G[Maintainer activates next job]
+  F --> G[Maintainer approves backlog]
+  G --> H[Queue opens next job when capacity allows]
 ```
 
 A completed job records a disposition for a research question. A team may refer a result for validation, reject the hypothesis, or identify a better next question. The decision, scope, evidence and remaining uncertainties belong in the final finding. Evidence of lower mortality and evidence that care reaches the intended population are required before claiming that work saved lives.

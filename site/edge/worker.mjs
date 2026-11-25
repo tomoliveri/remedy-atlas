@@ -33,6 +33,22 @@ export function summarize(issues) {
   return result;
 }
 
+export function networkCounts(issues) {
+  const counts = {ready: 0, working: 0, done: 0};
+  for (const issue of issues) {
+    const labels = new Set(issue.labels.map(label => label.name));
+    if (issue.pull_request || !labels.has("ws:task") || labels.has("ws:job") || labels.has("ws:split")) continue;
+    if (issue.state === "closed") {
+      if (labels.has("ws:done")) counts.done++;
+    } else if (labels.has("ws:ready")) {
+      counts.ready++;
+    } else if (labels.has("ws:running") || labels.has("ws:review")) {
+      counts.working++;
+    }
+  }
+  return counts;
+}
+
 export async function listIssues(fetcher = fetch) {
   const issues = [];
   for (let page = 1; page <= 10; page++) {
@@ -53,13 +69,14 @@ export default {
     if (url.pathname !== "/api/progress") return env.ASSETS.fetch(request);
     if (request.method !== "GET") return new Response(null, {status: 405, headers: {Allow: "GET"}});
 
-    url.search = "";
+    url.search = "?schema=2";
     const cache = caches.default;
     const cached = await cache.match(url.toString());
     if (cached) return cached;
     try {
       const issues = await listIssues();
-      const response = Response.json({updatedAt: new Date().toISOString(), tracks: summarize(issues)}, {
+      const response = Response.json({updatedAt: new Date().toISOString(), tracks: summarize(issues),
+        network: networkCounts(issues)}, {
         headers: {"Cache-Control": "public, max-age=60"},
       });
       ctx.waitUntil(cache.put(url.toString(), response.clone()));

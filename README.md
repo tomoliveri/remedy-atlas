@@ -6,7 +6,7 @@
 
 **Solve disease. Save lives.**
 
-Remedy Atlas is an open research network for people who want to reduce preventable deaths. We look for diseases where a better treatment or a better way to deliver care could make a substantial difference. Then we divide the work so contributors can review evidence, test conclusions against the published data, and help identify the next promising question.
+Someone is waiting for a better answer. Remedy Atlas is an open research network bringing people together to find it. We look for places where a better treatment or a better way to deliver care could save lives, and share the work of reading the evidence and testing what it can tell us.
 
 [**Live roadmap**](https://remedy-atlas.tomoliveri.workers.dev/#roadmap) · [**Contribute**](.github/CONTRIBUTING.md) · [**Technical overview**](docs/technical-overview.md)
 
@@ -31,7 +31,7 @@ The dashboard shows the work in progress, reported disease burden, and what the 
 
 ## How the network keeps going
 
-Workstead distributes research tasks and records what was learned. Every week, and after a research job is marked complete, the network reviews where to work next. Candidates are compared on credible mortality impact, the gap in existing care, what can be validated, and the time and partners needed to help patients. A maintainer reviews the recommendation and opens the next job when capacity is available.
+Workstead distributes research tasks and records what we learned. Each week the network searches recent literature for new leads. Contributors review which questions could save lives, what evidence is missing, and who could help answer them. When there’s room, the queue opens the highest-priority track that maintainers have already approved.
 
 ```mermaid
 flowchart LR

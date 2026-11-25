@@ -31,6 +31,7 @@ jobs:
           sparse-checkout: |
             tools/ws
             research
+            site/public
           persist-credentials: false
       - id: app
         if: vars.WS_APP_ID != ''

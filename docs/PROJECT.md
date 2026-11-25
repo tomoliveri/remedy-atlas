@@ -21,7 +21,7 @@ python3 research/atlas.py plan TRACK > /tmp/atlas-plan.json
 
 Review the starter plan before submitting. Add or remove tasks, fan out with Workstead arrays, change priorities and dispatch follow-up work as findings emerge. Add a reusable job type through `partitions` in `workstead.json`; set its delivery format, review requirement and time budget. Use [/priority, /hold and /unhold](protocol.md) for live queue changes.
 
-The Workstead sweep opens a [portfolio review](candidates.md) when one is due or a tracked job completes. If one is already open, it remains the place to compare candidates. Use `python3 research/portfolio.py --dry-run` to preview the decision. Promote a candidate after reviewing its evidence, prerequisites and likely path to patient benefit.
+The Workstead sweep opens a [portfolio review](candidates.md) when one is due or a tracked job completes. Each week it adds recent Europe PMC literature leads to the open review. The workflow also fills an available slot with the highest-priority approved `Queued` track, up to four open tracks. To approve a new track, review its evidence and path to patient benefit, then add it to `site/public/tracks.json` as `Queued`. Run `python3 research/portfolio.py --dry-run` to preview queue changes and `python3 research/portfolio.py --preview-scout` to see the search results.
 
 ## Refresh task scaffolds
 

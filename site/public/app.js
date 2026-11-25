@@ -1,9 +1,6 @@
-import {roadmapStatus} from "./roadmap.mjs";
-
 const grid = document.querySelector("#tracks");
 const feed = document.querySelector("#feed");
 const filters = [...document.querySelectorAll("[data-filter]")];
-const checklistLabels = new Map();
 
 let tracks = [];
 let snapshot;
@@ -61,7 +58,8 @@ function card(track) {
 
   const article = element("article", "", "card");
   const top = element("div", "", "card-top");
-  top.append(element("p", track.area, "category"), element("span", track.phase, `phase ${track.phase.toLowerCase().replace(" ", "-")}`));
+  const phase = trackPhase(track);
+  top.append(element("p", track.area, "category"), element("span", phase, `phase ${phase.toLowerCase().replace(" ", "-")}`));
   const impact = element("div", "", "metrics");
   const context = element("div", "", "metric");
   context.append(element("p", "Reported burden", "metric-label"),
@@ -99,13 +97,19 @@ function card(track) {
   return article;
 }
 
+function trackPhase(track) {
+  const jobs = snapshot?.tracks[track.id]?.jobs ?? [];
+  if (jobs.length && jobs.every(job => job.state === "done")) return "Reviewed";
+  return track.phase === "Queued" && jobs.length ? "Active" : track.phase;
+}
+
 function render() {
   const open = new Set([...grid.querySelectorAll("details[open]")].map(node =>
     `${node.closest("article").id}:${node.className}`));
   const active = document.activeElement;
   // Leave keyboard focus and the expanded links in place until focus leaves the queue.
   if (grid.contains(active) && active.matches("a, summary")) return;
-  grid.replaceChildren(...tracks.filter(track => filter === "All" || track.phase === filter).map(track => {
+  grid.replaceChildren(...tracks.filter(track => filter === "All" || trackPhase(track) === filter).map(track => {
     const node = card(track);
     node.id = track.id;
     for (const details of node.querySelectorAll("details")) {
@@ -121,36 +125,11 @@ function setFilter(value) {
   render();
 }
 
-function buildChecklist() {
-  const initial = document.querySelector("#disease-checklist");
-  const cancer = document.querySelector("#cancer-checklist");
-  for (const track of tracks) {
-    const item = element("li", "");
-    const label = element("span", "", "milestone-status");
-    const target = link(track.name, `#${track.id}`);
-    target.addEventListener("click", () => setFilter("All"));
-    item.append(target, label);
-    (track.oncology ? cancer : initial).append(item);
-    checklistLabels.set(track.id, label);
-  }
-  updateChecklist();
-}
-
-function updateChecklist() {
-  for (const track of tracks) {
-    const status = roadmapStatus(track.phase, snapshot?.tracks[track.id]);
-    const node = checklistLabels.get(track.id);
-    node.textContent = status.complete ? `✓ ${status.label}` : status.label;
-    node.classList.toggle("complete", status.complete);
-  }
-}
-
 async function refresh() {
   try {
     const response = await fetch("/api/progress");
     if (!response.ok) throw new Error("queue unavailable");
     snapshot = await response.json();
-    updateChecklist();
     feed.textContent = `Live queue · checked ${new Date(snapshot.updatedAt).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})}`;
     render();
   } catch {
@@ -168,8 +147,8 @@ try {
   const response = await fetch("/tracks.json");
   if (!response.ok) throw new Error("tracks unavailable");
   tracks = await response.json();
-  buildChecklist();
   render();
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
   await refresh();
   setInterval(refresh, 45_000);
 } catch {

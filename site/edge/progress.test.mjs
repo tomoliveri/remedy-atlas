@@ -1,7 +1,19 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {listIssues, summarize} from "./worker.mjs";
+import {listIssues, networkCounts, summarize} from "./worker.mjs";
 import {roadmapStatus} from "../public/roadmap.mjs";
+
+test("homepage counts claimable, underway and completed leaf tasks", () => {
+  const issue = (state, ...labels) => ({state, labels: labels.map(name => ({name}))});
+  assert.deepEqual(networkCounts([
+    issue("open", "ws:task", "ws:ready"),
+    issue("open", "ws:task", "ws:review"),
+    issue("closed", "ws:task", "ws:done"),
+    issue("open", "ws:task", "ws:job", "ws:ready"),
+    issue("closed", "ws:task", "ws:ready"),
+    issue("open", "ws:task", "ws:pending"),
+  ]), {ready: 1, working: 1, done: 1});
+});
 
 test("roadmap checks off a reviewed milestone only after all its jobs are done", () => {
   const status = (...states) => roadmapStatus("Active", {jobs: states.map(state => ({state}))});
