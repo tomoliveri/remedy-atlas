@@ -280,8 +280,9 @@ def avoid(repo: str, n: int, seconds: int = 3600) -> None:
 
 
 def pick(ctx: Ctx, max_hours: Optional[float] = None, rng: Optional[random.Random] = None,
-         snap: Optional[Dict[str, Any]] = None, avoid: Optional[set] = None) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
-    snap = snap if snap is not None else ctx.snapshot()
+         snap: Optional[Dict[str, Any]] = None, avoid: Optional[set] = None,
+         live: bool = False) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+    snap = None if live else (snap if snap is not None else ctx.snapshot())
     if snap is not None:
         tasks, reviews = snap["tasks"], snap["reviews"]
     else:
@@ -379,6 +380,10 @@ def cmd_next(ctx: Ctx, args) -> int:
             return emit_choice(ctx_for(ctx, lz["repo"]), {"number": lz["number"], "kind": "resume", "title": lz.get("title", "")},
                                {"source": "local"}, give_back=ctx.repo)
     choice, info = pick(ctx, args.max_hours)
+    if not choice and info["source"] == "board":
+        # The board can be up to a sweep old: confirm against the live queue
+        # before telling the agent to wait (new jobs appear here first).
+        choice, info = pick(ctx, args.max_hours, live=True)
     if choice:
         backoff(ctx.repo, reset=True)
         return emit_choice(ctx, choice, info)
@@ -395,7 +400,7 @@ def cmd_next(ctx: Ctx, args) -> int:
     wait = backoff(ctx.repo)
     print(json.dumps({"status": "idle", "retry_after": wait,
                       "message": f"Nothing you can take right now ({info['open']} open, {info['reviews']} awaiting review). "
-                                 f"Run `ws next` again in about {wait // 60} minutes."}))
+                                 f"Run `ws next` again in about {max(1, round(wait / 60))} minute(s)."}))
     return EXIT_IDLE
 
 
