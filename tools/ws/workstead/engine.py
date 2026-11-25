@@ -401,7 +401,8 @@ class Queue:
     def reconcile(self, n: int, reason: str = "") -> None:
         issue, comments, sc, state = self.load(n)
         if issue["is_pr"]:
-            return self.reconcile_pr(n, reason)
+            self.reconcile_pr(n, reason)
+            return
         self._comments = comments
         before = json.dumps(state, sort_keys=True) if sc else ""
         meta = self.meta_of(issue)

@@ -149,8 +149,9 @@ class CliFlow(unittest.TestCase):
         code, out = self.run_cmd(W.cmd_claim, c, ref=str(job), node=None, timeout=5)
         self.assertEqual(json.loads(out)["status"], "leased", out)
         plan = Path(__file__).resolve().parents[3] / "docs" / "examples" / "plan-feature.json"
-        code, out = self.run_cmd(W.cmd_submit, c, ref=str(job), file=str(plan), summary_file=None, plan=False,
+        code, _ = self.run_cmd(W.cmd_submit, c, ref=str(job), file=str(plan), summary_file=None, plan=False,
                                  no_validate=False)
+        self.assertEqual(code, 0)
         self.r.pump()
         self.assertEqual(len(self.r.children(job)), 7)
         self.assertEqual(self.r.state(job)["status"], "split")

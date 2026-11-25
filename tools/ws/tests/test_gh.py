@@ -4,8 +4,10 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-import harness  # noqa: F401
+import harness
 from workstead import gh as G
+
+assert harness.HERE  # harness puts workstead on sys.path
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -46,7 +48,7 @@ class Handler(BaseHTTPRequestHandler):
                                                    {"name": "Project checks", "status": "completed", "conclusion": "success"}]})
         if self.path == "/repos/a/b/commits/abc/status":
             return self.reply(200, {"state": "pending", "statuses": []})
-        self.reply(404, {"message": "Not Found"})
+        return self.reply(404, {"message": "Not Found"})
 
     def do_POST(self):
         n = int(self.headers.get("Content-Length", 0))
@@ -55,7 +57,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/repos/a/b/issues/5/comments":
             return self.reply(201, {"id": 77, "body": body["body"], "user": {"login": "me"},
                                     "issue_url": "https://api.github.com/repos/a/b/issues/5"})
-        self.reply(404, {"message": "Not Found"})
+        return self.reply(404, {"message": "Not Found"})
 
 
 class RealClient(unittest.TestCase):

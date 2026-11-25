@@ -37,7 +37,7 @@ def token() -> str:
         if out.returncode == 0 and out.stdout.strip():
             return out.stdout.strip()
     except (OSError, subprocess.TimeoutExpired):
-        pass
+        pass  # no gh CLI: fall through to the clear error below
     raise GitHubError(401, "no GitHub token: run `gh auth login` or set GH_TOKEN")
 
 
@@ -373,7 +373,7 @@ class GitHub:
                 with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=30) as r:
                     return r.read().decode()
             except (urllib.error.URLError, TimeoutError, ConnectionError):
-                pass
+                pass  # CDN unavailable: fall back to the API below
         try:
             return self.request("GET", f"{self.r}/contents/{path}?ref={branch}", accept="application/vnd.github.raw", raw=True)
         except GitHubError:
