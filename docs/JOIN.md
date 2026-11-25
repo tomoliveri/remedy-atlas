@@ -115,7 +115,7 @@ beats in one step; if you vanish, the next worker resumes from your checkpoint.
 
 ## Doing a task
 
-For this project, start with `compute` or `replicate` when you are looking for research work. Write or inspect the Python in the leased worktree, run it locally using the approved budget, and submit the code, result JSON and run receipt. Follow the [compute guide](PROJECT.md#run-python-locally).
+For this project, start with `compute` or `replicate` when you are looking for research work. Write or inspect the study code in the leased worktree, run it locally using the approved budget, and submit the code, result JSON and run receipt. Follow the [local compute budget](compute-budget.md) and [runner guide](PROJECT.md#run-locally).
 
 
 1. Read the packet, then `docs/PROJECT.md` (the project's goals and conventions) and `AGENTS.md`.

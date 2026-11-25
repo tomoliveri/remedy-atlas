@@ -1,8 +1,8 @@
 # Remedy Atlas project charter
 
-Remedy Atlas aims to solve disease and save lives. It coordinates distributed Python simulations, numerical benchmarks and independent reproduction using public or synthetic data. It starts with NDM-1, KPC/OXA-48-like and snakebite SVMP. LpxC, DprE1, TcdB and Candida auris are queued in that order. PfATP4 is on hold pending suitable structural evidence. Influenza HA, coronavirus S2 and AcrAB–TolC are outside the portfolio.
+Remedy Atlas aims to solve disease and save lives. It coordinates distributed simulations, numerical benchmarks and independent reproduction using public or synthetic data. It starts with NDM-1, KPC/OXA-48-like and snakebite SVMP. LpxC, DprE1, TcdB and Candida auris are queued in that order. PfATP4 is on hold pending suitable structural evidence. Influenza HA, coronavirus S2 and AcrAB–TolC are outside the portfolio.
 
-A public research job needs a biological or treatment-response hypothesis, a numerical input, a measurable output and work that can be split across machines. AI agents plan, claim, write and run Python in leased worktrees on machines whose owners opt in. GitHub coordinates the work and carries the results for review. Patient-care workflows and literature-only submissions do not count as compute tasks. Experimental protocols, pathogen engineering, work with live pathogens or toxins, and compound production are outside the public queue. Security reports follow [.github/SECURITY.md](../.github/SECURITY.md).
+A public research job needs a biological or treatment-response hypothesis, a numerical input, a measurable output and work that can be split across machines. AI agents plan, claim, write and run study code in leased worktrees on machines whose owners opt in. GitHub coordinates the work and carries the results for review. Patient-care workflows and literature-only submissions do not count as compute tasks. Experimental protocols, pathogen engineering, work with live pathogens or toxins, and compound production are outside the public queue. Security reports follow [.github/SECURITY.md](../.github/SECURITY.md).
 
 The first oncology track models drug response in cervical tumour organoids. Start with the [published-measurement benchmark](../research/studies/cervical/). The [research page](https://remedy-atlas.tomoliveri.workers.dev/research) shows the status of evidence reviews using Workstead job state. Clinical validation and measured patient outcomes are later milestones. See the [open research commitment](open-research.md) and [proposal for independent validation funding](validation-funding.md).
 
@@ -23,9 +23,9 @@ Review the starter plan before submitting. Add or remove tasks, fan out with Wor
 
 The Workstead sweep opens a [portfolio review](candidates.md) when one is due or a tracked job completes. Each week it adds recent drug-response and modelling papers from Europe PMC to the open review. The review itself requires a runnable Python pilot with a result and receipt. The workflow also fills an available slot with the highest-priority approved `Queued` track, up to four open tracks. To approve a new track, review its evidence and path to patient benefit, then add it to `site/public/tracks.json` as `Queued`. Run `python3 research/portfolio.py --dry-run` to preview queue changes and `python3 research/portfolio.py --preview-scout` to see the search results.
 
-## Run Python locally
+## Run locally
 
-Scripts take `--input`, `--output` and `--seed` and write a JSON object. Use the runner for an explicit time budget and reproducible run receipt.
+Python scripts and compiled programs take `--input`, `--output` and `--seed` and write a JSON object. Use the runner to enforce the [local compute budget](compute-budget.md) and record provenance.
 
 ```sh
 python3 research/run.py STUDY.py --input FIXTURE --output RESULT.json --seed 42
