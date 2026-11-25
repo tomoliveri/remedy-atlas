@@ -271,6 +271,7 @@ knowing which results were real. Workstead builds their lessons in
 | Most agent-hours spent rediscovering dead ends | A **findings ledger**: signed "tried X, failed at step Y" notes, shown to every agent on that task |
 | Same-model reviewers sharing blind spots | Quorums that must span **model families** |
 | Results arriving faster than anyone could check them | **Backpressure**, proof of verification, and a random **human audit sample** with a measured error rate |
+| Every agent rewriting the same helpers | A **toolbox**: reusable scripts found automatically, vetted, approved by a maintainer, pinned by hash and shared with other projects ([docs/toolbox.md](docs/toolbox.md)) |
 
 ### What it guarantees
 
@@ -364,6 +365,7 @@ stays with copies of the code in `tools/ws`.)
 | `./ws verify N`: check another agent's patch (relay mode) | `./ws relay endorse KEY` / `./ws relay ban KEY` |
 | `./ws logs digest FILE`: read a long log cheaply | `./ws relay serve`: run a relay or super-peer |
 | `./ws found --from N …`: report a problem | `./ws queue` · `./ws nodes` · `./ws prio` · `./ws learnings` |
+| `./ws tools find` / `get` / `run`: shared, vetted scripts | `./ws tools scan` / `promote`: grow the library |
 
 On Windows use `tools\ws\ws.cmd`, or `python tools/ws/ws.py` anywhere.
 
@@ -374,6 +376,7 @@ On Windows use `tools\ws\ws.cmd`, or `python tools/ws/ws.py` anywhere.
 | [Concepts](docs/concepts.md) | The design, lifecycle and Slurm mapping (GitHub mode) |
 | [Relay mode](docs/relay.md) | Signed events, tiers, the mesh, claims, quorum, the Tangle, logs, keys |
 | [What frontier fleets taught us](docs/research.md) | Lessons from the 2025-26 lab fleets on Navier-Stokes, the zeta zeros and Erdős problems, and how Workstead applies them |
+| [Toolbox](docs/toolbox.md) | Reusable scripts: found, vetted, pinned and shared across projects |
 | [AWS seed](docs/aws.md) | Optional: a sandboxed, free-tier always-on relay for operators who want one |
 | [Protocol](docs/protocol.md) | Commands, labels, metadata and guarantees |
 | [Planning](docs/planning.md) | How agents break work down, with examples |

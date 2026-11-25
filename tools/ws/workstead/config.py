@@ -150,6 +150,17 @@ DEFAULTS: Dict[str, Any] = {
     # | "lean" | "code" (built-in forbid lists). frozen: statement/evaluator
     # paths no patch may touch. must_fail: control commands that must fail.
     "verify": {"profile": "", "forbid": [], "frozen": [], "must_fail": []},
+    # The toolbox (toolbox.py): vetted reusable scripts. path: the library
+    # (protected: changes need a maintainer). scan/ignore: where `ws tools
+    # scan` looks for candidates. allow_imports: third-party modules tools
+    # may use (numpy, scipy...). sources: other projects (owner/name) whose
+    # libraries this one trusts, besides itself and its template. image: the
+    # container for `ws tools run` with relay.verify_sandbox docker.
+    "toolbox": {"path": "tools/lib/", "scan": ["**/*.py"],
+                "ignore": ["tools/ws/", ".ws/", ".github/", "tests/", "test_*.py", "*_test.py", "conftest.py",
+                           "setup.py", "node_modules/", ".venv/", "venv/"],
+                "allow_imports": [], "sources": [], "min_score": 5, "duplicate_similarity": 0.8,
+                "announce": True, "image": ""},
     "relay": {
         # Milestones (TaskPublished, VerificationReceipt, Endorsement,
         # TaskSettled): two or three tiny events per completed task, so free
@@ -290,6 +301,15 @@ def validate(cfg: Dict[str, Any]) -> None:
     from .contract import PROFILES
     if cfg["verify"]["profile"] not in ("",) + tuple(PROFILES):
         raise ConfigError(f"verify.profile must be one of: {', '.join(PROFILES)} (or empty)")
+    tb = cfg["toolbox"]
+    if not re.match(r"^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*/?$", tb["path"]) or ".." in tb["path"].split("/"):
+        raise ConfigError("toolbox.path must be a relative directory like tools/lib/")
+    if not all(isinstance(s, str) and re.match(r"^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", s) for s in tb["sources"]):
+        raise ConfigError("toolbox.sources must be owner/name repositories")
+    if not all(isinstance(m, str) and re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", m) for m in tb["allow_imports"]):
+        raise ConfigError("toolbox.allow_imports must be module names (numpy, scipy...)")
+    if not 0 < float(tb["duplicate_similarity"]) <= 1 or not 0 <= int(tb["min_score"]) <= 6:
+        raise ConfigError("toolbox.duplicate_similarity is in (0, 1] and toolbox.min_score in 0-6")
     gb = cfg["give_back"]
     if cfg["driver"] not in ("github-issues", "nostr"):
         raise ConfigError("driver must be github-issues or nostr")
@@ -336,6 +356,9 @@ def load(root: Optional[Path] = None, data: Optional[Dict[str, Any]] = None) -> 
     cfg = _merge(DEFAULTS, data)
     validate(cfg)
     cfg["relay_pending"] = False
+    lib = cfg["toolbox"]["path"].rstrip("/") + "/"
+    if lib not in cfg["review"]["protected_paths"]:  # the shared library always needs a maintainer
+        cfg["review"]["protected_paths"] = list(cfg["review"]["protected_paths"]) + [lib]
     if cfg["driver"] == "nostr" and not cfg["relay"]["publishers"]:
         # Relay mode needs at least one publisher key (./ws harden creates the
         # repository's gate key). Until then the issues queue does the work.
