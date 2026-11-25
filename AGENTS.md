@@ -9,7 +9,7 @@ Read `../AGENTS.md` (all-projects rules) first and follow it; this file only add
 - Status: **external** (production runs elsewhere (e.g. AWS); deploy via project script)
 - Purpose: Remedy Atlas public research dashboard on Cloudflare Workers. GitHub Actions run its Workstead queue.
 - Web `remedy-atlas`: https://remedy-atlas.tomoliveri.workers.dev (auth `none`, mode `external`)
-- Deploy: `ops deploy medisc` - runs `wrangler deploy` from the laptop after syncing
+- Deploy: `ops deploy medisc` - runs `wrangler deploy --config site/wrangler.toml` from the laptop after syncing
 - Verify: `ops status medisc` + https://remedy-atlas.tomoliveri.workers.dev/api/progress
 
 <!-- END:ops -->

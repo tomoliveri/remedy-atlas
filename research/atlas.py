@@ -21,10 +21,13 @@ def validate_impact(impact):
         return
     assert impact["population"] and impact["sources"], "Impact needs a population and sources"
     assert all(source.startswith("https://") for source in impact["sources"])
-    for key in ("baselineDeaths", "eligibleFraction", "reach", "mortalityReduction"):
+    baselines = {"annualCases", "baselineDeaths"}.intersection(impact)
+    assert len(baselines) == 1, "Impact needs exactly one kind of baseline"
+    baseline = baselines.pop()
+    for key in (baseline, "eligibleFraction", "reach", "mortalityReduction"):
         low, high = impact[key]
         assert all(math.isfinite(value) for value in (low, high)) and 0 <= low <= high
-        assert key == "baselineDeaths" or high <= 1
+        assert key == baseline or high <= 1
 
 
 def read(path, ref):
@@ -89,7 +92,10 @@ def main():
     if getattr(args, "latest", False):
         subprocess.run(["git", "fetch", "origin", "main"], cwd=ROOT, check=True)
         ref = subprocess.check_output(["git", "rev-parse", "FETCH_HEAD"], cwd=ROOT, text=True).strip()
-    tracks = json.loads(read("site/tracks.json", ref))
+    tracks_path = "site/public/tracks.json"
+    if ref and not exists(tracks_path, ref):
+        tracks_path = "site/tracks.json"
+    tracks = json.loads(read(tracks_path, ref))
     if args.command == "check":
         cfg = config.load(ROOT)
         assert len({t["id"] for t in tracks}) == len(tracks)

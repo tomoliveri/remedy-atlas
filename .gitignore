@@ -9,6 +9,7 @@ __pycache__/
 .idea/
 .vscode/
 *.swp
-infra/aws/state.json
+tools/infra/aws/state.json
 .playwright-mcp/
 .wrangler/
+/CLAUDE.md

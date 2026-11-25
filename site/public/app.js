@@ -19,12 +19,34 @@ function link(label, href) {
   return node;
 }
 
-function impactValue(impact) {
-  const inputs = [impact.baselineDeaths, impact.eligibleFraction, impact.reach, impact.mortalityReduction];
-  const format = new Intl.NumberFormat(undefined, {maximumSignificantDigits: 2});
-  const [low, high] = [0, 1].map(bound =>
-    format.format(inputs.reduce((product, input) => product * input[bound], 1)));
+function formatRange(values, options) {
+  const format = new Intl.NumberFormat(undefined, options);
+  const [low, high] = values.map(value => format.format(value));
   return low === high ? low : `${low}–${high}`;
+}
+
+function impactValue(impact) {
+  const inputs = [impact.annualCases ?? impact.baselineDeaths, impact.eligibleFraction, impact.reach, impact.mortalityReduction];
+  const totals = [0, 1].map(bound => inputs.reduce((product, input) => product * input[bound], 1));
+  return formatRange(totals, {maximumSignificantDigits: 2, maximumFractionDigits: 1, roundingPriority: "lessPrecision"});
+}
+
+function impactDetails(track) {
+  const impact = track.impact;
+  const caseBased = Boolean(impact.annualCases);
+  const percent = values => formatRange(values, {style: "percent"});
+  const details = element("details", "", "assumptions");
+  details.append(element("summary", "How this was calculated"));
+  const baseline = formatRange(impact.annualCases ?? impact.baselineDeaths);
+  const effect = caseBased
+    ? `${formatRange(impact.mortalityReduction.map(value => value * 100))} percentage points lower mortality`
+    : `${percent(impact.mortalityReduction)} relative reduction in mortality`;
+  details.append(
+    element("p", `${baseline} annual ${caseBased ? "clinical detections" : "baseline deaths"} × ${percent(impact.eligibleFraction)} eligible × ${percent(impact.reach)} reached × ${effect} versus current care.`, "secondary"),
+    element("p", track.gap, "secondary"),
+  );
+  impact.sources.forEach((source, index) => details.append(link(index ? `Baseline source ${index + 1}` : "Baseline source", source), " "));
+  return details;
 }
 
 function card(track) {
@@ -45,8 +67,8 @@ function card(track) {
   const potential = element("div", "", "metric");
   potential.append(element("p", "Potential lives saved / year", "metric-label"),
     element("strong", track.impact ? impactValue(track.impact) : "Unestimated"),
-    element("p", track.impact ? `Conditional scenario · ${track.impact.population}` : track.gap, "secondary"));
-  track.impact?.sources.forEach((source, index) => potential.append(link(`Source ${index + 1}`, source), " "));
+    element("p", track.impact ? `${track.impact.illustrative ? "Illustrative scenario" : "Conditional estimate"} · ${track.impact.population}` : track.gap, "secondary"));
+  if (track.impact) potential.append(impactDetails(track));
   impact.append(context, potential);
 
   const queue = element("div", "", "queue");
@@ -54,7 +76,7 @@ function card(track) {
   if (issueData) {
     queue.append(element("p", tasks.length ? `${done} reviewed and closed · ${remaining} open · ${underway} underway` :
       "Planning activity in the public queue", "queue-summary"));
-    const details = element("details", "");
+    const details = element("details", "", "queue-details");
     details.append(element("summary", "View queue activity"));
     const list = element("ul", "");
     for (const job of issueData.jobs) {
@@ -75,14 +97,17 @@ function card(track) {
 }
 
 function render() {
-  const open = new Set([...grid.querySelectorAll("article:has(details[open])")].map(node => node.id));
+  const open = new Set([...grid.querySelectorAll("details[open]")].map(node =>
+    `${node.closest("article").id}:${node.className}`));
   const active = document.activeElement;
   // Leave keyboard focus and the expanded links in place until focus leaves the queue.
   if (grid.contains(active) && active.matches("a, summary")) return;
   grid.replaceChildren(...tracks.filter(track => filter === "All" || track.phase === filter).map(track => {
     const node = card(track);
     node.id = track.id;
-    if (open.has(track.id)) node.querySelector("details").open = true;
+    for (const details of node.querySelectorAll("details")) {
+      details.open = open.has(`${track.id}:${details.className}`);
+    }
     return node;
   }));
 }

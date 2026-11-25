@@ -3,7 +3,7 @@
 Subscribed to the workstead-brake SNS topic, which only the budget's top
 threshold publishes to. It sets the index Lambda's concurrency to 0 (HTTP 429
 for everyone) and stops the seed relay instance. Nothing is deleted:
-`infra/aws/deploy.py resume` undoes it.
+`tools/infra/aws/deploy.py resume` undoes it.
 
 A daily EventBridge schedule also calls it in maintenance mode, which
 activates the `project` cost allocation tag as soon as AWS allows (it must

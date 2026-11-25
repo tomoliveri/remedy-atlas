@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Deploy the Workstead seed infrastructure on AWS (free-tier friendly).
 
-    python3 infra/aws/deploy.py up        # create or converge everything
-    python3 infra/aws/deploy.py status    # health and ids
-    python3 infra/aws/deploy.py brake     # what the budget brake does, by hand
-    python3 infra/aws/deploy.py resume    # undo the brake
+    python3 tools/infra/aws/deploy.py up        # create or converge everything
+    python3 tools/infra/aws/deploy.py status    # health and ids
+    python3 tools/infra/aws/deploy.py brake     # what the budget brake does, by hand
+    python3 tools/infra/aws/deploy.py resume    # undo the brake
 
 Uses the AWS CLI (credentials from the usual places). Everything is tagged
 project=workstead, lives in its own VPC, and is idempotent.
@@ -43,7 +43,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 PKG = ROOT / "tools" / "ws" / "workstead"
 HERE = Path(__file__).resolve().parent
 STATE = HERE / "state.json"

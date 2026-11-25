@@ -1,6 +1,6 @@
 # An always-on Workstead relay node behind a Cloudflare quick tunnel.
 #
-#   docker compose -f infra/node/compose.yml up -d --build
+#   docker compose -f tools/infra/node/compose.yml up -d --build
 #
 # No domain, no DNS record, no open port: cloudflared dials out to Cloudflare,
 # which gives the tunnel a random https://<words>.trycloudflare.com name. The
@@ -25,7 +25,7 @@ x-hardening: &hardening
 services:
   relayd:
     <<: *hardening
-    build: {context: ../.., dockerfile: infra/node/Dockerfile}
+    build: {context: ../../.., dockerfile: tools/infra/node/Dockerfile}
     image: workstead-node:local
     environment:
       WS_CLIENT_IP_HEADER: cf-connecting-ip

@@ -1,6 +1,6 @@
 """Keep an always-on relay node announced to the mesh.
 
-Runs beside ``relayd`` and a Cloudflare tunnel (``infra/node``). Every
+Runs beside ``relayd`` and a Cloudflare tunnel (``tools/infra/node``). Every
 ``WS_ANNOUNCE_MINUTES`` it
 
 1. asks cloudflared for the tunnel's current public hostname (a quick

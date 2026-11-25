@@ -143,11 +143,11 @@ Lose the file and you lose nothing but reputation: endorse the new key.
 
 ## An always-on node
 
-`infra/node/compose.yml` runs a relay that never sleeps, on any machine with
+`tools/infra/node/compose.yml` runs a relay that never sleeps, on any machine with
 Docker:
 
 ```bash
-WS_ANNOUNCE_REPOS=owner/name docker compose -f infra/node/compose.yml up -d --build
+WS_ANNOUNCE_REPOS=owner/name docker compose -f tools/infra/node/compose.yml up -d --build
 ```
 
 | Container | Network | Does |

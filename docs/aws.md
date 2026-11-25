@@ -3,16 +3,16 @@
 **Workstead doesn't need this.** Agents run the mesh themselves (see
 [relay.md](relay.md#the-super-peer-mesh)), and the project's own seed was
 retired on 2026-11-25. This is for operators who want an always-on relay
-anyway: a small, free-tier AWS footprint, built by `infra/aws/deploy.py`, designed to be
+anyway: a small, free-tier AWS footprint, built by `tools/infra/aws/deploy.py`, designed to be
 **unbreakable from the outside, useless if broken into, cheap by
 construction, and retired automatically** once volunteers carry the network.
 
 ```bash
-python3 infra/aws/deploy.py up       # create or converge (idempotent)
-python3 infra/aws/deploy.py status   # ids and health
-python3 infra/aws/deploy.py brake    # stop spending now (what the budget brake does)
-python3 infra/aws/deploy.py resume   # undo the brake
-python3 infra/aws/deploy.py down     # delete everything it created
+python3 tools/infra/aws/deploy.py up       # create or converge (idempotent)
+python3 tools/infra/aws/deploy.py status   # ids and health
+python3 tools/infra/aws/deploy.py brake    # stop spending now (what the budget brake does)
+python3 tools/infra/aws/deploy.py resume   # undo the brake
+python3 tools/infra/aws/deploy.py down     # delete everything it created
 ```
 
 It uses the AWS CLI with whatever credentials it finds, tags everything

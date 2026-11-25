@@ -1,16 +1,29 @@
+<picture>
+  <img src="docs/images/remedy-atlas.webp" alt="" width="1280">
+</picture>
+
 # Remedy Atlas
 
-An open research project mapping treatment gaps in drug-resistant infections and snakebite. The NDM-1 and snakebite SVMP tracks run in parallel, with KPC and OXA-48-like coverage in the same antibiotic resistance campaign.
+**Open research on the infections and envenomings that today’s treatments still leave behind.**
 
-- [Research dashboard](https://remedy-atlas.tomoliveri.workers.dev)
-- [Public work queue](https://github.com/tomoliveri/remedy-atlas/issues)
-- [How to contribute and interpret results](CONTRIBUTING.md)
+Remedy Atlas brings researchers and contributors together to answer practical questions. Who still needs a better treatment? What does the evidence say could help? What would it take for that treatment to save lives?
 
-Workstead handles task allocation, leases, priorities, dependencies, reviews and retries. The dashboard reads the public queue and refreshes every 45 seconds. Track definitions and sources live in [tracks.json](site/tracks.json).
+[**Explore the live dashboard**](https://remedy-atlas.tomoliveri.workers.dev) · [**Contribute**](.github/CONTRIBUTING.md) · [**Read the technical overview**](docs/technical-overview.md)
 
-## Work on the project
+## Where we’re starting
 
-Start with [the contribution guide](CONTRIBUTING.md). Operators can find deployment, job planning and scaffold commands in [the project charter](docs/PROJECT.md).
+- **Drug-resistant infections.** The NDM-1 and KPC/OXA tracks look at where treatments fall short for people with carbapenem-resistant infections, and how coverage differs by resistance mechanism.
+- **Snakebite.** A parallel track asks whether targeting venom metalloproteinases could add protection alongside sPLA₂ inhibition and standard care.
+- **Next in line.** The portfolio also tracks LpxC, drug-resistant TB, *C. difficile*, *Candida auris*, and malaria. The dashboard shows which questions are queued or on hold.
+
+## How to follow or help
+
+The dashboard links each track to its open work, published sources, and an annual lives-saved scenario with visible assumptions. The scenarios show what a future treatment would need to achieve. Clinical benefit still needs to be demonstrated.
+
+Pick an evidence question from the [public queue](https://github.com/tomoliveri/remedy-atlas/issues?q=is%3Aissue+is%3Aopen+label%3Aws%3Aready), help assess a result, or propose a gap the project should investigate.
+
+<details>
+<summary>Join with an AI worker</summary>
 
 <!-- ws:join:start -->
 ```text
@@ -18,4 +31,6 @@ Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md
 ```
 <!-- ws:join:end -->
 
-Remedy Atlas builds on [Workstead](https://github.com/tomoliveri/workstead). See [LICENSE](LICENSE) for the repository license. Third-party source material retains its original terms.
+</details>
+
+Built on [Workstead](https://github.com/tomoliveri/workstead) · [MIT license](LICENSE)

@@ -6,7 +6,7 @@ Public jobs cover research synthesis and clinical or epidemiological questions. 
 
 ## Run the queue
 
-GitHub Issues and Actions run Workstead. Workers claim by partition and capability. Workstead schedules by priority, queue age and dependencies, and expires and retries abandoned leases. To add a track, add its record to `site/tracks.json`, verify source dates and scope, and deploy the updated portfolio. When ready, publish its job.
+GitHub Issues and Actions run Workstead. Workers claim by partition and capability. Workstead schedules by priority, queue age and dependencies, and expires and retries abandoned leases. To add a track, add its record to `site/public/tracks.json`, verify source dates and scope, and deploy the updated portfolio. When ready, publish its job.
 
 ```sh
 python3 research/atlas.py job TRACK > /tmp/atlas-job.md
@@ -34,13 +34,13 @@ The first command fetches `origin/main` and prints the exact commit without touc
 
 ```sh
 python3 research/atlas.py check
-node --test edge/progress.test.mjs
-node --check site/app.js
+node --test site/edge/progress.test.mjs
+node --check site/public/app.js
 python3 -m unittest discover -s tools/ws/tests
-wrangler deploy --dry-run
-wrangler deploy
+wrangler deploy --config site/wrangler.toml --dry-run
+wrangler deploy --config site/wrangler.toml
 ```
 
-Use Python 3.9+, Node 22+ and a Cloudflare credential scoped to Workers deployment. Wrangler deploys the public UI and read-only GitHub feed on Cloudflare Workers. Locally, use `wrangler dev`. The Worker caches queue snapshots for up to 60 seconds. Track metadata changes require a Worker deployment; queue state changes show up automatically. The dashboard displays the last successful fetch when GitHub is unavailable.
+Use Python 3.9+, Node 22+ and a Cloudflare credential scoped to Workers deployment. Wrangler deploys the public UI and read-only GitHub feed on Cloudflare Workers. Locally, use `wrangler dev --config site/wrangler.toml`. The Worker caches queue snapshots for up to 60 seconds. Track metadata changes require a Worker deployment; queue state changes show up automatically. The dashboard displays the last successful fetch when GitHub is unavailable.
 
-Once reviewed evidence supports an estimate, add an `impact` object to the track with `population` (include geography and year), `sources` (primary-source HTTPS links), and lower and upper pairs for `baselineDeaths`, `eligibleFraction`, `reach` and `mortalityReduction`. The dashboard multiplies the lower and upper inputs to display a conditional scenario range. Document the inputs and correlations in the evidence record. This range represents the proposed assumptions and carries no statistical confidence level.
+The `impact` object records `population` (include geography and year), `sources` (primary-source HTTPS links), and lower and upper pairs for `eligibleFraction`, `reach` and `mortalityReduction`. Use `baselineDeaths` with a relative mortality reduction or `annualCases` with an absolute mortality reduction. The dashboard multiplies the lower and upper inputs to display a scenario range. Keep `illustrative` true when the inputs include unsupported assumptions. Document reviewed inputs and correlations in the evidence record. Scenario ranges carry no statistical confidence level.
