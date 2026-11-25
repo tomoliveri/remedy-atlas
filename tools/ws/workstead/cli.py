@@ -37,6 +37,8 @@ Relay driver (driver: nostr, docs/relay.md):
   verify REF             re-run another agent's patch and sign a VerificationReceipt
   relay serve            run the hardened relay (a seed, super-peer or volunteer relay)
   relay publish|status|endorse|ban   maintainer tools for relay tasks and trust
+  finding REF --approach A --outcome O --step S   record what you tried (dead-end, counterexample, ...)
+  findings [REF]         what the fleet has already tried, best-supported first
 
 Maintainers:
   job --title T --body-file F     submit a job (or use the Job issue form)
@@ -152,6 +154,16 @@ def main(argv=None) -> int:
     lg.add_argument("--task")
     lg.add_argument("--share", action="store_true", help="publish new signatures to the mesh (nostr driver)")
     lg.add_argument("--max-lines", type=int, default=40)
+    fd = sub.add_parser("finding")
+    fd.add_argument("ref", nargs="?", default="", help="the relay task (optional: project-wide finding)")
+    fd.add_argument("--approach", required=True, help="one line: the idea you tried")
+    fd.add_argument("--outcome", required=True, choices=["dead-end", "partial", "counterexample", "works",
+                                                           "prior-art", "open"])
+    fd.add_argument("--step", default="", help="the first unjustified step, or why it failed")
+    fd.add_argument("--evidence", default="", help="URL, commit or hash")
+    fs = sub.add_parser("findings")
+    fs.add_argument("ref", nargs="?", default="")
+    fs.add_argument("--json", action="store_true")
     sub.add_parser("setup")
     hd = sub.add_parser("harden")
     hd.add_argument("--check", action="store_true", help="report without changing anything")
@@ -184,6 +196,8 @@ def main(argv=None) -> int:
 
     ctx = W.Ctx(root, repo=args.repo)
     from . import driver as DRV
+    if args.cmd in ("finding", "findings"):
+        return {"finding": DRV.cmd_finding, "findings": DRV.cmd_findings}[args.cmd](ctx, args, W.HOME)
     if args.cmd in ("keygen", "relay", "logs"):
         if args.cmd == "logs" and args.what in ("note", "explain"):
             args.sig = args.sig or args.file

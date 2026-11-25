@@ -373,6 +373,10 @@ class GitHub:
     def pr_files(self, n: int) -> List[str]:
         return [f["filename"] for f in self.paginate(f"{self.r}/pulls/{n}/files?", limit=3000)]
 
+    def pr_patches(self, n: int) -> Dict[str, str]:
+        """{file: unified diff hunk text} (GitHub omits the text for binary or huge files)."""
+        return {f["filename"]: f.get("patch") or "" for f in self.paginate(f"{self.r}/pulls/{n}/files?", limit=3000)}
+
     # --- other repositories (safety-net verification) ---------------------------
 
     def repo_owner(self, full: str) -> Tuple[str, str]:

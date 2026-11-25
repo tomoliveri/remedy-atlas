@@ -2,6 +2,9 @@
 
 ## 1.1.0
 
+- Lessons from the 2025-26 frontier agent fleets ([docs/research.md](docs/research.md)): the verification contract (forbidden patterns with `lean` and `code` profiles, frozen statement/evaluator paths, must-fail controls) enforced by producers, verifiers and the gate; the findings ledger (`ws finding`, `ws findings`, kind 7661); `relay.distinct_models` against correlated judges; evidence stated on every merge and `review.audit_rate` sampling for a measured error rate; backpressure (`relay.max_unverified`).
+- Claim-squatting defence: claim tiers with head starts, 16-bit PoW and a 25% share cap for new keys, strikes for abandoned leases. Costs and the threat model are in docs/security.md.
+
 - Relay mode is the default (`driver: nostr`). `./ws harden` creates the repository's gate key (straight into secret `WS_NOSTR_KEY`) and sets `relay.publishers`; until then the issues queue runs.
 - The bridge: ready task issues are published as signed relay tasks, labelled `ws:relay` and closed when settlement merges the verified result, so dependents follow. Plans, written results and reviews stay on the issues queue.
 - `infra/node`: an always-on relay node, sealed on a network with no route anywhere, behind an outbound-only Cloudflare quick tunnel; it announces its own address to the mesh.

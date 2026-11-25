@@ -101,6 +101,9 @@ DEFAULTS: Dict[str, Any] = {
         "merge_method": "squash",
         "require_checks": True,
         "max_rounds": 5,
+        # share of merged relay results picked at random (by task hash) for a
+        # human audit, so the fleet's error rate is measured, not assumed
+        "audit_rate": 0.05,
         # Pull requests touching these always need a maintainer's approval.
         "protected_paths": [".github/", "tools/ws/", "workstead.json",
                             "JOIN.md", "AGENTS.md", "CLAUDE.md", "SECURITY.md"],
@@ -142,6 +145,11 @@ DEFAULTS: Dict[str, Any] = {
     "give_back": {"enabled": False, "share": 0.001, "upstream": "",
                   "min_owed_hours": 0.5, "learnings": True},
     "board": {"title": "Workstead board", "branch": "ws-board"},
+    # The verification contract (contract.py): what "passes" means beyond
+    # validate.command, so a fleet can't game its own checker. profile: ""
+    # | "lean" | "code" (built-in forbid lists). frozen: statement/evaluator
+    # paths no patch may touch. must_fail: control commands that must fail.
+    "verify": {"profile": "", "forbid": [], "frozen": [], "must_fail": []},
     "relay": {
         # Milestones (TaskPublished, VerificationReceipt, Endorsement,
         # TaskSettled): two or three tiny events per completed task, so free
@@ -175,6 +183,11 @@ DEFAULTS: Dict[str, Any] = {
         # does the producer's own receipt count toward the quorum? (no: two
         # independent verifiers back every patch)
         "count_producer": False,
+        # distinct model families (receipt "model" tag) the quorum must span:
+        # nine judges from one family are worth about two independent votes
+        "distinct_models": 1,
+        # this worker's model family, declared on its receipts (or WS_MODEL_FAMILY)
+        "model_family": "",
         # Tangle-style admission: a producer must have verified this many
         # earlier patches by others before its own patch counts (dag.py)
         "pov_min_prior_verifications": 2,
@@ -189,6 +202,23 @@ DEFAULTS: Dict[str, Any] = {
         "lease_minutes": 120,
         "max_lease_minutes": 720,
         "max_active_leases": 3,
+        # backpressure: the bridge stops publishing new tasks while this many
+        # results wait for verification (review capacity is the bottleneck)
+        "max_unverified": 25,
+        # Anti-squatting (claims are free to sign, keys are free to make): who
+        # may claim first, what newcomers pay, how much they can hold at once,
+        # and when a key that keeps abandoning leases is ignored. See
+        # docs/security.md#claim-squatting.
+        "claims": {
+            # seconds after a task becomes available before each tier may claim
+            "head_start_seconds": {"trusted": 0, "proven": 60, "new": 180},
+            # proof of work on claims by keys with no verified work yet
+            "new_key_pow_bits": 16,
+            # share of claimable tasks that new keys may hold at once (min 1)
+            "new_key_lease_share": 0.25,
+            # leases lapsed without a result within the window: the key's claims are ignored
+            "max_lapses": 2, "lapse_window_hours": 24,
+        },
         # NIP-13 proof of work (leading zero bits) on claims and receipts: anti-spam
         "pow_bits": 8,
         "max_skew_seconds": 300,
@@ -257,6 +287,9 @@ def validate(cfg: Dict[str, Any]) -> None:
         raise ConfigError("review.approvals_required must be >= 0")
     if not 0 < float(cfg["dedup"]["similarity"]) <= 1:
         raise ConfigError("dedup.similarity must be in (0, 1]")
+    from .contract import PROFILES
+    if cfg["verify"]["profile"] not in ("",) + tuple(PROFILES):
+        raise ConfigError(f"verify.profile must be one of: {', '.join(PROFILES)} (or empty)")
     gb = cfg["give_back"]
     if cfg["driver"] not in ("github-issues", "nostr"):
         raise ConfigError("driver must be github-issues or nostr")

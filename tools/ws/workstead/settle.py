@@ -64,6 +64,12 @@ def settle_pr(q: Queue, relays, n: int, events: Optional[List[Dict[str, Any]]] =
             if checks == "failure":
                 return _flag(q, n, out, "needs-maintainer", "verified by the fleet, but CI failed on a clean runner")
             return out
+    from . import contract as K
+    c = K.contract(cfg, row.get("spec") or {})
+    if c["forbid"] or c["frozen"]:
+        problems = K.violations(gh.pr_files(n), gh.pr_patches(n), c)
+        if problems:
+            return _flag(q, n, out, "rejected", "it breaks the verification contract: " + "; ".join(problems[:5]))
     why = q.needs_maintainer(n, pr)
     if why:
         return _flag(q, n, out, "needs-maintainer", why)
@@ -76,6 +82,10 @@ def settle_pr(q: Queue, relays, n: int, events: Optional[List[Dict[str, Any]]] =
         out.update(decision="waiting", reason="GitHub refused the merge (conflict or branch protection); will retry")
         return out
     out.update(decision="merged", reason=f"quorum {row['votes']}/{row['quorum']}, CI green")
+    try:
+        _record_evidence(q, n, tid, row, c)
+    except Exception as e:  # the merge stands; evidence is a courtesy record
+        out["note"] = f"evidence not recorded: {e}"
     issue = (row.get("spec") or {}).get("issue")
     if isinstance(issue, int) and issue != n:
         from .bridge import close_settled
@@ -91,6 +101,34 @@ def settle_pr(q: Queue, relays, n: int, events: Optional[List[Dict[str, Any]]] =
         except Exception as e:  # the merge stands; agents still see quorum
             out["note"] = f"TaskSettled not published: {e}"
     return out
+
+
+def audit_sampled(task_id: str, rate: float) -> bool:
+    """Deterministic, unpredictable before the task exists: hash of the task id."""
+    import hashlib
+    return int(hashlib.sha256(("audit:" + task_id).encode()).hexdigest()[:8], 16) / 2 ** 32 < float(rate)
+
+
+def _record_evidence(q: Queue, n: int, tid: str, row: Dict[str, Any], c: Dict[str, List[str]]) -> None:
+    """State what this result's verification consists of, claim by claim, and sample it for audit."""
+    cfg, gh = q.cfg, q.gh
+    lines = [f"- **Reviewed by agents:** {row['votes']} independent trusted verifiers re-ran the checks on this exact "
+             f"commit" + (f" (model families: {', '.join(row.get('models') or [])})" if row.get("models") else "")]
+    if cfg["review"]["require_checks"]:
+        lines.append("- **Machine-checked:** CI passed on a clean runner"
+                     + (f" with the `{cfg['verify']['profile']}` contract" if cfg["verify"]["profile"] else ""))
+    if c["frozen"] or c["forbid"] or c["must_fail"]:
+        lines.append(f"- **Contract:** {len(c['frozen'])} frozen paths untouched, {len(c['forbid'])} forbidden "
+                     f"patterns absent, {len(c['must_fail'])} controls still fail")
+    sampled = audit_sampled(tid, cfg["review"]["audit_rate"])
+    if sampled:
+        lines.append(f"- **Audited by sampling:** picked for a human audit ({cfg['review']['audit_rate']:.0%} of "
+                     "results). A maintainer checks it, then swaps `ws:audit` for `ws:audit-pass` or `ws:audit-fail` "
+                     "(with a comment saying why): the counts are the fleet's measured error rate.")
+        gh.add_labels(n, [L["audit"]])
+    else:
+        lines.append("- **Reviewed by a person:** not yet (not in this audit sample)")
+    gh.create_comment(n, "**Settled.** What this result's verification consists of:\n\n" + "\n".join(lines))
 
 
 def _flag(q: Queue, n: int, out: Dict[str, Any], decision: str, reason: str) -> Dict[str, Any]:

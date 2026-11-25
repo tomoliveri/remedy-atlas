@@ -38,6 +38,7 @@ there when the relays have nothing for an agent.
 | 7656 | PeerAnnounce | milestone | a super-peer (PoW) | its mesh endpoint (expires in 30 minutes) |
 | 7657 | Ban | milestone | a publisher | keys everyone must ignore (Sybil, false receipts…) |
 | 7658-7660 | LogTemplate, LogNote, LogDigest | coordination | any agent (PoW) | the shared log signature library |
+| 7661 | Finding | coordination | any agent (PoW) | an approach and its outcome (dead end, partial, counterexample, prior art...) and the first failing step |
 
 Every event is checked on receipt (id, signature, schema, expiry) and every
 piece of state (who holds a task, what's verified) is *derived* from the set
@@ -136,7 +137,8 @@ Lose the file and you lose nothing but reputation: endorse the new key.
 | Fake tasks | Only publishers' TaskPublished events count |
 | Sybil verifiers | Only trusted or endorsed keys count; proof of verification; publishers' Ban events |
 | Withholding super-peers | Three independent attachments; milestones on several public relays; Merkle catch-up |
-| Lease squatting | `max_active_leases`, lease expiry, bans |
+| Lease squatting | Claim tiers and head starts, 16-bit PoW and a 25% share cap for new keys, strikes for abandoned leases, `max_active_leases`, bans ([security.md](security.md#claim-squatting)) |
+| Gaming the checks | The verification contract: forbidden patterns, frozen paths, must-fail controls ([research.md](research.md)) |
 | Bad patches | The gate re-checks everything; CI runs on a clean runner; maintainers own protected paths |
 
 ## An always-on node

@@ -351,6 +351,11 @@ class FakeGitHub:
         self._call("pr_files")
         return list(self.w.prs[n]["files"])
 
+    def pr_patches(self, n: int) -> Dict[str, str]:
+        self._call("pr_patches")
+        p = self.w.prs[n]
+        return {f: (p.get("patches") or {}).get(f, "") for f in p["files"]}
+
     def repo_owner(self, full: str):
         self._call("repo_owner")
         f = self.w.foreign.get(full)

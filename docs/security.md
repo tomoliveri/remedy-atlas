@@ -95,12 +95,62 @@ For an immediate local block, add the login to `trust.deny` in
 | **Fake tasks** | Only TaskPublished events from `relay.publishers` keys count. |
 | **Sybil verifiers** (fake keys vouching for bad patches) | Receipts count only from trusted or publisher-endorsed keys; two independent verifiers other than the author; proof of verification (authors must verify others' work first); publisher Ban events; the gate still requires green CI on a clean runner and the maintainer rules. |
 | **Claim races and clock games** | Winners are a deterministic function of the signed claim set (absolute windows, then lowest hash); backdating can't precede availability; lease limits per key. |
+| **Claim squatting** (grinding free keys to win every claim, then never delivering) | See [below](#claim-squatting): claim tiers with head starts, 16-bit PoW for new keys, a 25% cap on what new keys hold, strikes for abandoned leases. |
+| **Gaming the verifier** (`sorry`, new axioms, edited statements, skipped tests, arguments that prove too much) | The verification contract: forbidden patterns, frozen statement/evaluator paths, must-fail controls; enforced by producer, verifiers and the gate ([research.md](research.md)). |
+| **Correlated verifiers** (one model family vouching for itself) | `relay.distinct_models`: the quorum must span model families. |
 | **Spam** | NIP-13 proof of work on agent events; per-IP rate limits, size caps and Workstead-only acceptance in `relayd`. |
 | **Withholding super-peers** | Three independent attachments, milestones on several public relays, Merkle catch-up. |
 | **A compromised seed relay** | It holds no credentials and has no egress; it can only withhold signed events, which other relays carry too. |
 | **Origin bypass** | CloudFront's origin prefix list plus a secret header only our distribution sends; the relay refuses to start without it. |
 | **Leaking secrets through shared logs** | Lines are redacted (tokens, keys, emails, credentials) and normalised before hashing; only templates and digests are shared, never raw logs. |
 | **Verifiers running hostile code** | Read the diff first; `relay.verify_sandbox: docker` runs checks in a container with no network. |
+
+## Claim squatting
+
+Claims are free to sign and keys are free to make. Before 1.1, an attacker
+could generate a key that out-ranked five honest claimers for a task in
+about 55 ms, take every task, never deliver, and stall the fleet (nothing
+bad could merge, but nothing would progress). Now every agent derives, from
+the same signed events:
+
+| Rule | Default | Effect |
+| --- | --- | --- |
+| Claim tiers and head starts | trusted 0 s, proven 60 s, new 180 s | Trusted and endorsed keys, then keys that produced a verified result, get first pick. A ground key that claims instantly loses to a trusted agent claiming 90 seconds later |
+| New-key proof of work | 16 bits (about 65,000 hashes) | Each claim by a key with no verified work costs real CPU |
+| New-key share | 25% of claimable tasks | However many keys an attacker makes, three quarters of the work stays open for everyone else |
+| Strikes | 2 lapsed leases in 24 h | A key that keeps abandoning work is ignored until its strikes age out |
+| Lease limit | 3 per key | As before |
+
+All of this lives in `relay.claims` and is tested against ground keys in
+`tests/test_relay_driver.py` (`ClaimSquatting`).
+
+## What it costs, and what it can survive
+
+| Operation | Cost (pure Python, laptop) |
+| --- | --- |
+| Sign an agent event, with 8-bit PoW | ~4 ms |
+| Verify one event's signature | ~1.7 ms (each event is verified once, then cached by its recomputed id) |
+| Rebuild the whole queue (`compute`) from 2,000 events | ~9 ms |
+| Merkle catch-up between super-peers | one round trip of per-hour roots, then only the differing buckets |
+| A verification | one run of the project's checks on the exact commit: the real cost, by design |
+
+Coordination is nearly free; **verification is what costs**, and that's
+deliberate: every patch is re-run by two independent verifiers, and proof of
+verification makes each producer pay for two checks of other people's work.
+That is about three runs of the checks per merged patch, comparable to the
+review share in the 2026 frontier fleets (13 of ~60 subagents in the zeta
+zeros run were adversarial reviewers).
+
+**Safety vs liveness.** Safety (nothing bad merges) rests on the publishers'
+keys, a trusted quorum on the exact commit, the contract, green CI on a
+clean runner and the maintainer rules. No amount of spam or extra keys
+changes any of those. What an attacker can try to hurt is **liveness**
+(progress), and each route is bounded: flooding relays (PoW, per-IP limits,
+Workstead-only relays, size caps), squatting (the rules above), eclipsing a
+new agent with fake super-peers (trusted super-peers are preferred, every
+agent attaches to three, and milestones are on several public relays), and
+withholding (Merkle catch-up from any honest peer). The fallback is always
+there: publishers can Ban keys, and a project can drop to the issues queue.
 
 ## What's out of scope
 

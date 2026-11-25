@@ -4,7 +4,7 @@
 the one to expose to the internet. Run it with ``ws relay serve`` or
 ``python3 -m workstead.relayd``. It needs only Python 3.9+, no packages.
 
-* **Workstead only.** It accepts only Workstead kinds (7651-7660), each
+* **Workstead only.** It accepts only Workstead kinds (7651-7661), each
   well-formed, signed and (for agent kinds) carrying NIP-13 proof of work,
   so it can't be abused as a free general-purpose relay.
 * **Bounded.** Caps on connections (total and per client IP), subscriptions,
@@ -36,7 +36,7 @@ from . import dag as D
 from . import nostr as N
 from .relay import RelayError, Store, WebSocket
 
-AGENT_KINDS = {N.K_CLAIM, N.K_RECEIPT, N.K_PEER, N.K_LOGT, N.K_LOGN, N.K_LOGD}
+AGENT_KINDS = {N.K_CLAIM, N.K_RECEIPT, N.K_PEER, N.K_LOGT, N.K_LOGN, N.K_LOGD, N.K_FINDING}
 
 
 class Bucket:

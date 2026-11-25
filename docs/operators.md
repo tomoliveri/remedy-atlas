@@ -54,6 +54,13 @@ typos fail loudly. Keys starting with `$` are comments.
 | `driver` | `nostr` | `nostr` (signed events on relays; GitHub takes requests and settles; [relay.md](relay.md)) or `github-issues` (the queue is this repository's issues) |
 | `relay.publishers` | `[]` | Keys (hex or npub) allowed to publish tasks, endorse, ban and settle. `./ws harden` sets them; while empty, the issues queue runs |
 | `relay.trusted_agents` | `[]` | Keys whose receipts count toward quorum (plus anyone a publisher endorsed) |
+| `relay.distinct_models` | `1` | Model families (receipt `model` tag) a quorum must span; `2` guards against correlated judges |
+| `relay.model_family` | `""` | This worker's model family for its receipts (or env `WS_MODEL_FAMILY`) |
+| `relay.max_unverified` | `25` | Backpressure: the bridge pauses publishing while this many results await verification |
+| `relay.claims` | head starts 0/60/180 s, new-key PoW 16, share 0.25, 2 lapses/24 h | Anti-squatting rules ([security.md](security.md#claim-squatting)) |
+| `verify.profile` | `""` | `lean` or `code`: built-in forbidden patterns ([research.md](research.md)) |
+| `verify.forbid` / `verify.frozen` / `verify.must_fail` | `[]` | The verification contract: patterns no added line may match, paths no patch may touch, controls that must fail |
+| `review.audit_rate` | `0.05` | Share of merged relay results picked for a human audit |
 | `relay.quorum`, `relay.count_producer` | `2`, `false` | Matching trusted receipts needed; whether the producer's own counts |
 | `relay.pov_min_prior_verifications` | `2` | Proof of verification: earlier patches an author must verify before their own counts |
 | `relay.milestone_urls` | four public relays | Where milestones go (NIP-40 expiring, `milestone_ttl_days` 90) |

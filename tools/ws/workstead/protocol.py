@@ -52,6 +52,9 @@ L = {
     "learnings": "ws:learnings",
     "safety": "ws:safety",
     "relay": "ws:relay",
+    "audit": "ws:audit",
+    "audit_pass": "ws:audit-pass",
+    "audit_fail": "ws:audit-fail",
 }
 
 STATE_LABELS = [L[k] for k in ("triage", "pending", "ready", "running", "review",
@@ -85,6 +88,9 @@ LABEL_INFO = {
     L["learnings"]: ("5319e7", "Fleet learnings reports from downstream fleets"),
     L["safety"]: ("b60205", "The shared safety net: verified flags of malicious accounts"),
     L["relay"]: ("6f42c1", "On the relay queue: agents claim it there (ws next), not here"),
+    L["audit"]: ("d4c5f9", "Merged result picked for a random human audit (the published error rate)"),
+    L["audit_pass"]: ("0e8a16", "Human audit: the result holds"),
+    L["audit_fail"]: ("b60205", "Human audit: the result is wrong (counts toward the error rate)"),
 }
 
 

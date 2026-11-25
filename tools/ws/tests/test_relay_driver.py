@@ -124,5 +124,82 @@ class ZeroGitHubCalls(unittest.TestCase):
         self.assertEqual(gh.calls, 0)
 
 
+class ClaimSquatting(unittest.TestCase):
+    """Keys are free and claims are cheap: an attacker grinding keys must not stall the fleet."""
+
+    def setUp(self):
+        self.honest = bytes([7]) * 32
+        self.c = cfg(trusted_agents=[S.pubkey(self.honest).hex()], pow_bits=0,
+                     claims={"new_key_pow_bits": 10, "head_start_seconds": {"trusted": 0, "proven": 60, "new": 180}})
+        self.now = 1_900_000_000
+        self.tasks = [N.task_event(PUB_SK, REPO, "a" * 40, {"title": f"t{i}"}, 3, 2, self.now - 3600) for i in range(8)]
+
+    def grind(self, tid, beat, n=400):
+        """Attacker keys whose claim rank beats `beat` for task tid."""
+        out = []
+        while len(out) < n // 100:
+            sk = S.generate()[0]
+            if N.claim_rank(tid, S.pubkey(sk).hex()) < beat:
+                out.append(sk)
+        return out
+
+    def test_trusted_head_start_beats_ground_keys(self):
+        t = self.tasks[0]
+        beat = N.claim_rank(t["id"], S.pubkey(self.honest).hex())
+        evs = list(self.tasks)
+        for sk in self.grind(t["id"], beat):  # instant claims, right as the task appears
+            evs.append(N.claim_event(sk, t["id"], REPO, t["created_at"], 3600, pow_bits=10))
+        evs.append(N.claim_event(self.honest, t["id"], REPO, t["created_at"] + 90, 3600))
+        row = N.compute(evs, self.c, REPO, t["created_at"] + 120)[t["id"]]
+        self.assertEqual(row["holder"], S.pubkey(self.honest).hex())
+
+    def test_new_keys_need_pow_and_are_capped(self):
+        evs = list(self.tasks)
+        at = self.now - 3600 + 200  # after the new-key head start
+        for t in self.tasks:
+            evs.append(N.claim_event(S.generate()[0], t["id"], REPO, at, 7200, pow_bits=0))  # no PoW: ignored
+        st = N.compute(evs, self.c, REPO, at + 10)
+        self.assertTrue(all(r["status"] == "open" for r in st.values()))
+        for t in self.tasks:
+            evs.append(N.claim_event(S.generate()[0], t["id"], REPO, at + 1, 7200, pow_bits=10))
+        st = N.compute(evs, self.c, REPO, at + 10)
+        leased = [r for r in st.values() if r["status"] == "leased"]
+        self.assertEqual(len(leased), 2)  # 25% of 8 claimable tasks: the rest stay open for others
+
+    def test_serial_abandoners_are_struck(self):
+        sk = S.generate()[0]
+        pk = S.pubkey(sk).hex()
+        evs = list(self.tasks)
+        at = self.now - 3600 + 200
+        for t in self.tasks[:2]:  # wins two leases and abandons both
+            evs.append(N.claim_event(sk, t["id"], REPO, at, 600, pow_bits=10))
+        later = at + 1200
+        evs.append(N.claim_event(sk, self.tasks[2]["id"], REPO, later, 600, pow_bits=10))
+        ctx = {}
+        st = N.compute(evs, self.c, REPO, later + 10, ctx_out=ctx)
+        self.assertIn(pk, ctx["struck"])
+        self.assertEqual(st[self.tasks[2]["id"]]["status"], "open")
+
+    def test_proven_keys_rank_above_new_keys(self):
+        prod = bytes([9]) * 32
+        v1, v2 = bytes([20]) * 32, bytes([21]) * 32
+        c = cfg(trusted_agents=[S.pubkey(v1).hex(), S.pubkey(v2).hex()], pow_bits=0, pov_min_prior_verifications=0,
+                claims={"new_key_pow_bits": 10})
+        t0, t1 = self.tasks[0], self.tasks[1]
+        evs = [t0, t1, N.claim_event(prod, t0["id"], REPO, t0["created_at"] + 200, 3600, pow_bits=10)]
+        for sk, role in ((prod, "produce"), (v1, "verify"), (v2, "verify")):
+            evs.append(N.receipt_event(sk, t0["id"], REPO, "a" * 40, "f" * 40, "c" * 64, "d" * 64, "pass", role,
+                                       t0["created_at"] + 300, ref="https://x.example/r.git#b" if role == "produce" else None))
+        ctx = {}
+        N.compute(evs, c, REPO, self.now, ctx_out=ctx)
+        self.assertIn(S.pubkey(prod).hex(), ctx["proven"])
+        # On the next task the proven producer's claim (after 60 s) beats an earlier new key's (after 180 s).
+        newbie = S.generate()[0]
+        evs += [N.claim_event(newbie, t1["id"], REPO, t1["created_at"] + 180, 3600, pow_bits=10),
+                N.claim_event(prod, t1["id"], REPO, t1["created_at"] + 61, 3600)]
+        row = N.compute(evs, c, REPO, self.now)[t1["id"]]
+        self.assertEqual(row["holder"], S.pubkey(prod).hex())
+
+
 if __name__ == "__main__":
     unittest.main()

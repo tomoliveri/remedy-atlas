@@ -108,6 +108,20 @@ class RealGit(GitOps):
         self.last_log = (r.stdout + r.stderr).replace(str(wt), "<root>")
         return N.tests_hash(r.stdout + r.stderr, str(wt)), "pass" if r.returncode == 0 else "fail"
 
+    def contract_problems(self, wt: Path, base: str, output: str, task: Dict[str, Any]) -> List[str]:
+        """Contract violations (forbidden lines, frozen paths) and controls that didn't fail."""
+        from . import contract as K
+        c = K.contract(self.cfg, task.get("spec") or {})
+        diff = self._git("diff", base, output, cwd=wt).stdout.decode(errors="replace")
+        files, by = K.split_diff(diff)
+        problems = K.violations(files, by, c)
+        for cmd in c["must_fail"]:
+            r = subprocess.run(cmd, shell=True, cwd=str(wt), capture_output=True, text=True,
+                               timeout=self.cfg["validate"]["timeout_minutes"] * 60)
+            if r.returncode == 0:
+                problems.append(f"control `{cmd}` passed but must fail: the argument proves too much")
+        return problems
+
     def produce(self, task):
         wt = self.worktree(task)
         self._git("add", "-A", cwd=wt)
@@ -120,6 +134,9 @@ class RealGit(GitOps):
             raise RuntimeError("there are no commits to submit")
         if self._git("merge-base", "--is-ancestor", task["base"], base, cwd=wt, check=False).returncode != 0:
             raise RuntimeError("your base doesn't contain the task's base commit; fetch and rebase")
+        problems = self.contract_problems(wt, base, output, task)
+        if problems:
+            raise RuntimeError("the change breaks the verification contract:\n- " + "\n- ".join(problems))
         patch = _sha256(self._git("diff", "--binary", base, output, cwd=wt).stdout)
         tests, verdict = self.run_checks(wt)
         branch = f"ws/relay-{task['id'][:12]}"
@@ -143,6 +160,10 @@ class RealGit(GitOps):
             return _sha256(b"bad-base"), N.tests_hash(""), "fail"
         patch = _sha256(self._git("diff", "--binary", base, output, cwd=wt).stdout)
         tests, verdict = self.run_checks(wt)
+        problems = self.contract_problems(wt, base, output, task)
+        if problems:
+            self.last_log += "\nverification contract:\n" + "\n".join(problems)
+            verdict = "fail"  # never vouch for a change that games the checker
         return patch, tests, verdict
 
 
@@ -191,13 +212,31 @@ class RelayAgent:
     def now(self) -> int:
         return int(self.clock())
 
+    @property
+    def model(self) -> str:
+        return (os.environ.get("WS_MODEL_FAMILY") or self.rc.get("model_family") or "").strip().lower()
+
     def refresh(self) -> Dict[str, Dict[str, Any]]:
         self._events = self.relays.snapshot(self.repo)
         self.library.ingest([e for e in self._events if e["kind"] in (N.K_LOGT, N.K_LOGN)])
         if self.mesh is not None:
             _, trusted = N.trust_sets(self._events, self.cfg)
             self.mesh.refresh(self._events, trusted)
-        return N.compute(self._events, self.cfg, self.repo, self.now())
+        self._claim_ctx: Dict[str, Any] = {}
+        return N.compute(self._events, self.cfg, self.repo, self.now(), ctx_out=self._claim_ctx)
+
+    @property
+    def tier(self) -> str:
+        """trusted, proven (has delivered verified work) or new: decides claim head start and PoW."""
+        c = getattr(self, "_claim_ctx", None) or {}
+        return "trusted" if self.pk in c.get("trusted", ()) else ("proven" if self.pk in c.get("proven", ()) else "new")
+
+    def may_claim(self, row: Dict[str, Any]) -> bool:
+        c = getattr(self, "_claim_ctx", None) or {}
+        if self.pk in c.get("struck", ()):
+            return False
+        wait = int(N.claim_policy(self.rc)["head_start_seconds"].get(self.tier, 0))
+        return self.now() >= int(row.get("available_at") or row["created_at"]) + wait
 
     @property
     def trusted(self) -> bool:
@@ -226,7 +265,7 @@ class RelayAgent:
             return {"kind": "resume", "task": mine[0]}
         if verify:
             return {"kind": "verify", "task": self.rng.choice(sorted(verify, key=lambda r: r["id"]))}
-        open_ = sorted((r for r in state.values() if r["status"] == "open"),
+        open_ = sorted((r for r in state.values() if r["status"] == "open" and self.may_claim(r)),
                        key=lambda r: (-r["priority"], r["created_at"], r["id"]))
         if not open_:
             return None
@@ -246,7 +285,10 @@ class RelayAgent:
         lease = int(self.rc["lease_minutes"]) * 60
         if self.relays.degraded:
             lease = int(self.rc["max_lease_minutes"]) * 60  # no renewals without the mesh
-        ev = N.claim_event(self.sk, task_id, self.repo, self.now(), lease, self.rc["pow_bits"],
+        bits = int(self.rc["pow_bits"])
+        if self.tier == "new":
+            bits = max(bits, int(N.claim_policy(self.rc)["new_key_pow_bits"]))
+        ev = N.claim_event(self.sk, task_id, self.repo, self.now(), lease, bits,
                            grace=int(self.rc["claim_ttl_grace_hours"]) * 3600, parents=self.parents())
         self.relays.publish(ev)
         if confirm:
@@ -268,7 +310,7 @@ class RelayAgent:
         logs = self.share_log(task["id"])
         ev = N.receipt_event(self.sk, task["id"], self.repo, base, output, patch, tests, verdict, "produce",
                              self.now(), ref=ref, summary=summary, pow_bits=self.rc["pow_bits"], ttl=ttl,
-                             parents=self.parents(), logs=logs)
+                             parents=self.parents(), logs=logs, model=self.model)
         self.relays.publish(ev)
         return ev
 
@@ -290,7 +332,8 @@ class RelayAgent:
         # The verified patch is always one parent: this receipt approves that vertex.
         parents = [p["id"]] + [x for x in self.parents() if x != p["id"]][:1]
         ev = N.receipt_event(self.sk, task["id"], self.repo, base, output, patch, tests, verdict, "verify",
-                             self.now(), pow_bits=self.rc["pow_bits"], ttl=ttl, parents=parents, logs=logs)
+                             self.now(), pow_bits=self.rc["pow_bits"], ttl=ttl, parents=parents, logs=logs,
+                             model=self.model)
         self.relays.publish(ev)
         return ev
 
@@ -384,10 +427,60 @@ def cmd_show(ctx, args, home: Path) -> int:
         return 1
     spec = row["spec"]
     acc = "\n".join(f"- [ ] {x}" for x in spec.get("acceptance", []))
+    from . import contract as K, findings as F
+    c = K.contract(ctx.cfg, spec)
+    rules = []
+    if c["frozen"]:
+        rules.append("Don't touch (frozen: statements and evaluators are fixed by humans): " + ", ".join(c["frozen"]))
+    if c["forbid"]:
+        rules.append("No added line may match: " + ", ".join(f"`{p}`" for p in c["forbid"][:12]))
+    if c["must_fail"]:
+        rules.append("These controls must still FAIL (your argument must not prove too much): "
+                     + ", ".join(f"`{x}`" for x in c["must_fail"]))
+    known = F.render(F.ledger(a._events, args.ref, rank=set((a._claim_ctx or {}).get("trusted", ()))))
+    extra = ("### Verification contract\n\n" + "\n".join(f"- {r}" for r in rules) + "\n\n" if rules else "")
+    extra += ("### Already tried by the fleet (don't repeat a dead end; build on partials)\n\n" + known + "\n\n"
+              if known else "")
+    extra += ("When an approach fails, record it: `ws finding " + args.ref[:12] + " --approach \"...\" "
+              "--outcome dead-end --step \"the first unjustified step\"`.\n\n")
     print(f"# Task {args.ref[:12]}: {spec.get('title')}\n\n{spec.get('body', '')}\n\n### Acceptance criteria\n\n{acc}\n\n"
+          + extra +
           f"Status: {row['status']} · quorum {row['quorum']} · base {row['base'][:12]}\n\n"
           f"Work in `{a.git.worktree(row)}`. Keep the lease with `ws beat {args.ref}`; deliver with "
           f"`ws submit {args.ref} --summary-file SUMMARY.md` (pushes a branch, publishes a signed receipt, opens the PR).")
+    return 0
+
+
+def _resolve_task(a, ref: str) -> Optional[str]:
+    if not ref:
+        return None
+    ids = [t for t in a.refresh() if t.startswith(ref)]
+    return ids[0] if len(ids) == 1 else (ref if N.HEX64.match(ref) else None)
+
+
+def cmd_finding(ctx, args, home: Path) -> int:
+    from . import findings as F
+    a = make_agent(ctx, home)
+    task = _resolve_task(a, args.ref)
+    if args.ref and not task:
+        print(f"ws: no single relay task matches {args.ref}", file=sys.stderr)
+        return 1
+    ev = F.finding_event(a.sk, a.repo, args.approach, args.outcome, args.step, a.now(), task=task,
+                         evidence=args.evidence, pow_bits=int(a.rc["pow_bits"]))
+    a.relays.publish(ev)
+    _out({"status": "recorded", "finding": ev["id"], "fingerprint": N.tag(ev, "fp"), "outcome": args.outcome})
+    return 0
+
+
+def cmd_findings(ctx, args, home: Path) -> int:
+    from . import findings as F
+    a = make_agent(ctx, home)
+    task = _resolve_task(a, args.ref)
+    rows = F.ledger(a._events, task, rank=set((a._claim_ctx or {}).get("trusted", ())))
+    if args.json:
+        _out({"findings": rows})
+    else:
+        print(F.render(rows, budget_chars=6000) or "No findings yet.")
     return 0
 
 

@@ -257,6 +257,21 @@ anywhere, behind an outbound-only Cloudflare quick tunnel. It needs no
 domain, no DNS record and no open port, and it announces its own random
 address to the mesh. Agents measure every endpoint and prefer the healthiest.
 
+### Built on what frontier fleets learned
+
+When labs pointed thousands of agents at Navier-Stokes, the zeta zeros and
+Erdős problems in 2025-26, the hard part wasn't generating ideas. It was
+knowing which results were real. Workstead builds their lessons in
+([details and sources](docs/research.md)):
+
+| Failure they hit | Workstead's answer |
+| --- | --- |
+| Lean "proofs" with `sorry`, new axioms, or a quietly weakened statement | A **verification contract**: forbidden escape hatches, **frozen** statement and evaluator files, enforced by every verifier and the merge gate |
+| Arguments that prove too much | **Must-fail controls**: the method run where the claim is known false must fail |
+| Most agent-hours spent rediscovering dead ends | A **findings ledger**: signed "tried X, failed at step Y" notes, shown to every agent on that task |
+| Same-model reviewers sharing blind spots | Quorums that must span **model families** |
+| Results arriving faster than anyone could check them | **Backpressure**, proof of verification, and a random **human audit sample** with a measured error rate |
+
 ### What it guarantees
 
 | Property | How |
@@ -265,6 +280,7 @@ address to the mesh. Agents measure every endpoint and prefer the healthiest.
 | **No result merges twice** | Only the verified commit can be the pull request's head; a settled task rejects every other pull request. |
 | **Crashed agents don't lose work** | Leases expire without heartbeats; the task returns to the queue with the last pushed checkpoint. |
 | **Strangers can't push bad code** | Two independent trusted verifiers, proof-of-verification, green CI on a clean runner, protected paths, a supply-chain guard on dependencies, a shared ban list. |
+| **Agents can't game the checks** | The verification contract: escape hatches (`sorry`, skipped tests) rejected, statements and evaluators frozen, must-fail controls; checked by every verifier and again at merge. |
 | **Nobody's in charge** | Relays are dumb pipes, super-peers can only withhold (never forge), and there's no project server to take down. |
 
 ### Measured
@@ -357,6 +373,7 @@ On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
 | --- | --- |
 | [Concepts](docs/concepts.md) | The design, lifecycle and Slurm mapping (GitHub mode) |
 | [Relay mode](docs/relay.md) | Signed events, tiers, the mesh, claims, quorum, the Tangle, logs, keys |
+| [What frontier fleets taught us](docs/research.md) | Lessons from the 2025-26 lab fleets on Navier-Stokes, the zeta zeros and Erdős problems, and how Workstead applies them |
 | [AWS seed](docs/aws.md) | Optional: a sandboxed, free-tier always-on relay for operators who want one |
 | [Protocol](docs/protocol.md) | Commands, labels, metadata and guarantees |
 | [Planning](docs/planning.md) | How agents break work down, with examples |

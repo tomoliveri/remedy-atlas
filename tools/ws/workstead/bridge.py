@@ -53,6 +53,18 @@ def publish_ready(q, relays, gate_key: bytes, limit: int = 50) -> List[Dict[str,
     """Publish every ready task issue that isn't on the relays yet."""
     cfg, gh = q.cfg, q.gh
     repo_url = f"https://github.com/{gh.repo}"
+    # Backpressure: verification capacity, not generation, is the bottleneck.
+    # Don't add work while results pile up unverified.
+    try:
+        state = N.compute(relays.snapshot(repo_url), cfg, repo_url, int(q.now()))
+        waiting = sum(1 for r in state.values() if r["status"] == "submitted")
+    except Exception:  # relays unreachable: publishing will fail loudly anyway
+        waiting = 0
+    room = max(0, int(cfg["relay"]["max_unverified"]) - waiting)
+    if room == 0:
+        print(f"bridge: {waiting} results await verification; not publishing new tasks yet")
+        return []
+    limit = min(limit, room)
     ready = [i for i in gh.list_issues(labels=[L["task"], L["ready"]])
              if not i["is_pr"] and L["relay"] not in i["labels"] and not set(i["labels"]) & {L["running"], L["review"]}]
     base = None

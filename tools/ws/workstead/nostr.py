@@ -20,6 +20,7 @@ Kinds (regular, so relays keep them):
 7658    LogTemplate           a normalised log line and its signature (mesh only)
 7659    LogNote               what an agent learned about a log signature (mesh only)
 7660    LogDigest             a run's log as signatures and counts (mesh only)
+7661    Finding               an approach and its outcome: dead end, partial, counterexample... (mesh)
 ======  ====================  ==================================================
 
 Every agent-built event can name up to two ``parent`` vertices (dag.py), so
@@ -48,8 +49,8 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from . import schnorr
 
 K_TASK, K_CLAIM, K_RECEIPT, K_ENDORSE, K_SETTLED, K_PEER = 7651, 7652, 7653, 7654, 7655, 7656
-K_BAN, K_LOGT, K_LOGN, K_LOGD = 7657, 7658, 7659, 7660
-KINDS = (K_TASK, K_CLAIM, K_RECEIPT, K_ENDORSE, K_SETTLED, K_PEER, K_BAN, K_LOGT, K_LOGN, K_LOGD)
+K_BAN, K_LOGT, K_LOGN, K_LOGD, K_FINDING = 7657, 7658, 7659, 7660, 7661
+KINDS = (K_TASK, K_CLAIM, K_RECEIPT, K_ENDORSE, K_SETTLED, K_PEER, K_BAN, K_LOGT, K_LOGN, K_LOGD, K_FINDING)
 APP_TAG = ["t", "workstead"]
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 SHA = re.compile(r"^[0-9a-f]{40}([0-9a-f]{24})?$")
@@ -183,7 +184,7 @@ def receipt_digest(task_id: str, base: str, output: str, patch: str, verdict: st
 def receipt_event(seckey: bytes, task_id: str, repo_url: str, base: str, output: str, patch: str, tests: str,
                   verdict: str, role: str, created_at: int, ref: Optional[str] = None, summary: str = "",
                   pow_bits: int = 0, ttl: int = 90 * 86400, parents: Iterable[str] = (),
-                  logs: Optional[str] = None) -> Dict[str, Any]:
+                  logs: Optional[str] = None, model: str = "") -> Dict[str, Any]:
     t = [APP_TAG, ["e", task_id], ["r", repo_url], ["base", base], ["output", output], ["patch", patch],
          ["tests", tests], ["verdict", verdict], ["role", role],
          ["digest", receipt_digest(task_id, base, output, patch, verdict)]]
@@ -191,6 +192,8 @@ def receipt_event(seckey: bytes, task_id: str, repo_url: str, base: str, output:
         t.append(["ref", ref])
     if logs:
         t.append(["logs", logs])  # LogDigest id or artifact hash: the full run, by reference
+    if model and re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,31}", model):
+        t.append(["model", model])  # model family, self-declared (claude, gpt, gemini, ...)
     content = canonical({"summary": summary[:2000]}) if summary else ""
     return build(seckey, K_RECEIPT, t, content, created_at, pow_bits, expires_at=created_at + ttl, parents=parents)
 
@@ -225,7 +228,7 @@ def ban_event(seckey: bytes, repo_url: str, pubkeys: Iterable[str], reason: str,
 
 
 BAN_REASONS = ("sybil", "malicious_code", "spam", "false_receipts", "lease_abuse")
-COORDINATION_KINDS = (K_CLAIM, K_LOGT, K_LOGN, K_LOGD)
+COORDINATION_KINDS = (K_CLAIM, K_LOGT, K_LOGN, K_LOGD, K_FINDING)
 
 
 def tier(kind: int) -> str:
@@ -285,6 +288,9 @@ def well_formed(ev: Dict[str, Any], repo_url: str, cfg: Dict[str, Any]) -> bool:
     if k in (K_LOGT, K_LOGN, K_LOGD):
         from . import logs as _logs
         return _logs.well_formed(ev) and pow_ok(ev, rc["pow_bits"])
+    if k == K_FINDING:
+        from . import findings as _f
+        return _f.well_formed(ev) and pow_ok(ev, rc["pow_bits"])
     if k == K_PEER:
         return (bool(re.fullmatch(r"wss?://[A-Za-z0-9.\-\[\]:]{1,100}(/[A-Za-z0-9._/-]{0,100})?", tag(ev, "url", "")))
                 and tag(ev, "cap", "").isdigit() and tag(ev, "expiration") is not None
@@ -307,11 +313,39 @@ def trust_sets(events: Iterable[Dict[str, Any]], cfg: Dict[str, Any]) -> Tuple[S
     return pubs, agents
 
 
+DEFAULT_CLAIMS = {"head_start_seconds": {"trusted": 0, "proven": 60, "new": 180}, "new_key_pow_bits": 16,
+                  "new_key_lease_share": 0.25, "max_lapses": 2, "lapse_window_hours": 24}
+
+
+def claim_policy(rc: Dict[str, Any]) -> Dict[str, Any]:
+    pol = dict(DEFAULT_CLAIMS)
+    pol.update(rc.get("claims") or {})
+    pol["head_start_seconds"] = dict(DEFAULT_CLAIMS["head_start_seconds"], **(pol.get("head_start_seconds") or {}))
+    return pol
+
+
+def _tier_fn(agents: Set[str], proven: Set[str]):
+    def tier(pk: str) -> str:
+        return "trusted" if pk in agents else ("proven" if pk in proven else "new")
+    return tier
+
+
+def claim_eligible(c: Dict[str, Any], start: int, tier, pol: Dict[str, Any], struck: Set[str]) -> bool:
+    """Does this claim take part in the contest for a task available since `start`?"""
+    if c["pubkey"] in struck:
+        return False
+    t = tier(c["pubkey"])
+    if c["created_at"] < start + int(pol["head_start_seconds"].get(t, 0)):
+        return False  # before this tier's head start ended
+    return t != "new" or pow_ok(c, int(pol["new_key_pow_bits"]))
+
+
 def claim_rank(task_id: str, pubkey: str) -> str:
     return hashlib.sha256((task_id + pubkey).encode()).hexdigest()
 
 
-def compute(events: Iterable[Dict[str, Any]], cfg: Dict[str, Any], repo_url: str, now: int) -> Dict[str, Dict[str, Any]]:
+def compute(events: Iterable[Dict[str, Any]], cfg: Dict[str, Any], repo_url: str, now: int,
+            ctx_out: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, Any]]:
     """The whole queue, derived deterministically from a set of verified events.
 
     Returns {task_id: {...}} with status one of pending, open, leased,
@@ -341,30 +375,49 @@ def compute(events: Iterable[Dict[str, Any]], cfg: Dict[str, Any], repo_url: str
             if key:
                 by_task[tid][key].append(e)
 
-    out: Dict[str, Dict[str, Any]] = {}
-    pending = dict(tasks)
-    # Dependencies: resolve in passes (tasks whose deps are known come first).
-    for _ in range(len(tasks) + 1):
-        progressed = False
-        for tid, t in list(pending.items()):
-            deps = [d[1] for d in tags(t, "e") if len(d) >= 4 and d[3] == "dep"]
-            if any(d in pending for d in deps):
-                continue
-            dep_done = [out.get(d) for d in deps]
-            if any(x is None or x["status"] not in ("verified", "merged") for x in dep_done):
-                out[tid] = _task_row(t, "pending", by_task[tid])
+    pol = claim_policy(rc)
+
+    def run(proven: Set[str], struck: Set[str], lapses: Dict[str, List[int]]) -> Dict[str, Dict[str, Any]]:
+        tier = _tier_fn(agents, proven)
+        out: Dict[str, Dict[str, Any]] = {}
+        pending = dict(tasks)
+        # Dependencies: resolve in passes (tasks whose deps are known come first).
+        for _ in range(len(tasks) + 1):
+            progressed = False
+            for tid, t in list(pending.items()):
+                deps = [d[1] for d in tags(t, "e") if len(d) >= 4 and d[3] == "dep"]
+                if any(d in pending for d in deps):
+                    continue
+                dep_done = [out.get(d) for d in deps]
+                if any(x is None or x["status"] not in ("verified", "merged") for x in dep_done):
+                    out[tid] = _task_row(t, "pending", by_task[tid])
+                    del pending[tid]
+                    progressed = True
+                    continue
+                available = max([t["created_at"]] + [x["verified_at"] or 0 for x in dep_done])
+                out[tid] = _derive(t, by_task[tid], agents, pubs, available, window, rc, now, pov=pov,
+                                       tier=tier, pol=pol, struck=struck, lapses=lapses)
                 del pending[tid]
                 progressed = True
-                continue
-            available = max([t["created_at"]] + [x["verified_at"] or 0 for x in dep_done])
-            out[tid] = _derive(t, by_task[tid], agents, pubs, available, window, rc, now, pov=pov)
-            del pending[tid]
-            progressed = True
-        if not progressed:
-            break
-    for tid, t in pending.items():  # cycles: never runnable
-        out[tid] = _task_row(t, "pending", by_task[tid])
-    _enforce_lease_limits(out, by_task, tasks, agents, pubs, window, rc, now, pov)
+            if not progressed:
+                break
+        for tid, t in pending.items():  # cycles: never runnable
+            out[tid] = _task_row(t, "pending", by_task[tid])
+        _enforce_lease_limits(out, by_task, tasks, agents, pubs, window, rc, now, pov, tier=tier, pol=pol,
+                              struck=struck, lapses=lapses)
+        return out
+
+    # Pass 1 finds who has delivered verified work ("proven") and who keeps
+    # abandoning leases; pass 2 applies the claim tiers and strikes. Both are
+    # pure functions of the event set, so every observer agrees.
+    lapses: Dict[str, List[int]] = {}
+    first = run(set(), set(), lapses)
+    proven = {r["producer"] for r in first.values() if r["status"] in ("verified", "merged") and r["producer"]}
+    since = now - int(pol["lapse_window_hours"]) * 3600
+    struck = {k for k, v in lapses.items() if len([u for u in v if u >= since]) >= int(pol["max_lapses"])} - pubs
+    out = run(proven, struck, {}) if (proven or struck) else first
+    if ctx_out is not None:
+        ctx_out.update(trusted=agents, proven=proven - agents, struck=struck, policy=pol)
     return out
 
 
@@ -380,7 +433,10 @@ def _task_row(t: Dict[str, Any], status: str, rel: Dict[str, List[Dict[str, Any]
             "verified_at": None, "external": tag(t, "i"), "publisher": t["pubkey"]}
 
 
-def _derive(t, rel, agents, pubs, available, window, rc, now, exclude=frozenset(), pov=None) -> Dict[str, Any]:
+def _derive(t, rel, agents, pubs, available, window, rc, now, exclude=frozenset(), pov=None, tier=None, pol=None,
+            struck=frozenset(), lapses=None) -> Dict[str, Any]:
+    tier = tier or _tier_fn(agents, set())
+    pol = pol or claim_policy(rc)
     row = _task_row(t, "open", rel)
     tid = t["id"]
     for s in sorted(rel["settled"], key=lambda e: (e["created_at"], e["id"])):
@@ -390,6 +446,7 @@ def _derive(t, rel, agents, pubs, available, window, rc, now, exclude=frozenset(
             return row
     # Quorum first: a verified result stands no matter who holds the lease.
     q = row["quorum"]
+    distinct = max(1, int(rc.get("distinct_models", 1)))
     groups: Dict[str, Dict[str, Any]] = {}
     for r in sorted(rel["receipts"], key=lambda e: (e["created_at"], e["id"])):
         if tag(r, "verdict") != "pass":
@@ -405,20 +462,23 @@ def _derive(t, rel, agents, pubs, available, window, rc, now, exclude=frozenset(
             g["keys"].append(r["pubkey"])
             if r["pubkey"] in agents and (rc["count_producer"] or tag(r, "role") != "produce"):
                 g["trusted"].append(r["pubkey"])
-                if len(g["trusted"]) == q and g["at"] is None:
+                g.setdefault("models", set()).add(tag(r, "model") or "unknown")
+                # Correlated judges: the same model family tends to make the same
+                # mistake, so a project can require the quorum to span families.
+                if len(g["trusted"]) >= q and len(g["models"]) >= distinct and g["at"] is None:
                     g["at"] = r["created_at"]
     verified = [g for g in groups.values() if g["at"] is not None and g["producer"]]
     if verified:
         best = min(verified, key=lambda g: (g["at"], g["output"]))
         row.update(status="verified", producer=best["producer"], output=best["output"], votes=len(best["trusted"]),
-                   verifiers=best["trusted"], verified_at=best["at"],
+                   verifiers=best["trusted"], verified_at=best["at"], models=sorted(best.get("models", ())),
                    digest=next(d for d, g in groups.items() if g is best))
         return row
     produced = [g for g in groups.values() if g["producer"]]
     claims = sorted((c for c in rel["claims"] if c["pubkey"] not in exclude), key=lambda e: (e["created_at"], e["id"]))
     start = available
     for _ in range(64):
-        live = [c for c in claims if c["created_at"] >= start]
+        live = [c for c in claims if claim_eligible(c, start, tier, pol, struck)]
         if not live:
             break
         # Absolute windows: a claim's round doesn't depend on how much expired
@@ -442,25 +502,42 @@ def _derive(t, rel, agents, pubs, available, window, rc, now, exclude=frozenset(
         if until >= now:
             row.update(status="leased", holder=holder, lease_until=until, claim=winner["id"])
             return row
+        if lapses is not None:
+            lapses.setdefault(holder, []).append(until)  # abandoned without a result
         start = until + 1  # lease lapsed: a new contest starts after it
     row["available_at"] = start
     return row
 
 
-def _enforce_lease_limits(out, by_task, tasks, agents, pubs, window, rc, now, pov=None) -> None:
-    """A key may hold at most max_active_leases at once; excess wins are void."""
+def _enforce_lease_limits(out, by_task, tasks, agents, pubs, window, rc, now, pov=None, tier=None, pol=None,
+                          struck=frozenset(), lapses=None) -> None:
+    """A key may hold at most max_active_leases at once, and new keys together at
+    most new_key_lease_share of the claimable tasks; excess wins are void."""
+    tier = tier or _tier_fn(agents, set())
+    pol = pol or claim_policy(rc)
     limit = int(rc["max_active_leases"])
-    held: Dict[str, List[Tuple[int, str, str]]] = {}
-    for tid, row in out.items():
-        if row["status"] == "leased":
-            c = next(x for x in by_task[tid]["claims"] if x["id"] == row["claim"])
-            held.setdefault(row["holder"], []).append((c["created_at"], c["id"], tid))
-    for holder, lst in held.items():
+    kw = dict(pov=pov, tier=tier, pol=pol, struck=struck, lapses=lapses)
+
+    def held_now():
+        held: Dict[str, List[Tuple[int, str, str]]] = {}
+        for tid, row in out.items():
+            if row["status"] == "leased":
+                c = next(x for x in by_task[tid]["claims"] if x["id"] == row["claim"])
+                held.setdefault(row["holder"], []).append((c["created_at"], c["id"], tid))
+        return held
+    for holder, lst in held_now().items():
         if len(lst) <= limit:
             continue
         for _, _, tid in sorted(lst)[limit:]:
             t = tasks[tid]
-            out[tid] = _derive(t, by_task[tid], agents, pubs, t["created_at"], window, rc, now, exclude={holder}, pov=pov)
+            out[tid] = _derive(t, by_task[tid], agents, pubs, t["created_at"], window, rc, now, exclude={holder}, **kw)
+    claimable = sum(1 for r in out.values() if r["status"] in ("open", "leased"))
+    cap = max(1, int(float(pol["new_key_lease_share"]) * claimable))
+    newbies = sorted((x, h) for h, lst in held_now().items() if tier(h) == "new" for x in lst)
+    for (_, _, tid), holder in newbies[cap:]:
+        t = tasks[tid]
+        out[tid] = _derive(t, by_task[tid], agents, pubs, t["created_at"], window, rc, now,
+                           exclude={holder} | {h for _, h in newbies[cap:]}, **kw)
 
 
 def normalize_output(text: str, root: str = "") -> str:
