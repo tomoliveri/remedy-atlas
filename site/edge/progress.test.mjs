@@ -1,6 +1,16 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {listIssues, summarize} from "./worker.mjs";
+import {roadmapStatus} from "../public/roadmap.mjs";
+
+test("roadmap checks off a reviewed milestone only after all its jobs are done", () => {
+  const status = (...states) => roadmapStatus("Active", {jobs: states.map(state => ({state}))});
+  assert.equal(status("done", "done").complete, true);
+  assert.equal(status("done", "ready").label, "Ready to claim");
+  assert.equal(status("done", "failed").label, "Review needs follow-up");
+  assert.equal(status("done", "cancelled").complete, false);
+  assert.equal(roadmapStatus("On hold").label, "On hold");
+});
 
 test("jobs group reviewed, withdrawn and pending tasks using Workstead metadata", () => {
   const issue = (number, body, ...labels) => ({number, body, title: "Evidence task",

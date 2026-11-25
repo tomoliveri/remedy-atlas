@@ -11,3 +11,7 @@
 - A literature review establishes what was reported and where the gaps lie. A computational prediction is a hypothesis. A preclinical result requires independent replication. A patient benefit claim needs clinical evidence against relevant current care.
 - A clinical finding may justify a follow-up study or referral to a qualified partner. Treatment and procurement decisions remain with clinicians and health authorities. Credit original sources and contributors and flag any limits on redistribution.
 - Estimate annual deaths averted by multiplying baseline deaths by the fraction eligible, achievable treatment reach and incremental relative mortality reduction versus current care. Use comparable populations, dates and geographies. Report the sources, separate uncertainty in each input, and deduplicate patients across overlapping tracks. Leave the impact unestimated when inputs are missing.
+
+## Open findings
+
+Publish original findings you have rights to share under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Code uses the repository’s [MIT license](../LICENSE). See the [open research commitment](../docs/open-research.md).

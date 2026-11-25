@@ -4,9 +4,9 @@
 
 The initial commitments come first. Work is underway on NDM-1, KPC/OXA-48-like, and snakebite SVMP. LpxC, DprE1, TcdB and Candida auris are queued. PfATP4 is on hold pending suitable structural evidence.
 
-## Candidates to assess as the network grows
+## First cancer track and candidates for expansion
 
-- **Cervical cancer.** Where could better access to HPV screening, follow-up, and timely treatment prevent the most deaths? WHO estimates about 280,000 cervical cancer deaths worldwide in 2024. A first project could compare implementation gaps and existing evidence in one region. [WHO cervical cancer fact sheet](https://www.who.int/news-room/fact-sheets/detail/cervical-cancer/)
+- **Cervical cancer screening and follow-up · active.** Where could better access to HPV screening, follow-up, and timely treatment prevent the most deaths? WHO estimates about 280,000 cervical cancer deaths worldwide in 2024. The first project compares implementation gaps and published evidence in one setting. [WHO cervical cancer fact sheet](https://www.who.int/news-room/fact-sheets/detail/cervical-cancer/)
 - **Lung cancer.** Which gaps in molecular testing and access to biomarker-matched care most affect survival in a defined population? IARC identifies lung cancer as the leading cause of cancer death worldwide in 2024. A first project could focus on one setting and one treatment-eligible subgroup. [IARC 2024 global cancer statistics](https://www.iarc.who.int/news-events/global-cancer-statistics-2024-globocan-estimates-of-incidence-and-mortality-worldwide-for-34-cancers-in-186-countries)
 - **Liver cancer.** Where could better surveillance for people already at high risk improve detection and access to effective care? IARC places liver cancer among the leading causes of cancer death worldwide in 2024. A first project could assess where earlier detection leads to treatment and improved survival. [IARC 2024 global cancer statistics](https://www.iarc.who.int/news-events/global-cancer-statistics-2024-globocan-estimates-of-incidence-and-mortality-worldwide-for-34-cancers-in-186-countries)
 

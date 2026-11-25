@@ -1,6 +1,9 @@
+import {roadmapStatus} from "./roadmap.mjs";
+
 const grid = document.querySelector("#tracks");
 const feed = document.querySelector("#feed");
 const filters = [...document.querySelectorAll("[data-filter]")];
+const checklistLabels = new Map();
 
 let tracks = [];
 let snapshot;
@@ -112,11 +115,42 @@ function render() {
   }));
 }
 
+function setFilter(value) {
+  filter = value;
+  for (const button of filters) button.setAttribute("aria-pressed", String(button.dataset.filter === value));
+  render();
+}
+
+function buildChecklist() {
+  const initial = document.querySelector("#disease-checklist");
+  const cancer = document.querySelector("#cancer-checklist");
+  for (const track of tracks) {
+    const item = element("li", "");
+    const label = element("span", "", "milestone-status");
+    const target = link(track.name, `#${track.id}`);
+    target.addEventListener("click", () => setFilter("All"));
+    item.append(target, label);
+    (track.oncology ? cancer : initial).append(item);
+    checklistLabels.set(track.id, label);
+  }
+  updateChecklist();
+}
+
+function updateChecklist() {
+  for (const track of tracks) {
+    const status = roadmapStatus(track.phase, snapshot?.tracks[track.id]);
+    const node = checklistLabels.get(track.id);
+    node.textContent = status.complete ? `✓ ${status.label}` : status.label;
+    node.classList.toggle("complete", status.complete);
+  }
+}
+
 async function refresh() {
   try {
     const response = await fetch("/api/progress");
     if (!response.ok) throw new Error("queue unavailable");
     snapshot = await response.json();
+    updateChecklist();
     feed.textContent = `Live queue · checked ${new Date(snapshot.updatedAt).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})}`;
     render();
   } catch {
@@ -127,17 +161,14 @@ async function refresh() {
 }
 
 for (const button of filters) {
-  button.addEventListener("click", () => {
-    filter = button.dataset.filter;
-    for (const choice of filters) choice.setAttribute("aria-pressed", String(choice === button));
-    render();
-  });
+  button.addEventListener("click", () => setFilter(button.dataset.filter));
 }
 
 try {
   const response = await fetch("/tracks.json");
   if (!response.ok) throw new Error("tracks unavailable");
   tracks = await response.json();
+  buildChecklist();
   render();
   await refresh();
   setInterval(refresh, 45_000);

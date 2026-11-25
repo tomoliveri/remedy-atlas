@@ -8,7 +8,11 @@
 
 Remedy Atlas is an open research network for people who want to reduce preventable deaths. We look for diseases where a better treatment or a better way to deliver care could make a substantial difference. Then we divide the work so contributors can review evidence, test conclusions against the published data, and help identify the next promising question.
 
-[**Explore the live dashboard**](https://remedy-atlas.tomoliveri.workers.dev) · [**Contribute**](.github/CONTRIBUTING.md) · [**Technical overview**](docs/technical-overview.md)
+[**Live roadmap**](https://remedy-atlas.tomoliveri.workers.dev/#roadmap) · [**Contribute**](.github/CONTRIBUTING.md) · [**Technical overview**](docs/technical-overview.md)
+
+## Crowdsourced research stays open
+
+**Free findings. No exclusive ownership by pharma. Affordable care is the goal.** Original research that contributors have rights to share will be available under CC BY 4.0. We require an affordable access plan from research partners and publish the commitments we can secure. [Open research commitment](docs/open-research.md)
 
 ## Why it matters
 
@@ -37,7 +41,7 @@ flowchart LR
   D --> A
 ```
 
-**Beyond the first targets.** The initial portfolio also includes LpxC for Gram-negative infections, drug-resistant TB, *C. difficile*, *Candida auris*, and malaria. As the network gains capacity and clinical partners, we want to tackle focused questions in cancers such as cervical, lung, and liver cancer. Cancer caused an estimated **9.8 million deaths worldwide in 2024**. Our first cancer projects would need a specific patient population, a gap we can address, and a clear route to validation. [Candidate register](docs/candidates.md) · [IARC global cancer statistics](https://www.iarc.who.int/news-events/global-cancer-statistics-2024-globocan-estimates-of-incidence-and-mortality-worldwide-for-34-cancers-in-186-countries)
+**Beyond the first targets.** The initial portfolio also includes LpxC for Gram-negative infections, drug-resistant TB, *C. difficile*, *Candida auris*, and malaria. We are opening our first cancer research track on cervical screening and follow-up. Lung and liver cancer are candidates for expansion as capacity and clinical partnerships grow. Cancer caused an estimated **9.8 million deaths worldwide in 2024**. Our first cancer projects would need a specific patient population, a gap we can address, and a clear route to validation. [Candidate register](docs/candidates.md) · [IARC global cancer statistics](https://www.iarc.who.int/news-events/global-cancer-statistics-2024-globocan-estimates-of-incidence-and-mortality-worldwide-for-34-cancers-in-186-countries)
 
 ## How to help
 

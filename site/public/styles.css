@@ -32,6 +32,25 @@ h2{font-size:clamp(2.3rem,5vw,3.75rem);line-height:1.03}
 .hero-art b:nth-of-type(1){top:13%;right:20%}
 .hero-art b:nth-of-type(2){bottom:18%;left:24%}
 .hero-art b:nth-of-type(3){right:18%;bottom:36%}
+.open-research{background:#d8fae9}
+.open-inner{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;padding:2.5rem 0}
+.open-inner a{display:inline-block;margin-top:.55rem}
+.roadmap{padding:3.75rem 0;background:#eaf2ed;border-bottom:1px solid var(--line)}
+.roadmap-intro{max-width:49rem;margin:1rem 0 1.5rem;color:var(--muted)}
+.timeline{list-style:none;margin:0;padding:0 0 0 1.4rem;border-left:2px solid #9cbaaa;display:grid;gap:.85rem}
+.milestone,.funding{position:relative;padding:1.05rem 1.25rem;border-radius:.75rem}
+.milestone{background:#fff;border:1px solid var(--line)}
+.milestone::before{content:"";position:absolute;left:calc(-1.4rem - 7px);top:1.2rem;width:10px;height:10px;border:2px solid var(--teal);border-radius:50%;background:#eaf2ed}
+.milestone-phase{font-size:.875rem;color:var(--teal);font-weight:750;margin-bottom:.3rem}
+.milestone h3,.funding h3{margin-bottom:.45rem}
+.milestone>a,.funding>a{display:inline-block;margin-top:.65rem}
+.checklist{list-style:none;margin:.8rem 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem 1rem}
+.checklist li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.15rem .5rem;padding:.2rem 0}
+.checklist a{font-weight:650}
+.milestone-status{font-size:.875rem;color:var(--muted)}
+.milestone-status.complete{color:var(--teal);font-weight:750}
+.funding{margin-top:1.4rem;background:#d9ebdf;border:1px solid #b6d4c1}
+.funding p+p{margin-top:.5rem}
 .portfolio{padding:3.5rem 0 4rem}
 .section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem}
 .feed,.secondary{color:var(--muted);font-size:.875rem}
@@ -71,8 +90,11 @@ footer{padding:1.6rem 0}
   .hero-inner{padding:3.6rem 0}
   .hero-art{right:-10%;opacity:.36;width:62vw}
   .nav,nav{gap:.8rem}
-  nav a:not(.nav-button){display:none}
-  .grid,.impact-inner{grid-template-columns:1fr}
+  nav a:not(.nav-button):not([href="#roadmap"]){display:none}
+  .grid,.impact-inner,.open-inner{grid-template-columns:1fr}
+  .open-inner{gap:1rem}
+  .checklist{grid-template-columns:1fr}
   .section-heading{align-items:flex-start;flex-direction:column}
 }
+@media(max-width:390px){.nav>nav [href="#roadmap"]{display:none}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

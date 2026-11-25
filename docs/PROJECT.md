@@ -4,6 +4,8 @@ Remedy Atlas aims to solve disease and save lives. It coordinates public evidenc
 
 Public jobs cover research synthesis and clinical or epidemiological questions. Experimental protocols, pathogen engineering, work with live pathogens or toxins, and compound production are outside the public queue. Security reports follow [.github/SECURITY.md](../.github/SECURITY.md).
 
+The first oncology track reviews cervical screening and follow-up. The [live roadmap](https://remedy-atlas.tomoliveri.workers.dev/#roadmap) checks off completed review milestones using Workstead job state. Clinical validation and measured patient outcomes are later milestones. See the [open research commitment](open-research.md) and [proposal for independent validation funding](validation-funding.md).
+
 ## Run the queue
 
 GitHub Issues and Actions run Workstead. Workers claim by partition and capability. Workstead schedules by priority, queue age and dependencies, and expires and retries abandoned leases. To add a track, add its record to `site/public/tracks.json`, verify source dates and scope, and deploy the updated portfolio. When ready, publish its job.
