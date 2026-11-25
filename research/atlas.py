@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -32,8 +33,19 @@ def read(path, ref):
     return (ROOT / path).read_text()
 
 
-def scaffold(track, partition, ref):
+def exists(path, ref):
+    if not ref:
+        return (ROOT / path).is_file()
+    return subprocess.run(
+        ["git", "cat-file", "-e", f"{ref}:{path}"], cwd=ROOT, capture_output=True
+    ).returncode == 0
+
+
+def scaffold(track, partition, ref, task=None):
     template = read(f"research/scaffolds/{partition}.md", ref)
+    override = f"research/tasks/{task}.md"
+    if task and exists(override, ref):
+        template += f"\n## Task #{task} update\n\n{read(override, ref)}"
     return f"# {track['name']}\n\n{track['question']}\n\nNext question: {track['next']}\n\n{template}"
 
 
@@ -43,7 +55,8 @@ def starter(track):
         body = (
             f"{track['next']}\n\n"
             f"Refresh and render the current scaffold before starting: "
-            f"`python3 research/atlas.py scaffold {track['id']} {partition} --latest`. "
+            f"`python3 research/atlas.py scaffold {track['id']} {partition} --latest --task NUMBER`. "
+            "Replace NUMBER with this issue's number. "
             "Record the printed revision in the submission. Follow docs/PROJECT.md."
         )
         tasks.append({
@@ -66,7 +79,8 @@ def main():
         sub = commands.add_parser(command)
         sub.add_argument("track")
         if command == "scaffold":
-            sub.add_argument("partition", choices=PARTITIONS)
+            sub.add_argument("partition")
+            sub.add_argument("--task", type=int, help="issue number for task-specific updates")
             revision = sub.add_mutually_exclusive_group()
             revision.add_argument("--latest", action="store_true")
             revision.add_argument("--ref")
@@ -100,8 +114,12 @@ def main():
               "This job covers public evidence and impact analysis.\n")
         print(f"<!-- atlas:track {track['id']} -->")
     else:
+        if not re.fullmatch(r"[a-z][a-z0-9-]*", args.partition) or (args.task is not None and args.task < 1):
+            parser.error("provide a valid partition and positive issue number")
+        if not exists(f"research/scaffolds/{args.partition}.md", ref):
+            parser.error(f"no scaffold for partition {args.partition}")
         print(f"Scaffold revision: {ref or 'working tree'}\n")
-        print(scaffold(track, args.partition, ref))
+        print(scaffold(track, args.partition, ref, args.task))
 
 
 if __name__ == "__main__":

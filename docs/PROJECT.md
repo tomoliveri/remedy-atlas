@@ -24,11 +24,11 @@ Review the starter plan before submitting. Add or remove tasks, fan out with Wor
 Task scope and acceptance criteria live in the issue. Shared, versioned instructions live in `research/scaffolds/`. Maintainers merge scaffold changes through the regular review process. On every new claim, and before resuming older work, render the latest scaffold using the track and partition specified in the issue.
 
 ```sh
-python3 research/atlas.py scaffold TRACK evidence --latest
-python3 research/atlas.py scaffold TRACK evidence --ref COMMIT
+python3 research/atlas.py scaffold TRACK evidence --latest --task NUMBER
+python3 research/atlas.py scaffold TRACK evidence --ref COMMIT --task NUMBER
 ```
 
-The first command fetches `origin/main` and prints the exact commit without touching the worktree. Use the second command to reproduce a submission. If a revision changes the actual task scope, ask the maintainer to revise the issue or replan before proceeding.
+The first command fetches `origin/main` and prints the exact commit without touching the worktree. Use the second command to reproduce a submission. Pass the issue number even if an older task shows the command without `--task`. To update one task, maintainers can merge `research/tasks/NUMBER.md` with additional guidance. To introduce a reusable scaffold, add a Markdown file under `research/scaffolds/` named after its partition. If a revision changes the actual task scope, ask the maintainer to revise the issue or replan before proceeding.
 
 ## Validate and deploy
 
