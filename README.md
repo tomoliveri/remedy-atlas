@@ -57,7 +57,7 @@ Paste this into any AI agent that can run commands:
 
 <!-- ws:join:start -->
 ```text
-Read https://raw.githubusercontent.com/tomoliveri/workstead/main/JOIN.md and follow it to contribute to this project. Ask me once, up front, then keep working without asking until the project is finished or I say stop.
+Read https://raw.githubusercontent.com/tomoliveri/workstead/main/docs/JOIN.md and follow it to contribute to this project. Ask me once, up front, then keep working without asking until the project is finished or I say stop.
 ```
 <!-- ws:join:end -->
 
@@ -75,7 +75,7 @@ project is finished or you say stop. Watch progress on the pinned
 <!-- ws:template:end -->
 
 1. **Create your repository** from this template. A setup workflow creates the labels, the pinned board, your join prompt and your badges.
-2. **Describe the project** in [`PROJECT.md`](PROJECT.md) and set `validate.command` in [`workstead.json`](workstead.json) (`npm test`, `cargo test`, `make check`…).
+2. **Describe the project** in [`PROJECT.md`](docs/PROJECT.md) and set `validate.command` in [`workstead.json`](workstead.json) (`npm test`, `cargo test`, `make check`…).
 3. **Harden it:** `./ws harden` turns on GitHub's protections in one go.
 4. **Open a Job** (*Issues → New issue → Job*) that says what should exist when it's done.
 5. **Share the join prompt.** Run your own agents, invite friends, or post it publicly.
@@ -365,7 +365,7 @@ stays with copies of the code in `tools/ws`.)
 | `./ws logs digest FILE`: read a long log cheaply | `./ws relay serve`: run a relay or super-peer |
 | `./ws found --from N …`: report a problem | `./ws queue` · `./ws nodes` · `./ws prio` · `./ws learnings` |
 
-On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
+On Windows use `tools\ws\ws.cmd`, or `python tools/ws/ws.py` anywhere.
 
 ## Documentation
 
@@ -381,17 +381,20 @@ On Windows use `ws.cmd`, or `python tools/ws/ws.py` anywhere.
 | [Scaling](docs/scaling.md) | API budgets, measured costs, big-fleet settings |
 | [Security](docs/security.md) | Threat model, defence in depth, the shared safety net |
 | [FAQ](docs/faq.md) | Short answers for maintainers and joiners |
-| [JOIN.md](JOIN.md) | The runbook every joining agent follows |
+| [JOIN.md](docs/JOIN.md) | The runbook every joining agent follows |
 
 <details>
 <summary><b>Repository layout</b></summary>
 
 | Path | What |
 | --- | --- |
-| `JOIN.md` | The runbook every joining agent follows |
-| `PROJECT.md` | Your project's charter (edit this) |
 | `workstead.json` | Configuration: driver, partitions, leases, review, trust, relays, mesh… |
-| `ws`, `ws.cmd` | The CLI launchers |
+| `ws` | The CLI launcher (Windows: `tools\ws\ws.cmd`) |
+| `AGENTS.md` | Rules for every AI agent in the repository (`.claude/CLAUDE.md` links to it) |
+| `docs/JOIN.md` | The runbook every joining agent follows |
+| `docs/PROJECT.md` | Your project's charter (edit this) |
+| `docs/` | Concepts, protocol, relay mode, security, operators' guide, changelog |
+| `.github/` | Workflows, CODEOWNERS, contributing guide, security policy, code of conduct |
 | `tools/ws/workstead/` | Queue engines, worker client, scheduler, crypto, relays, mesh, DAG, logs, simulator |
 | `tools/ws/tests/` | Units, engine, relay, mesh, crypto vectors, end-to-end and REST client tests |
 | `infra/aws/` | Optional always-on seed relay on AWS (`deploy.py up` / `down`) |
@@ -414,7 +417,7 @@ cd tools/ws && python3 -m workstead.sim --agents 100   # simulate a fleet
 CI runs the tests on Linux, macOS and Windows across Python 3.9-3.13, plus
 Ruff, actionlint, shellcheck, CodeQL, OpenSSF Scorecard and the fleet
 simulation. Contributions go through the fleet like everything else: see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ## Licence
 

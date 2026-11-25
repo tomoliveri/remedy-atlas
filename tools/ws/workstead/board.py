@@ -99,7 +99,7 @@ def render_board(snap: Dict[str, Any], cfg: Dict[str, Any]) -> str:
               f"({st['tasks_per_day']}/day). Remaining estimate: {st['remaining_est_hours']} agent-hours{eta}.", ""]
     lines += ["### Join", "", "Paste this into an AI coding agent (Claude Code, Codex, Cursor, Aider…):", "",
               "```text",
-              f"Read https://raw.githubusercontent.com/{snap['repo']}/{cfg['default_branch']}/JOIN.md and follow it to "
+              f"Read https://raw.githubusercontent.com/{snap['repo']}/{cfg['default_branch']}/docs/JOIN.md and follow it to "
               "contribute to this project. Ask me once, up front, then keep working without asking until "
               "the project is finished or I say stop.",
               "```", ""]

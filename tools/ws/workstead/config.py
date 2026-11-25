@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 DEFAULTS: Dict[str, Any] = {
-    "project": {"name": "", "charter": "PROJECT.md"},
+    "project": {"name": "", "charter": "docs/PROJECT.md"},
     # owner/name. Empty means: GITHUB_REPOSITORY in Actions, else the git remote.
     "repo": "",
     "default_branch": "main",
@@ -106,7 +106,7 @@ DEFAULTS: Dict[str, Any] = {
         "audit_rate": 0.05,
         # Pull requests touching these always need a maintainer's approval.
         "protected_paths": [".github/", "tools/ws/", "workstead.json",
-                            "JOIN.md", "AGENTS.md", "CLAUDE.md", "SECURITY.md"],
+                            "docs/JOIN.md", "AGENTS.md", ".claude/", "ws"],
         # Supply-chain guard: changes to dependencies, build images, git hooks
         # and binaries need a maintainer too (fnmatch patterns on file paths).
         "maintainer_patterns": [

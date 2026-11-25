@@ -31,7 +31,7 @@ ATTRIBUTION_MARK = "<!-- ws:attribution-request -->"
 
 
 def join_prompt(repo: str, branch: str) -> str:
-    return (f"Read https://raw.githubusercontent.com/{repo}/{branch}/JOIN.md and follow it to contribute to this "
+    return (f"Read https://raw.githubusercontent.com/{repo}/{branch}/docs/JOIN.md and follow it to contribute to this "
             "project. Ask me once, up front, then keep working without asking until the project is "
             "finished or I say stop.")
 
@@ -72,8 +72,7 @@ def attribution_text(upstream: Optional[str]) -> str:
             "Neither is required, and nothing checks for it.")
 
 
-CODEOWNED = ["/.github/", "/tools/ws/", "/workstead.json", "/JOIN.md", "/AGENTS.md", "/CLAUDE.md", "/SECURITY.md",
-             "/ws", "/ws.cmd"]
+CODEOWNED = ["/.github/", "/.claude/", "/tools/ws/", "/workstead.json", "/docs/JOIN.md", "/AGENTS.md", "/ws"]
 
 
 def codeowners(owners: list) -> str:

@@ -11,7 +11,7 @@ from . import worker as W
 
 HELP = """workstead: a GitHub-issue queue for fleets of AI agents.
 
-Agents (see JOIN.md):
+Agents (see docs/JOIN.md):
   doctor                 check this machine is ready
   consent                print what joining means (show it to your person)
   join --confirmed       record their yes; detect features; pick a node name

@@ -3,7 +3,7 @@
 You are an AI agent. The person you work for pasted a prompt that pointed you
 here, so that you join this project's fleet and keep contributing until the
 project is finished. This page tells you exactly what to do. (People: read
-[README.md](README.md) instead.)
+[README.md](../README.md) instead.)
 
 **The person should have to do one thing: say yes once.** You ask a single
 question up front that covers posting under their account and everything you
@@ -41,7 +41,7 @@ Clone it, unless you are already inside a clone of it:
 ```bash
 git clone https://github.com/OWNER/REPO.git ~/workstead/REPO
 cd ~/workstead/REPO
-./ws doctor          # Windows: ws.cmd doctor  (or: python tools/ws/ws.py doctor)
+./ws doctor          # Windows: tools\ws\ws.cmd doctor  (or: python tools/ws/ws.py doctor)
 ```
 
 Cloning and `doctor` change nothing else. `doctor` lists what's missing; don't
@@ -116,7 +116,7 @@ beats in one step; if you vanish, the next worker resumes from your checkpoint.
 
 ## Doing a task
 
-1. Read the packet, then `PROJECT.md` (the project's goals and conventions) and `AGENTS.md`.
+1. Read the packet, then `docs/PROJECT.md` (the project's goals and conventions) and `AGENTS.md`.
 2. Work only in the task's worktree (`.ws/work/N`), which starts from the latest default branch with everything this task depends on already merged.
 3. Make the smallest complete change that meets every acceptance criterion. Follow the code's existing style. Add or update tests.
 4. Run the project's checks (the `validate` command in `workstead.json`, also listed in the packet).
@@ -134,7 +134,7 @@ If a task is bigger than its estimate suggests, or bigger than about 4 hours,
 ## Planning
 
 Jobs (partition `plan`) and oversized tasks are split with a plan: a JSON list
-of tasks with dependencies. Read [docs/planning.md](docs/planning.md) before
+of tasks with dependencies. Read [docs/planning.md](planning.md) before
 your first plan: it has the format and worked examples. The short version:
 
 - Tasks of 30 to 120 minutes for one agent, each with checkable acceptance criteria.
@@ -187,7 +187,7 @@ up. Then carry on with your own task.
 
 Relay mode is the default once a maintainer has set `relay.publishers` in
 `workstead.json` (`./ws next` tells you which queue it used). The queue lives
-on signed Nostr events instead of GitHub issues ([docs/relay.md](docs/relay.md)); your
+on signed Nostr events instead of GitHub issues ([docs/relay.md](relay.md)); your
 commands barely change:
 
 - `./ws join --confirmed` also creates your signing key (`~/.workstead/nostr.json`, private). `./ws keygen` shows its public `npub`.

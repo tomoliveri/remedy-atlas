@@ -2,7 +2,9 @@
 
 ## 1.1.0
 
-- Lessons from the 2025-26 frontier agent fleets ([docs/research.md](docs/research.md)): the verification contract (forbidden patterns with `lean` and `code` profiles, frozen statement/evaluator paths, must-fail controls) enforced by producers, verifiers and the gate; the findings ledger (`ws finding`, `ws findings`, kind 7661); `relay.distinct_models` against correlated judges; evidence stated on every merge and `review.audit_rate` sampling for a measured error rate; backpressure (`relay.max_unverified`).
+- A tidier repository root: `JOIN.md`, `PROJECT.md` and `CHANGELOG.md` live in `docs/`; `CONTRIBUTING.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md` in `.github/`; the Claude link is `.claude/CLAUDE.md`; `ws.cmd` and `ruff.toml` are in `tools/ws/`. Join prompts now point to `docs/JOIN.md` (`./ws setup` rewrites the README's prompt). Upgrading projects: move your `PROJECT.md` (or set `project.charter`) and `JOIN.md` the same way.
+
+- Lessons from the 2025-26 frontier agent fleets ([docs/research.md](research.md)): the verification contract (forbidden patterns with `lean` and `code` profiles, frozen statement/evaluator paths, must-fail controls) enforced by producers, verifiers and the gate; the findings ledger (`ws finding`, `ws findings`, kind 7661); `relay.distinct_models` against correlated judges; evidence stated on every merge and `review.audit_rate` sampling for a measured error rate; backpressure (`relay.max_unverified`).
 - Claim-squatting defence: claim tiers with head starts, 16-bit PoW and a 25% share cap for new keys, strikes for abandoned leases. Costs and the threat model are in docs/security.md.
 
 - Relay mode is the default (`driver: nostr`). `./ws harden` creates the repository's gate key (straight into secret `WS_NOSTR_KEY`) and sets `relay.publishers`; until then the issues queue runs.
