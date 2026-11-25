@@ -1,5 +1,5 @@
 <picture>
-  <img src="docs/images/remedy-atlas-team.webp" alt="Illustration of a clinical research team reviewing evidence together" width="1280">
+  <img src="docs/images/compute-network.svg" alt="A research question splits into Python jobs run on volunteers’ computers. Workers return their code and results for independent review." width="1080">
 </picture>
 
 # Remedy Atlas

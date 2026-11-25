@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="350" viewBox="0 0 1080 350" role="img" aria-labelledby="title description">
+  <title id="title">How the Remedy Atlas compute network works</title>
+  <desc id="description">A research question goes into Workstead, where AI workers claim separate Python jobs. Volunteer machines fit a model, sweep parameters, and run controls. The code, inputs, and results come back for independent review and open publication.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#101c19"/>
+      <stop offset="1" stop-color="#152c25"/>
+    </linearGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#c5f7dd" opacity=".11"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1l6 3-6 3" fill="none" stroke="#83d4aa" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <g id="laptop" fill="none" stroke="#a5f3c6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+      <rect x="1" y="1" width="29" height="20" rx="3"/>
+      <path d="M0 25h31M8 10l3 3-3 3m8 0h5"/>
+    </g>
+  </defs>
+
+  <rect width="1080" height="350" rx="18" fill="url(#background)"/>
+  <rect width="1080" height="350" rx="18" fill="url(#grid)"/>
+
+  <g fill="none" stroke="#83d4aa" stroke-width="2" marker-end="url(#arrow)">
+    <path d="M215 175h39"/>
+    <path d="M429 175h50q14 0 14-14V97q0-15 15-15h16"/>
+    <path d="M429 175h95"/>
+    <path d="M429 175h50q14 0 14 14v64q0 15 15 15h16"/>
+    <path d="M754 82h15q15 0 15 15v64q0 14 14 14h21"/>
+    <path d="M754 175h65"/>
+    <path d="M754 268h15q15 0 15-15v-64q0-14 14-14h21"/>
+  </g>
+  <g fill="#a5f3c6">
+    <circle cx="493" cy="175" r="4"/>
+    <circle cx="784" cy="175" r="4"/>
+  </g>
+
+  <g font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+    <rect x="25" y="112" width="190" height="126" rx="12" fill="#162823" stroke="#4d7261"/>
+    <g fill="none" stroke="#a5f3c6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="56" cy="140" r="11"/>
+      <path d="M56 135v10m-5-5h10"/>
+    </g>
+    <text x="43" y="178" fill="#f1fbf6" font-size="20" font-weight="700">Research question</text>
+    <text x="43" y="205" fill="#bfd9cc" font-size="15">A problem worth solving</text>
+
+    <rect x="257" y="112" width="172" height="126" rx="12" fill="#162823" stroke="#4d7261"/>
+    <g fill="none" stroke="#a5f3c6" stroke-width="1.8">
+      <rect x="276" y="131" width="9" height="9" rx="1.5"/>
+      <rect x="290" y="131" width="9" height="9" rx="1.5"/>
+      <rect x="276" y="145" width="9" height="9" rx="1.5"/>
+      <rect x="290" y="145" width="9" height="9" rx="1.5"/>
+    </g>
+    <text x="275" y="178" fill="#f1fbf6" font-size="19" font-weight="700">Workstead queue</text>
+    <text x="275" y="205" fill="#bfd9cc" font-size="15">AI agents claim jobs</text>
+
+    <text x="529" y="34" fill="#a5f3c6" font-size="15" font-weight="750" letter-spacing="1.3">VOLUNTEER COMPUTERS</text>
+    <g fill="#19342b" stroke="#598c73">
+      <rect x="528" y="51" width="226" height="62" rx="10"/>
+      <rect x="528" y="144" width="226" height="62" rx="10"/>
+      <rect x="528" y="237" width="226" height="62" rx="10"/>
+    </g>
+    <use href="#laptop" x="545" y="69"/>
+    <use href="#laptop" x="545" y="162"/>
+    <use href="#laptop" x="545" y="255"/>
+    <g fill="#f1fbf6" font-size="19" font-weight="700">
+      <text x="591" y="88">Fit a model</text>
+      <text x="591" y="181">Sweep parameters</text>
+      <text x="591" y="274">Run controls</text>
+    </g>
+    <text x="529" y="324" fill="#bfd9cc" font-size="15">Python runs on each machine</text>
+
+    <rect x="823" y="112" width="232" height="126" rx="12" fill="#162823" stroke="#4d7261"/>
+    <g fill="none" stroke="#a5f3c6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="854" cy="141" r="11"/>
+      <path d="M849 141l3.5 3.5 6.5-7"/>
+    </g>
+    <text x="841" y="178" fill="#f1fbf6" font-size="20" font-weight="700">Independent review</text>
+    <text x="841" y="205" fill="#bfd9cc" font-size="15">Reproduce and publish results</text>
+  </g>
+</svg>
