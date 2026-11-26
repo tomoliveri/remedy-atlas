@@ -1,0 +1,222 @@
+{
+  "model": "cross-study calibration of pooled NDM-1 inhibitor endpoints",
+  "seed": 42,
+  "samples": 2000,
+  "anchor": "D-captopril",
+  "anchor_reported_um": {
+    "ma": 21.8,
+    "brem": 20.1,
+    "li": 7.9
+  },
+  "anchor_fold_disagreement": 2.759,
+  "assumed_fold_error": 2.0,
+  "studies": {
+    "alfano": {
+      "reference": "42",
+      "assay_group": "A",
+      "assay": "fluorocillin fluorogenic",
+      "compounds": 1,
+      "anchored": false
+    },
+    "brem": {
+      "reference": "39",
+      "assay_group": "C",
+      "assay": "kinetic inhibition",
+      "compounds": 4,
+      "anchored": true
+    },
+    "kondratieva": {
+      "reference": "43",
+      "assay_group": "B",
+      "assay": "meropenem spectrophotometric",
+      "compounds": 3,
+      "anchored": false
+    },
+    "li": {
+      "reference": "40",
+      "assay_group": "C",
+      "assay": "prescreen then dose response",
+      "compounds": 8,
+      "anchored": true
+    },
+    "ma": {
+      "reference": "38",
+      "assay_group": "B",
+      "assay": "imipenem spectrophotometric",
+      "compounds": 8,
+      "anchored": true
+    },
+    "meng": {
+      "reference": "41",
+      "assay_group": "A",
+      "assay": "fluorocillin fluorogenic",
+      "compounds": 3,
+      "anchored": false
+    }
+  },
+  "studies_without_anchor": [
+    "alfano",
+    "kondratieva",
+    "meng"
+  ],
+  "censored_excluded": [
+    "5bE [kondratieva]",
+    "compound 10 [ma]",
+    "compound 26 [li]",
+    "compound 9 [li]",
+    "epi-L-captopril [brem]"
+  ],
+  "naive_pooled_ranking": [
+    "14a [meng]",
+    "14m [meng]",
+    "(2R,2'R)-5aC [kondratieva]",
+    "compound 22 [li]",
+    "5aE [kondratieva]",
+    "(S,R)-6d [alfano]",
+    "14q [meng]",
+    "compound 11 [ma]",
+    "compound 6 [ma]",
+    "compound 21 [li]",
+    "compound 23 [li]",
+    "compound 3 [ma]",
+    "D-captopril [li]",
+    "compound 32 [li]",
+    "compound 7 [ma]",
+    "compound 31 [li]",
+    "D-captopril [brem]",
+    "compound 4 [ma]",
+    "D-captopril [ma]",
+    "compound 5 [ma]",
+    "epi-D-captopril [brem]",
+    "L-captopril [brem]"
+  ],
+  "naive_top": "14a [meng]",
+  "kendall_tau_vs_naive": {
+    "mean": 0.7236,
+    "min": 0.4978,
+    "max": 0.8874
+  },
+  "permutation_null_tau": {
+    "mean": 0.003,
+    "min": -0.4113,
+    "max": 0.4372
+  },
+  "top_rank_frequency": {
+    "14a [meng]": 1208,
+    "14m [meng]": 743,
+    "(2R,2'R)-5aC [kondratieva]": 49
+  },
+  "naive_top_stays_top": 1208,
+  "rank_interval": {
+    "(2R,2'R)-5aC [kondratieva]": [
+      1,
+      4,
+      2.84
+    ],
+    "(S,R)-6d [alfano]": [
+      4,
+      16,
+      7.85
+    ],
+    "14a [meng]": [
+      1,
+      3,
+      1.44
+    ],
+    "14m [meng]": [
+      1,
+      3,
+      1.72
+    ],
+    "14q [meng]": [
+      4,
+      16,
+      8.29
+    ],
+    "5aE [kondratieva]": [
+      4,
+      16,
+      7.41
+    ],
+    "D-captopril [brem]": [
+      11,
+      19,
+      14.78
+    ],
+    "D-captopril [li]": [
+      12,
+      20,
+      15.78
+    ],
+    "D-captopril [ma]": [
+      13,
+      21,
+      16.78
+    ],
+    "L-captopril [brem]": [
+      20,
+      22,
+      21.88
+    ],
+    "compound 11 [ma]": [
+      3,
+      14,
+      6.63
+    ],
+    "compound 21 [li]": [
+      5,
+      21,
+      12.77
+    ],
+    "compound 22 [li]": [
+      3,
+      14,
+      6.3
+    ],
+    "compound 23 [li]": [
+      5,
+      21,
+      12.66
+    ],
+    "compound 3 [ma]": [
+      4,
+      18,
+      8.61
+    ],
+    "compound 31 [li]": [
+      11,
+      22,
+      18.93
+    ],
+    "compound 32 [li]": [
+      7,
+      22,
+      17.15
+    ],
+    "compound 4 [ma]": [
+      8,
+      21,
+      15.22
+    ],
+    "compound 5 [ma]": [
+      9,
+      22,
+      17.17
+    ],
+    "compound 6 [ma]": [
+      4,
+      14,
+      6.97
+    ],
+    "compound 7 [ma]": [
+      4,
+      20,
+      11.41
+    ],
+    "epi-D-captopril [brem]": [
+      11,
+      22,
+      20.41
+    ]
+  }
+}
