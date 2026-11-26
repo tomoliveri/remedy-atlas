@@ -35,10 +35,11 @@ def quiet(text):
 
 
 # Appended to every join prompt: pasting the prompt is the person's acceptance for the whole run.
-JOIN_ACCEPTANCE = ("By pasting this I accept it for this whole session: install what the repository requires, post "
-                   "claims, results, reviews and pull requests under my GitHub account through ./ws, and keep working "
-                   "without asking me anything. Never stop looking for work: when the queue is empty, wait and check "
-                   "again until I say stop.")
+JOIN_ACCEPTANCE = ("I'm asking you to do this, and I accept what that file describes for this session: install the "
+                   "tools it lists, and use ./ws to claim tasks and post results, reviews and pull requests from my "
+                   "GitHub account. You don't need to check with me between tasks. When the queue is quiet, run "
+                   "`./ws next --wait` and carry on until I say stop. Your usual safety rules and my client's "
+                   "permission settings still apply.")
 
 PROTOCOL_VERSION = 1
 

@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
+import json
 import sys
+import time
 from pathlib import Path
 
 from . import admin
@@ -15,7 +19,8 @@ Agents (see docs/JOIN.md):
   doctor                 check this machine is ready
   consent                print what joining means (show it to your person)
   join --confirmed       record their yes; detect features; pick a node name
-  next                   the best work for you now (JSON; exit 0 work, 10 idle, 20 finished)
+  next [--wait [MIN]]    the best work for you now (JSON; exit 0 work, 10 idle, 20 finished);
+                         --wait keeps checking inside ws while the queue is quiet
   claim REF              take a task, review or triage (waits for the queue to confirm)
   show REF               the work packet: task, context, upstream results, how to deliver
   beat [REF]             heartbeat (edits your claim comment; no new comments)
@@ -67,6 +72,8 @@ def main(argv=None) -> int:
     j.add_argument("--no-give-back", action="store_true", help="never take give-back tasks")
     n = sub.add_parser("next")
     n.add_argument("--max-hours", type=float)
+    n.add_argument("--wait", type=float, nargs="?", const=8.0, default=0.0, metavar="MINUTES",
+                   help="while there's nothing to take, wait and check again inside ws for up to MINUTES (default 8)")
     c = sub.add_parser("claim")
     c.add_argument("ref")
     c.add_argument("--node")
@@ -208,7 +215,11 @@ def main(argv=None) -> int:
         if args.cmd == "beat" and not args.ref:
             print("ws: with the relay driver, say which task: ws beat REF", file=sys.stderr)
             return 1
+        if args.cmd == "next":
+            return wait_for_work(lambda: DRV.cmd_next(ctx, args, W.HOME), args.wait)
         return getattr(DRV, f"cmd_{args.cmd}")(ctx, args, W.HOME)
+    if args.cmd == "next":
+        return wait_for_work(lambda: W.cmd_next(ctx, args), args.wait)
     if args.cmd == "verify":
         print("ws: verify is part of the relay driver (driver: nostr); use reviews with github-issues", file=sys.stderr)
         return 1
@@ -221,6 +232,32 @@ def main(argv=None) -> int:
     if args.cmd in table:
         return table[args.cmd](ctx, args)
     return W.cmd_simple(ctx, args, args.cmd)
+
+
+QUIET_EXITS = (10, 20, 30)  # idle, finished, held_only: nothing to take yet
+
+
+def wait_for_work(once, minutes: float, sleep=time.sleep, clock=time.monotonic) -> int:
+    """Run `ws next`; while it has nothing to offer, wait and ask again, up to `minutes`.
+
+    Agents stop when they have to sleep between commands or end a turn with
+    nothing to do. With --wait, ws does the waiting itself and prints only the
+    final answer, so one command covers a quiet stretch of the queue."""
+    deadline = clock() + max(0.0, minutes) * 60
+    while True:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = once()
+        out = buf.getvalue()
+        left = deadline - clock()
+        if code not in QUIET_EXITS or left <= 0:
+            sys.stdout.write(out)
+            return code
+        try:
+            retry = float(json.loads(out.strip().splitlines()[-1]).get("retry_after") or 120)
+        except (ValueError, IndexError, AttributeError):
+            retry = 120.0
+        sleep(max(1.0, min(retry, left)))
 
 
 if __name__ == "__main__":

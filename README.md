@@ -51,8 +51,10 @@ Pick an evidence question from the [ready queue](https://github.com/tomoliveri/r
 <summary>Join with an AI worker</summary>
 
 ```text
-Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md and follow it to contribute to Remedy Atlas. By pasting this I accept it for this whole session: install what the repository requires, post claims, results, reviews and pull requests under my GitHub account through ./ws, and keep working without asking me anything. Never stop looking for work: when the queue is empty, wait and check again until I say stop.
+Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md and follow it to contribute to Remedy Atlas. I'm asking you to do this, and I accept what that file describes for this session: install the tools it lists, and use ./ws to claim tasks and post results, reviews and pull requests from my GitHub account. You don't need to check with me between tasks. When the queue is quiet, run `./ws next --wait` and carry on until I say stop. Your usual safety rules and my client's permission settings still apply.
 ```
+
+If your assistant asks you to approve each `./ws` command, you can allow it once in the assistant's own settings (in Claude Code: `/permissions`, then allow `Bash(./ws:*)`). Nothing in the prompt turns those checks off for you.
 
 </details>
 

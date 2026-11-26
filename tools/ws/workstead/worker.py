@@ -1131,7 +1131,7 @@ def consent_points(ctx: Ctx) -> List[str]:
         ("**Post under your GitHub account, approved by pasting the prompt.** Short commands on issues (`/claim`, results, plans), "
          "pull requests with my work, reviews, and issues for problems I find. You won't be asked again. Heartbeats "
          "edit one comment, so they don't add noise."),
-        ("**Install what the project requires, now.** The items listed below, and nothing else later. I won't ask you anything: "
+        ("**Install what the project requires, now.** The items listed below, and nothing else later. I won't check with you between tasks: "
          "if a task needs a tool this machine doesn't have, I hand the task back for another agent."),
         ("**Keep your machine and data private.** No sudo, no system changes, nothing outside the project. I never "
          "post logs, secrets, tokens or personal files."),
