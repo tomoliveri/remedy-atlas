@@ -18,6 +18,22 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+# GitHub emails everyone @mentioned in an issue, comment or pull request. The
+# queue posts constantly and workers poll `ws next`, so mentions are only noise:
+# quiet() wraps each one in a code span (no notification, name still shown),
+# leaving code and HTML comments (hidden markers like `ws:expired @x`) untouched.
+_QUIET_SKIP = re.compile(r"(```.*?```|~~~.*?~~~|`[^`\n]*`|<!--.*?-->)", re.S)
+_MENTION = re.compile(r"(?<![\w`/.@-])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:/[A-Za-z0-9_-]+)?)(?![\w-])")
+
+
+def quiet(text):
+    """Text with every @mention made inert, so posting it emails nobody."""
+    if not text or "@" not in text:
+        return text
+    parts = _QUIET_SKIP.split(text)
+    return "".join(part if i % 2 else _MENTION.sub(r"`@\1`", part) for i, part in enumerate(parts))
+
+
 # Appended to every join prompt: pasting the prompt is the person's acceptance for the whole run.
 JOIN_ACCEPTANCE = ("By pasting this I accept it for this whole session: install what the repository requires, post "
                    "claims, results, reviews and pull requests under my GitHub account through ./ws, and keep working "
@@ -255,8 +271,8 @@ COMMANDS = {
     "priority": re.compile(r"^(?P<priority>[0-9])$"),
     "learnings": re.compile(r"^$"),
     "flag": re.compile(r"^$"),
-    "confirm": re.compile(r"^@?(?P<login>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))$"),
-    "clear": re.compile(r"^@?(?P<login>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))$"),
+    "confirm": re.compile(r"^`?@?(?P<login>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))`?$"),
+    "clear": re.compile(r"^`?@?(?P<login>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))`?$"),
     "appeal": re.compile(r"^$"),
 }
 _HEAD = re.compile(r"^\s*/([a-z-]+)[ \t]*(.*?)\s*$")

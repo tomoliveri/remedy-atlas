@@ -19,6 +19,8 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+from .protocol import quiet
+
 API = os.environ.get("GITHUB_API_URL", "https://api.github.com")
 UA = "workstead/1"
 
@@ -288,10 +290,10 @@ class GitHub:
         return items if include_prs else [i for i in items if not i["is_pr"]]
 
     def create_issue(self, title: str, body: str, labels: List[str]) -> Dict[str, Any]:
-        return _issue(self.request("POST", f"{self.r}/issues", {"title": title, "body": body, "labels": labels}))
+        return _issue(self.request("POST", f"{self.r}/issues", {"title": title, "body": quiet(body), "labels": labels}))
 
     def edit_issue(self, n: int, **fields: Any) -> Dict[str, Any]:
-        fields = {k: v for k, v in fields.items() if v is not None}
+        fields = {k: (quiet(v) if k == "body" else v) for k, v in fields.items() if v is not None}
         return _issue(self.request("PATCH", f"{self.r}/issues/{n}", fields))
 
     def add_labels(self, n: int, labels: List[str]) -> None:
@@ -323,10 +325,10 @@ class GitHub:
         return [_comment(c) for c in self.paginate(f"{self.r}/issues/comments?{q}")]
 
     def create_comment(self, n: int, body: str) -> Dict[str, Any]:
-        return _comment(self.request("POST", f"{self.r}/issues/{n}/comments", {"body": body}))
+        return _comment(self.request("POST", f"{self.r}/issues/{n}/comments", {"body": quiet(body)}))
 
     def edit_comment(self, cid: int, body: str) -> Dict[str, Any]:
-        return _comment(self.request("PATCH", f"{self.r}/issues/comments/{cid}", {"body": body}))
+        return _comment(self.request("PATCH", f"{self.r}/issues/comments/{cid}", {"body": quiet(body)}))
 
     def delete_comment(self, cid: int) -> None:
         try:
@@ -435,7 +437,7 @@ class GitHub:
 
     def create_pr(self, head: str, base: str, title: str, body: str, draft: bool = False) -> Dict[str, Any]:
         return _pr(self.request("POST", f"{self.r}/pulls", {"head": head, "base": base, "title": title,
-                                                            "body": body, "draft": draft,
+                                                            "body": quiet(body), "draft": draft,
                                                             "maintainer_can_modify": True}))
 
     def find_pr(self, head: str) -> Optional[Dict[str, Any]]:
