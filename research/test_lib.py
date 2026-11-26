@@ -51,7 +51,8 @@ class DoseResponse(unittest.TestCase):
             fit = json.loads(out.read_text())["groups"]["A"]
             self.assertAlmostEqual(fit["ic50"], 2.0, places=2)
             receipt = json.loads(out.with_name("fit.json.run.json").read_text())
-            self.assertIn("numpy", receipt["libraries"])
+            self.assertIn(receipt["sandbox"]["backend"].split(" ")[0], ("wasm", "container", "nested"))
+            self.assertIsNone(receipt["sandbox"]["killed"])
 
 
 @unittest.skipUnless(HAVE_CORE, "needs the core tier")

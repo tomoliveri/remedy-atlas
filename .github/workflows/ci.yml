@@ -70,6 +70,30 @@ jobs:
           python tools/ws/ws.py plan-check docs/examples/plan-feature.json
           python tools/ws/ws.py plan-check docs/examples/plan-mapreduce.json
 
+  sandbox:
+    name: Sandbox (WebAssembly and rootless container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WS_HOME: ${{ github.workspace }}/../ws-home
+      WS_TEST_CONTAINER: "1"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.13"
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.x
+      - name: Fetch Pyodide (hash-checked)
+        run: python tools/ws/ws.py sandbox setup numpy
+      - name: Escape attempts, limits and container isolation
+        run: |
+          python tools/ws/ws.py sandbox doctor
+          python -m unittest discover -s tools/ws/tests -p test_sandbox.py -v
+
   simulate:
     name: Fleet simulation
     runs-on: ubuntu-latest
@@ -101,6 +125,11 @@ jobs:
           python-version: "3.12"
       - name: Research core tier (hash-locked)
         run: python -m pip install --require-hashes --no-input -r research/env/requirements-core.txt
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.x
+      - name: WebAssembly sandbox (studies run in it during the tests)
+        run: python tools/ws/ws.py sandbox setup
       - name: Run validate.command from workstead.json
         run: |
           cmd=$(python3 -c "import json; print(json.load(open('workstead.json')).get('validate', {}).get('command', ''))")
@@ -114,7 +143,7 @@ jobs:
   ok:
     name: CI ok
     if: always()
-    needs: [lint, test, simulate, project]
+    needs: [lint, test, simulate, project, sandbox]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

@@ -1,28 +1,31 @@
-"""Run a local study script and capture the information needed to reproduce it.
+"""Run a study script in the sandbox and capture what's needed to reproduce it.
 
-Uses the research venv (research/env.py setup) when it exists, so studies
-get NumPy, SciPy and the other pinned tiers. The receipt records the hashes,
-seed, run time, Python, library versions and hardware. The script runs with
-a clean environment: no tokens, keys or credentials, one BLAS thread per
-physical core.
+Studies never run directly on this machine. The script runs in Workstead's
+sandbox (tools/ws/workstead/sandbox.py): WebAssembly (Pyodide in Deno, no
+network, no access to your files) when it needs only the standard library,
+NumPy, SciPy, pandas, scikit-learn or statsmodels; otherwise a rootless
+container with no network, built from research/env/Dockerfile. Either way it
+sees its input at /input/<name> and writes its result to /output/result.json,
+under hard memory and time limits.
+
+The receipt records the hashes, seed, run time, sandbox backend, limits and
+this machine's hardware.
 """
 
 import argparse
 from hashlib import sha256
 import json
-import os
 from pathlib import Path
 import platform
-import subprocess
 import sys
 from tempfile import TemporaryDirectory
-from time import monotonic
 
-import env as research_env
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools" / "ws"))
 
-KEEP = ("PATH", "HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "LANG", "LC_ALL", "TZ", "TMPDIR", "TEMP", "TMP",
-        "SYSTEMROOT", "CUDA_VISIBLE_DEVICES", "HIP_VISIBLE_DEVICES", "PYTORCH_ENABLE_MPS_FALLBACK", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS",
-        "MKL_NUM_THREADS", "NUMBA_NUM_THREADS", "VECLIB_MAXIMUM_THREADS")
+from workstead import config as C, sandbox as SB  # noqa: E402
+
+import env as research_env  # noqa: E402
 
 
 def digest(path):
@@ -34,13 +37,14 @@ def digest(path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("script", type=Path)
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--timeout", type=int, default=300, help="maximum run time in seconds")
-    parser.add_argument("--python", help="interpreter (default: the research venv, else this Python)")
+    parser.add_argument("--memory", type=int, help="memory limit in MB (default: sandbox.memory_mb)")
+    parser.add_argument("--backend", default="auto", choices=["auto", "wasm", "container"])
     args = parser.parse_args()
     if args.timeout < 1:
         parser.error("--timeout must be positive")
@@ -52,35 +56,45 @@ def main():
     script, source = args.script.resolve(strict=True), args.input.resolve(strict=True)
     inputs = {"script_sha256": digest(script), "input_sha256": digest(source)}
     output.parent.mkdir(parents=True, exist_ok=True)
-    python = args.python or str(research_env.venv_python() or sys.executable)
+    cfg = C.load(ROOT)
     hardware = research_env.hardware()
-    _, libraries = research_env.installed(python)
-    started = monotonic()
     with TemporaryDirectory(dir=output.parent) as directory:
-        tempdir = Path(directory)
-        part = tempdir / "result.json"
-        child_env = {k: v for k, v in os.environ.items() if k in KEEP}
-        for k, v in research_env.thread_env(hardware).items():
-            child_env.setdefault(k, v)
-        child_env.update(PYTHONHASHSEED="0", MPLCONFIGDIR=directory)
-        subprocess.run([python, "-B", str(script), "--input", str(source),
-                        "--output", str(part), "--seed", str(args.seed)],
-                       check=True, timeout=args.timeout, env=child_env)
+        out_dir = Path(directory) / "out"
+        try:
+            res = SB.run_python(script, [source], out_dir,
+                                ["--input", f"/input/{source.name}", "--output", "/output/result.json",
+                                 "--seed", str(args.seed)],
+                                cfg, backend=args.backend, memory_mb=args.memory, timeout=args.timeout)
+        except SB.SandboxError as e:
+            sys.exit(f"run.py: {e}")
+        sys.stdout.write(res.stdout)
+        sys.stderr.write(res.stderr)
+        part = out_dir / "result.json"
+        if res.code != 0 or not part.is_file():
+            why = f" ({res.killed})" if res.killed else ""
+            sys.exit(f"run.py: the study failed in the sandbox{why}, exit {res.code}")
         with part.open() as data:
             if not isinstance(json.load(data), dict):
                 raise ValueError("study output must be a JSON object")
-        version = subprocess.run([python, "-c", "import platform; print(platform.python_version())"],
-                                 capture_output=True, text=True).stdout.strip() or platform.python_version()
         metadata = {**inputs, "output_sha256": digest(part), "seed": args.seed,
-                    "seconds": round(monotonic() - started, 3),
-                    "python": version, "architecture": platform.machine(), "libraries": libraries,
+                    "seconds": round(res.seconds, 3), "sandbox": {**res.describe(), **_runtime(res.backend, cfg)},
+                    "architecture": platform.machine(),
                     "hardware": {"physical_cores": hardware["physical_cores"], "memory_gb": hardware["memory_gb"],
                                  "gpus": [g["name"] for g in hardware["gpus"]]}}
-        partial_receipt = tempdir / "run.json"
+        partial_receipt = Path(directory) / "run.json"
         partial_receipt.write_text(json.dumps(metadata, indent=2) + "\n")
         part.replace(output)
         partial_receipt.replace(receipt)
     print(f"Result: {output}\nRun receipt: {receipt}")
+
+
+def _runtime(backend, cfg):
+    """What exactly ran the study: the Pyodide release, or the container image."""
+    if backend == "wasm":
+        return {"python": "pyodide " + SB.PYODIDE_VERSION}
+    if backend.startswith("container"):
+        return {"image": SB._image(cfg)}
+    return {"python": platform.python_version()}
 
 
 if __name__ == "__main__":

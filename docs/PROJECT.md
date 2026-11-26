@@ -31,29 +31,32 @@ Scripts take `--input`, `--output` and `--seed` and write a JSON object. Use the
 python3 research/run.py STUDY.py --input FIXTURE --output RESULT.json --seed 42
 ```
 
-Keep the script and input hash, output and run receipt in your submission. The runner is a launcher, so run your own or reviewed scripts with your machine owner's approval.
+Keep the script and input hash, output and run receipt in your submission. The runner runs the script in the sandbox, never on your machine.
 
-## Libraries and hardware
+## Libraries, hardware and the sandbox
 
-Volunteers run studies on their own CPUs and GPUs. `research/env.py` sets that up and records it:
+Volunteers run studies on their own machines, but never directly on them: every study, shared tool and check runs in Workstead's [sandbox](sandbox.md).
 
 ```sh
-python3 research/env.py doctor     # cores, memory, GPU, installed tiers, what to install
-python3 research/env.py setup      # recommended tiers into .ws/research-venv (shared by all worktrees)
+python3 research/env.py doctor     # cores, memory, GPUs, and which sandbox backends are ready
+python3 research/env.py setup      # fetch Pyodide (hash-checked) and build the project's container image
 ```
 
-| Tier | Packages | For |
-| --- | --- | --- |
-| `core` | NumPy, SciPy, pandas, scikit-learn, statsmodels | Dose-response fits, ODE solvers, held-out benchmarks, statistics (every track) |
-| `fast` | Numba | JIT-compiled loops: Monte Carlo, agent-based and spatial tumour models on all CPU cores |
-| `chem` | RDKit | Descriptors and fingerprints for compound-held-out models (NDM-1, KPC/OXA, LpxC, DprE1, Candida) |
-| `qsp` | libRoadRunner | Fast simulation of published SBML PK/PD and systems-pharmacology models |
-| `bayes` | PyMC, ArviZ | Uncertainty for sparse organoid and assay data |
-| `gpu` | PyTorch, torchdiffeq | Large batched simulations on NVIDIA CUDA or Apple Metal |
+- **WebAssembly first.** Studies that need only the standard library, NumPy, SciPy, pandas, scikit-learn or statsmodels run in Pyodide inside Deno: offline, with no network or access to your files, reading `/input` and writing `/output`, under hard memory and time limits. The cervical starter runs this way in about a second and reproduces its baseline exactly.
+- **A rootless container for the rest.** RDKit, Numba, libRoadRunner and the project's checks (git, node, the research tests) run in an image built from `research/env/Dockerfile`, with no network, a read-only root filesystem, no capabilities and an unprivileged user. The image installs the hash-locked tiers below with `--require-hashes`.
 
-Each `research/env/requirements-TIER.txt` pins every package and dependency by version and sha256 for Linux, macOS and Windows, and installs with `--require-hashes`; all tiers share `constraints.txt`. The research tiers need Python 3.12+ (Workstead itself runs on 3.9). Regenerate the locks with `uv pip compile TIER.in -c constraints.txt --universal --generate-hashes --python-version 3.12 -o requirements-TIER.txt`; lockfile changes need a maintainer. `research/run.py` uses the venv, scrubs credentials from the study's environment, sets one BLAS thread per physical core and records library versions and hardware in the receipt.
+| Tier | Packages | For | Where |
+| --- | --- | --- | --- |
+| `core` | NumPy, SciPy, pandas, scikit-learn, statsmodels | Dose-response fits, ODE solvers, held-out benchmarks, statistics (every track) | WebAssembly and the image |
+| `fast` | Numba | JIT-compiled loops: Monte Carlo, agent-based and spatial tumour models | image |
+| `chem` | RDKit | Descriptors and fingerprints for compound-held-out models (NDM-1, KPC/OXA, LpxC, DprE1, Candida) | image |
+| `qsp` | libRoadRunner | Simulation of published SBML PK/PD and systems-pharmacology models | image (x86-64 only: no Linux ARM wheels) |
+| `bayes` | PyMC, ArviZ | Uncertainty for sparse organoid and assay data | add to the image when a track needs it |
+| `gpu` | PyTorch, torchdiffeq | Large batched simulations | add to the image; NVIDIA GPUs on Linux with `sandbox.gpus` |
 
-Studies default to the CPU so results reproduce bit for bit; pass `--device auto` to a tool that supports it for large sweeps on a GPU. Workers advertise `gpu:cuda`, `gpu:metal` and `cpu:many`, so a plan can send a heavy task only to a machine that has one (`"features": ["gpu:cuda"]`).
+Each `research/env/requirements-TIER.txt` pins every package and dependency by version and sha256; all tiers share `constraints.txt`. Regenerate the locks with `uv pip compile TIER.in -c constraints.txt --universal --generate-hashes --python-version 3.12 -o requirements-TIER.txt`; lockfile and Dockerfile changes need a maintainer. `research/run.py` records the sandbox backend, limits, peak memory and this machine's hardware in every receipt.
+
+Studies default to the CPU so results reproduce bit for bit. Apple GPUs can't be reached from a sandbox, so GPU sweeps belong on Linux machines with NVIDIA cards; workers advertise `gpu:cuda`, `sandbox:wasm` and `sandbox:container`, so a plan can send a task only to a machine that can run it (`"features": ["gpu:cuda", "sandbox:container"]`).
 
 ## Shared tools
 

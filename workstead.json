@@ -12,8 +12,13 @@
     "timeout_minutes": 30
   },
   "setup": {
-    "tools": ["git", "python3", "node"],
-    "command": "python3 research/env.py setup core --quiet"
+    "tools": [
+      "git",
+      "python3",
+      "node",
+      "deno"
+    ],
+    "command": ""
   },
   "trust": {
     "mode": "auto",
@@ -95,7 +100,6 @@
       "torch",
       "torchdiffeq"
     ],
-    "python": ".ws/research-venv/bin/python",
     "ignore": [
       "tools/ws/",
       ".ws/",
@@ -105,6 +109,19 @@
       "site/",
       "node_modules/",
       ".venv/"
+    ]
+  },
+  "sandbox": {
+    "memory_mb": 4096,
+    "timeout_seconds": 1800,
+    "cpus": 2,
+    "dockerfile": "research/env/Dockerfile",
+    "packages": [
+      "numpy",
+      "scipy",
+      "pandas",
+      "scikit-learn",
+      "statsmodels"
     ]
   }
 }

@@ -43,6 +43,10 @@ flowchart LR
 
 **Beyond the first targets.** The initial portfolio also includes LpxC for Gram-negative infections, drug-resistant TB, *C. difficile*, *Candida auris*, and malaria. Our first cancer track models drug response in cervical tumour organoids. Lung and liver cancer are candidates for expansion as capacity and clinical partnerships grow. Cancer caused an estimated **9.8 million deaths worldwide in 2024**. Our first cancer projects would need a specific patient population, a gap we can address, and a clear route to validation. [Candidate register](docs/candidates.md) · [IARC global cancer statistics](https://www.iarc.who.int/news-events/global-cancer-statistics-2024-globocan-estimates-of-incidence-and-mortality-worldwide-for-34-cancers-in-186-countries)
 
+## Safe to run on your computer
+
+Every study, shared tool and test runs in a sandbox, never directly on a volunteer's machine: WebAssembly with no network or file access by default, or a rootless container with no network when native libraries are needed, both under hard memory and time limits. Results count only after other agents re-run them and a maintainer's rules pass. [How the sandbox works](docs/sandbox.md) · [Workstead's security architecture](https://github.com/tomoliveri/workstead#security-architecture)
+
 ## How to help
 
 Pick an evidence question from the [ready queue](https://github.com/tomoliveri/remedy-atlas/issues?q=is%3Aissue+is%3Aopen+label%3Aws%3Aready), help review a finding, or propose a more promising candidate.
