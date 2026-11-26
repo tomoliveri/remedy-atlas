@@ -1,0 +1,76 @@
+{
+  "model": "leave-one-out median baseline for NDM-1 inhibitor potency",
+  "seed": 42,
+  "samples": 500,
+  "endpoints": 22,
+  "censored_excluded": 5,
+  "units": "log10 micromolar IC50",
+  "studies": {
+    "alfano": {
+      "assay_group": "A",
+      "assay": "fluorocillin fluorogenic",
+      "endpoints": 1
+    },
+    "brem": {
+      "assay_group": "C",
+      "assay": "kinetic inhibition",
+      "endpoints": 3
+    },
+    "kondratieva": {
+      "assay_group": "B",
+      "assay": "meropenem spectrophotometric",
+      "endpoints": 2
+    },
+    "li": {
+      "assay_group": "C",
+      "assay": "prescreen then dose response",
+      "endpoints": 6
+    },
+    "ma": {
+      "assay_group": "B",
+      "assay": "imipenem spectrophotometric",
+      "endpoints": 7
+    },
+    "meng": {
+      "assay_group": "A",
+      "assay": "fluorocillin fluorogenic",
+      "endpoints": 3
+    }
+  },
+  "held_out_error": {
+    "pooled_ignoring_assay": {
+      "mae_log10": 0.6274,
+      "median_log10": 0.4117,
+      "worst_log10": 1.8388,
+      "fold_error_at_mae": 4.24
+    },
+    "by_assay_group": {
+      "mae_log10": 0.6876,
+      "median_log10": 0.491,
+      "worst_log10": 1.5441,
+      "fold_error_at_mae": 4.871
+    },
+    "by_study": {
+      "mae_log10": 0.5278,
+      "median_log10": 0.4822,
+      "worst_log10": 1.5515,
+      "fold_error_at_mae": 3.371
+    }
+  },
+  "improvement_over_pooled": {
+    "by_assay_group": -0.0602,
+    "by_study": 0.0996
+  },
+  "shuffled_label_control": {
+    "by_assay_group": {
+      "mae_log10_mean": 0.6192,
+      "mae_log10_p05": 0.5365,
+      "mae_log10_p95": 0.706
+    },
+    "by_study": {
+      "mae_log10_mean": 0.6776,
+      "mae_log10_p05": 0.5536,
+      "mae_log10_p95": 0.7923
+    }
+  }
+}
