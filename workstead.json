@@ -31,8 +31,9 @@
     "max_attempts": 3
   },
   "give_back": {
-    "enabled": false,
-    "share": 0.001
+    "enabled": true,
+    "share": 0.001,
+    "upstream": "tomoliveri/workstead"
   },
   "repo": "tomoliveri/remedy-atlas",
   "driver": "github-issues",
