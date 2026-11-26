@@ -31,7 +31,7 @@
     "max_attempts": 3
   },
   "give_back": {
-    "enabled": false,
+    "enabled": true,
     "share": 0.001
   },
   "repo": "tomoliveri/remedy-atlas",
