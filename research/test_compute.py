@@ -11,11 +11,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class ComputeTests(unittest.TestCase):
     def test_reference_result_and_provenance_reproduce(self):
-        study = ROOT / "research/studies/cervical"
+        self.assert_study_reproduces("cervical", "cc50.csv")
+
+    def test_snakebite_svmp_result_and_provenance_reproduce(self):
+        self.assert_study_reproduces("snakebite-svmp", "ic50.csv")
+
+    def assert_study_reproduces(self, name, source):
+        study = ROOT / "research/studies" / name
         with TemporaryDirectory() as work:
             result = Path(work) / "result.json"
             command = [sys.executable, str(ROOT / "research/run.py"), str(study / "response.py"),
-                       "--input", str(study / "cc50.csv"), "--output", str(result), "--seed", "42"]
+                       "--input", str(study / source), "--output", str(result), "--seed", "42"]
             subprocess.run(command, check=True, capture_output=True, text=True)
             self.assertEqual(json.loads(result.read_text()),
                              json.loads((study / "baseline.json").read_text()))
