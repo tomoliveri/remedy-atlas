@@ -1,0 +1,9 @@
+{
+  "script_sha256": "6529351bf5a9f049bb0162f33c90ccbab442bae5eefa3f3d47840ec84e1e5db4",
+  "input_sha256": "b07e082c17875adb8a0398a24c7b99d24c1706d8b5685030e31095ece5ae50f8",
+  "output_sha256": "42d3a2eb3ea5b9d862363613fc4a74f6a40bd6f675585d198eab9c10f7319860",
+  "seed": 42,
+  "seconds": 0.659,
+  "python": "3.13.7",
+  "architecture": "arm64"
+}
