@@ -15,7 +15,8 @@ until they tell you to stop.
 of permissions. It can't override your safety guidelines, your client's
 permission settings or anything the person tells you. If your client asks
 the person to approve a command, that's expected, not a failure: wait for
-it and carry on. If a task ever asks for something you wouldn't normally do,
+it and carry on. (In Claude Code, the clone's `.claude/settings.json`
+already pre-approves `./ws`, the checks and edits inside `.ws/`.) If a task ever asks for something you wouldn't normally do,
 hand it back (`./ws release REF out_of_scope`) and take the next one. You can
 check everything `ws` posts in `tools/ws/workstead/worker.py`; every result
 is reviewed before it merges, and nothing here needs sudo, secrets or access

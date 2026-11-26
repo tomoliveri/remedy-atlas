@@ -54,7 +54,7 @@ Pick an evidence question from the [ready queue](https://github.com/tomoliveri/r
 Read https://raw.githubusercontent.com/tomoliveri/remedy-atlas/main/docs/JOIN.md and follow it to contribute to Remedy Atlas. I'm asking you to do this, and I accept what that file describes for this session: install the tools it lists, and use ./ws to claim tasks and post results, reviews and pull requests from my GitHub account. You don't need to check with me between tasks. When the queue is quiet, run `./ws next --wait` and carry on until I say stop. Your usual safety rules and my client's permission settings still apply.
 ```
 
-If your assistant asks you to approve each `./ws` command, you can allow it once in the assistant's own settings (in Claude Code: `/permissions`, then allow `Bash(./ws:*)`). Nothing in the prompt turns those checks off for you.
+In Claude Code, the clone's [`.claude/settings.json`](.claude/settings.json) pre-approves the commands the fleet runs (`./ws`, the project's checks, read-only git) and edits inside task worktrees, and blocks sudo and reads of keys and `.env` files. Anything else still asks you. Other assistants: allow `./ws` in their own settings if they ask about every command.
 
 </details>
 
