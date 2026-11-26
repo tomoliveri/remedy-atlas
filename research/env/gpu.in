@@ -1,0 +1,3 @@
+# GPU: batched simulation on CUDA (Linux, Windows) or Apple Metal (MPS); CPU elsewhere.
+torch
+torchdiffeq

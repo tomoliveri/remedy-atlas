@@ -1,0 +1,2 @@
+# CPU speed: JIT-compiled loops for Monte Carlo, agent-based and spatial tumour models.
+numba

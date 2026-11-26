@@ -33,6 +33,41 @@ python3 research/run.py STUDY.py --input FIXTURE --output RESULT.json --seed 42
 
 Keep the script and input hash, output and run receipt in your submission. The runner is a launcher, so run your own or reviewed scripts with your machine owner's approval.
 
+## Libraries and hardware
+
+Volunteers run studies on their own CPUs and GPUs. `research/env.py` sets that up and records it:
+
+```sh
+python3 research/env.py doctor     # cores, memory, GPU, installed tiers, what to install
+python3 research/env.py setup      # recommended tiers into .ws/research-venv (shared by all worktrees)
+```
+
+| Tier | Packages | For |
+| --- | --- | --- |
+| `core` | NumPy, SciPy, pandas, scikit-learn, statsmodels | Dose-response fits, ODE solvers, held-out benchmarks, statistics (every track) |
+| `fast` | Numba | JIT-compiled loops: Monte Carlo, agent-based and spatial tumour models on all CPU cores |
+| `chem` | RDKit | Descriptors and fingerprints for compound-held-out models (NDM-1, KPC/OXA, LpxC, DprE1, Candida) |
+| `qsp` | libRoadRunner | Fast simulation of published SBML PK/PD and systems-pharmacology models |
+| `bayes` | PyMC, ArviZ | Uncertainty for sparse organoid and assay data |
+| `gpu` | PyTorch, torchdiffeq | Large batched simulations on NVIDIA CUDA or Apple Metal |
+
+Each `research/env/requirements-TIER.txt` pins every package and dependency by version and sha256 for Linux, macOS and Windows, and installs with `--require-hashes`; all tiers share `constraints.txt`. The research tiers need Python 3.12+ (Workstead itself runs on 3.9). Regenerate the locks with `uv pip compile TIER.in -c constraints.txt --universal --generate-hashes --python-version 3.12 -o requirements-TIER.txt`; lockfile changes need a maintainer. `research/run.py` uses the venv, scrubs credentials from the study's environment, sets one BLAS thread per physical core and records library versions and hardware in the receipt.
+
+Studies default to the CPU so results reproduce bit for bit; pass `--device auto` to a tool that supports it for large sweeps on a GPU. Workers advertise `gpu:cuda`, `gpu:metal` and `cpu:many`, so a plan can send a heavy task only to a machine that has one (`"features": ["gpu:cuda"]`).
+
+## Shared tools
+
+Reusable code lives in `tools/lib/`, pinned by sha256 in `tools/lib/toolbox.json` ([toolbox](toolbox.md)). It starts with:
+
+| Tool | What it does |
+| --- | --- |
+| `dose-response` | Four-parameter Hill fits per organoid or compound, residual-bootstrap IC50 intervals, normalised AUC, Bliss and HSA excess |
+| `heldout` | Leave one organoid, compound or study out; compare a model with the mean baseline by paired bootstrap |
+| `tumour-pkpd` | One-compartment PK, Emax kill and Gompertz growth for thousands of virtual tumours at once, with rank sensitivities; CPU or GPU |
+| `compute-backend` | NumPy or PyTorch backend and device choice for new batched simulations |
+
+`./ws tools scan` finds scripts elsewhere in the repository worth sharing and flags near-duplicates. `./ws tools vet FILE` blocks network access, subprocesses, dynamic code and credential access. `./ws tools promote FILE --name NAME` adds a script to the library; the pull request needs a maintainer because `tools/lib/` is protected. Other Workstead projects can fetch these tools with `./ws tools get NAME --from tomoliveri/remedy-atlas` once they list this repository in `toolbox.sources`. Every download re-checks the pin and vets the file again.
+
 ## Refresh task scaffolds
 
 Task scope and acceptance criteria live in the issue. Shared, versioned instructions live in `research/scaffolds/`. Maintainers merge scaffold changes through the regular review process. On every new claim, and before resuming older work, render the latest scaffold using the track and partition specified in the issue.

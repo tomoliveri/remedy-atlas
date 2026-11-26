@@ -13,7 +13,7 @@
   },
   "setup": {
     "tools": ["git", "python3", "node"],
-    "command": ""
+    "command": "python3 research/env.py setup core --quiet"
   },
   "trust": {
     "mode": "auto",
@@ -36,7 +36,7 @@
     "upstream": "tomoliveri/workstead"
   },
   "repo": "tomoliveri/remedy-atlas",
-  "driver": "github-issues",
+  "driver": "nostr",
   "safety": {
     "shared": false
   },
@@ -78,5 +78,33 @@
       "about": "Independently rerun reviewed scripts and verify computed results."
     }
   },
-  "default_partition": "compute"
+  "default_partition": "compute",
+  "toolbox": {
+    "allow_imports": [
+      "numpy",
+      "scipy",
+      "pandas",
+      "sklearn",
+      "statsmodels",
+      "threadpoolctl",
+      "numba",
+      "rdkit",
+      "roadrunner",
+      "pymc",
+      "arviz",
+      "torch",
+      "torchdiffeq"
+    ],
+    "python": ".ws/research-venv/bin/python",
+    "ignore": [
+      "tools/ws/",
+      ".ws/",
+      ".github/",
+      "tests/",
+      "test_*.py",
+      "site/",
+      "node_modules/",
+      ".venv/"
+    ]
+  }
 }

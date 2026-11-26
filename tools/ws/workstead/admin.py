@@ -66,12 +66,13 @@ def attribution_text(upstream: Optional[str]) -> str:
     return (f"{ATTRIBUTION_MARK}\n**A small request (not a requirement).** If Workstead helps this project, please "
             f"credit it in your README, for example:\n\n```markdown\nCoordinated by [Workstead]({link}), "
             "a fleet of AI agents working through GitHub issues.\n```\n\n"
-            "Optionally, set `give_back.enabled` to `true` in `workstead.json` to give 0.1% of your fleet's time back "
-            "to improving Workstead. Joiners are told about it before they agree, and anyone can opt out. "
-            "Neither is required, and nothing checks for it.")
+            "Give-back is on by default: 0.1% of your fleet's time goes back to improving Workstead. Joiners are "
+            "told about it before they agree and can opt out (`ws join --no-give-back`); set `give_back.enabled` "
+            "to `false` in `workstead.json` to turn it off for the whole project. Credit isn't required, and "
+            "nothing checks for it.")
 
 
-CODEOWNED = ["/.github/", "/.claude/", "/tools/ws/", "/workstead.json", "/docs/JOIN.md", "/AGENTS.md", "/ws"]
+CODEOWNED = ["/.github/", "/.claude/", "/tools/ws/", "/workstead.json", "/docs/JOIN.md", "/AGENTS.md", "/ws", "/tools/lib/"]
 
 
 def codeowners(owners: list) -> str:
@@ -216,9 +217,9 @@ def relay_init(root: Path, gh, cfg: Dict[str, Any]) -> None:
             r = subprocess.run(["gh", "secret", "set", "WS_NOSTR_KEY", "--repo", gh.repo], input=sk.hex(),
                                capture_output=True, text=True, timeout=60)
         except OSError:
-            raise GitHubError("needs the GitHub CLI (gh) to store the gate key as a secret") from None
+            raise GitHubError(0, "needs the GitHub CLI (gh) to store the gate key as a secret") from None
         if r.returncode != 0:
-            raise GitHubError(f"gh secret set failed: {r.stderr.strip()[:160]}")
+            raise GitHubError(r.returncode, f"gh secret set failed: {r.stderr.strip()[:160]}")
         pubs.append(schnorr.npub(pk))
     _, mine = load_or_create_key(_P.home() / ".workstead")
     mine_npub = schnorr.npub(bytes.fromhex(mine))
@@ -280,6 +281,38 @@ def bridge_tasks(q: Queue, cfg: Dict[str, Any], relays=None) -> List[Dict[str, A
     return done
 
 
+def announce_tools(root: Path, q: Queue, cfg: Dict[str, Any]) -> List[str]:
+    """Relay mode: sign a ToolRelease for each library entry the relays don't carry yet."""
+    if not cfg["toolbox"]["announce"]:
+        return []
+    from . import toolbox as T
+    if not T.load_manifest(root, cfg)["tools"]:
+        return []
+    from .settle import gate_key_from_env
+    key = gate_key_from_env()
+    if not key:
+        return []
+    import subprocess
+    import tempfile
+    from . import nostr as N
+    from .driver import relays_for
+    try:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True,
+                                check=True).stdout.strip()
+        relays = relays_for(cfg, Path(tempfile.mkdtemp()), probe=False)
+        try:
+            seen = T.releases(relays.milestone.query([{"kinds": [N.K_TOOL], "#r": [f"https://github.com/{q.gh.repo}"]}]))
+            done = T.announce(root, cfg, relays, key, q.gh.repo, commit, int(q.now()), seen)
+        finally:
+            relays.close()
+    except Exception as e:  # relays unreachable: the next sweep retries
+        print(f"tool announcements skipped: {e}")
+        return []
+    for d in done:
+        print(f"announced tool {d}")
+    return done
+
+
 def actions_sweep(root: Path) -> int:
     cfg = C.load(root)
     q = queue_from_env(cfg)
@@ -287,6 +320,7 @@ def actions_sweep(root: Path) -> int:
     if cfg["driver"] == "nostr":
         bridge_tasks(q, cfg)
         relay_board_into_issue(q, cfg)
+        announce_tools(root, q, cfg)
     st = snap["stats"]
     summary = (f"### Workstead sweep\n\nopen tasks {st['open_tasks']} · done in 24 h {st['done_24h']} · "
                f"dispatched {len(q.dispatched)} · API calls {q.gh.calls} · rate limit remaining {q.gh.remaining}\n")
@@ -331,6 +365,15 @@ def actions_settle(root: Path) -> int:
     relays = relays_for(cfg, Path(tempfile.mkdtemp()), probe=False)
     key = gate_key_from_env()
     pr = os.environ.get("WS_PR", "")
+    if not pr.isdigit():
+        # The guest gateway: verified results from contributors without a GitHub
+        # account become pull requests here (guest.py), then settle like any other.
+        from .guest import open_guest_prs
+        try:
+            for g in open_guest_prs(q, relays, relays.snapshot(f"https://github.com/{q.gh.repo}"), key):
+                print(json.dumps(g))
+        except Exception as e:  # never block settlement of the other pull requests
+            print(f"guest gateway skipped: {e}")
     results = [settle_pr(q, relays, int(pr), gate_key=key)] if pr.isdigit() else settle_open(q, relays, key)
     for r in results:
         print(json.dumps(r))
@@ -369,8 +412,8 @@ def setup(root: Path, write_files: bool = True) -> int:
             q.gh.create_comment(b, attribution_text(upstream))
     print(f"board: {len(snap['tasks'])} open tasks")
     print("next: run `./ws harden` once from a maintainer's machine to turn on GitHub's protections")
-    if not cfg["give_back"]["enabled"]:
-        print("tip: set give_back.enabled to true in workstead.json to give 0.1% of fleet time back to Workstead (optional).")
+    if cfg["give_back"]["enabled"]:
+        print("give-back is on: 0.1% of fleet time goes to Workstead (set give_back.enabled to false to turn it off)")
     step = os.environ.get("GITHUB_STEP_SUMMARY")
     if step:
         with open(step, "a") as f:

@@ -1,0 +1,81 @@
+{
+  "tools": {
+    "compute-backend": {
+      "file": "compute_backend.py",
+      "requires": [
+        "numpy",
+        "threadpoolctl",
+        "torch"
+      ],
+      "sha256": "ea66e15893d8fdc204f529336becc681ec53a4c2ed1b4c0dbe6ae5d10f4623ad",
+      "source": {
+        "commit": "33b604f8927f84797ca5818e88077e01bd3373c6",
+        "path": "tools/lib/compute_backend.py"
+      },
+      "summary": "Choose the array backend and device for batched simulations, and describe them for run receipts.",
+      "version": "1.0.0",
+      "vet": {
+        "look": [],
+        "rules": 1,
+        "verdict": "clean"
+      }
+    },
+    "dose-response": {
+      "file": "dose_response.py",
+      "requires": [
+        "numpy",
+        "scipy"
+      ],
+      "sha256": "c67411b71505c83a4019f8651aa06979e553b7c05b51fbd7707caafb7c42a653",
+      "source": {
+        "commit": "69b45d24c25494a16090dc044851ea74d263dd46",
+        "path": "tools/lib/dose_response.py"
+      },
+      "summary": "Fit four-parameter Hill (log-logistic) curves to dose-response data, with bootstrap intervals.",
+      "version": "1.0.0",
+      "vet": {
+        "look": [],
+        "rules": 1,
+        "verdict": "clean"
+      }
+    },
+    "heldout": {
+      "file": "heldout.py",
+      "requires": [
+        "numpy"
+      ],
+      "sha256": "4d3d061a92fb000e273dd8f9099549fa18cc36b34abb47ba9f606bdb4766d7dc",
+      "source": {
+        "commit": "69b45d24c25494a16090dc044851ea74d263dd46",
+        "path": "tools/lib/heldout.py"
+      },
+      "summary": "Held-out benchmarks: leave one group out, compare a model to a baseline, with a paired bootstrap.",
+      "version": "1.0.0",
+      "vet": {
+        "look": [],
+        "rules": 1,
+        "verdict": "clean"
+      }
+    },
+    "tumour-pkpd": {
+      "file": "tumour_pkpd.py",
+      "requires": [
+        "numpy",
+        "torch"
+      ],
+      "sha256": "621fba32577bc05e732123c5b0dca61d43e564b476683771ba112a9a7cb4441a",
+      "source": {
+        "commit": "69b45d24c25494a16090dc044851ea74d263dd46",
+        "path": "tools/lib/tumour_pkpd.py"
+      },
+      "summary": "Batched tumour growth under drug exposure: one-compartment PK, Emax kill, Gompertz growth.",
+      "version": "1.0.0",
+      "vet": {
+        "look": [],
+        "rules": 1,
+        "verdict": "clean"
+      }
+    }
+  },
+  "v": 1
+}

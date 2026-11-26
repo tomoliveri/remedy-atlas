@@ -96,9 +96,11 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
-      # Add toolchain setup here, for example:
-      # - uses: actions/setup-node@v4
-      #   with: { node-version: 22 }
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - name: Research core tier (hash-locked)
+        run: python -m pip install --require-hashes --no-input -r research/env/requirements-core.txt
       - name: Run validate.command from workstead.json
         run: |
           cmd=$(python3 -c "import json; print(json.load(open('workstead.json')).get('validate', {}).get('command', ''))")

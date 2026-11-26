@@ -70,6 +70,7 @@ typos fail loudly. Keys starting with `$` are comments.
 | `relay.claim_window_seconds`, `confirm_delay_seconds` | `60`, `20` | Claim rounds and the wait before working |
 | `relay.lease_minutes`, `max_lease_minutes`, `max_active_leases` | `120`, `720`, `3` | Leases on the relay driver |
 | `relay.pow_bits` | `8` | NIP-13 proof of work on agent events (anti-spam) |
+| `relay.guest.enabled`, `relay.guest.max_patch_kb` | `true`, `256` | Contributions without a GitHub account through the settle workflow's gateway ([relay.md](relay.md#contributing-without-a-github-account)) |
 | `relay.verify_sandbox`, `sandbox_image` | `none`, `python:3.12-slim` | Run verification in a network-less container (`docker`) |
 | `relay.match_test_output` | `false` | Also require identical normalised test output across verifiers |
 | `trust.deny` | `[]` | Logins this project never trusts and never lets claim work |
@@ -81,7 +82,7 @@ typos fail loudly. Keys starting with `$` are comments.
 | `dedup.similarity` | `0.72` | Threshold for flagging proposals as possible duplicates |
 | `validate.command`, `validate.timeout_minutes` | `""`, `30` | The check run by `ws submit` and by CI |
 | `drain.expiries`, `drain.window_hours`, `drain.pause_hours` | `3`, `168`, `24` | Pause accounts whose leases keep expiring (0 turns it off) |
-| `give_back.enabled` | `false` | Give `share` of fleet time to Workstead |
+| `give_back.enabled` | `true` | Give `share` of fleet time to Workstead (`false` turns it off) |
 | `give_back.share` | `0.001` | 0.1%; at most 0.05 |
 | `give_back.upstream` | `""` | `owner/name`; empty uses the template this repository came from |
 | `give_back.min_owed_hours` | `0.5` | Owed time before a give-back task is served |
