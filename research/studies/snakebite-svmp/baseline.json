@@ -1,0 +1,140 @@
+{
+  "model": "Hill inhibition of published SVMP IC50 endpoints",
+  "seed": 42,
+  "samples": 2000,
+  "toxins": [
+    "Atr-I",
+    "Leuc-a"
+  ],
+  "matched_inhibitors": [
+    "CP471474",
+    "batimastat",
+    "collagenase-I inhibitor",
+    "marimastat",
+    "mmp-III inhibitor",
+    "prinomastat"
+  ],
+  "coverage_threshold": 0.9,
+  "dose_grid_um": [
+    0.001,
+    100.0
+  ],
+  "combination_assumption": "Bliss independence at an equal split of one total dose",
+  "reported": {
+    "Atr-I": {
+      "CP471474": {
+        "ic50_um": 0.02,
+        "reported_spread_um": 0.01,
+        "hill": 2.37
+      },
+      "batimastat": {
+        "ic50_um": 0.05,
+        "reported_spread_um": 0.03,
+        "hill": 0.85
+      },
+      "collagenase-I inhibitor": {
+        "ic50_um": 8.0,
+        "reported_spread_um": 2.0,
+        "hill": 2.28
+      },
+      "marimastat": {
+        "ic50_um": 0.08,
+        "reported_spread_um": 0.01,
+        "hill": 2.05
+      },
+      "mmp-III inhibitor": {
+        "ic50_um": 0.05,
+        "reported_spread_um": 0.01,
+        "hill": 1.79
+      },
+      "prinomastat": {
+        "ic50_um": 0.16,
+        "reported_spread_um": 0.01,
+        "hill": 0.77
+      }
+    },
+    "Leuc-a": {
+      "CP471474": {
+        "ic50_um": 0.21,
+        "reported_spread_um": 0.11,
+        "hill": 0.55
+      },
+      "batimastat": {
+        "ic50_um": 12.0,
+        "reported_spread_um": 1.0,
+        "hill": 4.91
+      },
+      "collagenase-I inhibitor": {
+        "ic50_um": 6.0,
+        "reported_spread_um": 2.0,
+        "hill": 1.65
+      },
+      "marimastat": {
+        "ic50_um": 0.69,
+        "reported_spread_um": 0.02,
+        "hill": 0.78
+      },
+      "mmp-III inhibitor": {
+        "ic50_um": 0.36,
+        "reported_spread_um": 0.17,
+        "hill": 1.34
+      },
+      "prinomastat": {
+        "ic50_um": 0.02,
+        "reported_spread_um": 0.01,
+        "hill": 1.96
+      }
+    }
+  },
+  "single_agent_covers_all_toxins": {
+    "CP471474": 2000,
+    "batimastat": 2000,
+    "collagenase-I inhibitor": 2000,
+    "marimastat": 2000,
+    "mmp-III inhibitor": 2000,
+    "prinomastat": 2000
+  },
+  "lowest_dose_single_agent": {
+    "CP471474": 117,
+    "batimastat": 0,
+    "collagenase-I inhibitor": 0,
+    "marimastat": 0,
+    "mmp-III inhibitor": 1757,
+    "prinomastat": 456
+  },
+  "lowest_dose_single_agent_per_toxin": {
+    "Atr-I": {
+      "CP471474": 1882,
+      "batimastat": 119,
+      "collagenase-I inhibitor": 0,
+      "marimastat": 0,
+      "mmp-III inhibitor": 9,
+      "prinomastat": 0
+    },
+    "Leuc-a": {
+      "CP471474": 6,
+      "batimastat": 0,
+      "collagenase-I inhibitor": 0,
+      "marimastat": 0,
+      "mmp-III inhibitor": 34,
+      "prinomastat": 1969
+    }
+  },
+  "pair_below_best_single_agent": {
+    "CP471474 + batimastat": 0,
+    "CP471474 + collagenase-I inhibitor": 4,
+    "CP471474 + marimastat": 272,
+    "CP471474 + mmp-III inhibitor": 1523,
+    "CP471474 + prinomastat": 1958,
+    "batimastat + collagenase-I inhibitor": 1,
+    "batimastat + marimastat": 0,
+    "batimastat + mmp-III inhibitor": 7,
+    "batimastat + prinomastat": 1806,
+    "collagenase-I inhibitor + marimastat": 2,
+    "collagenase-I inhibitor + mmp-III inhibitor": 3,
+    "collagenase-I inhibitor + prinomastat": 0,
+    "marimastat + mmp-III inhibitor": 336,
+    "marimastat + prinomastat": 1830,
+    "mmp-III inhibitor + prinomastat": 1857
+  }
+}

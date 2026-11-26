@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from . import config as C
 from .engine import Queue
 from .gh import GitHub
-from .protocol import L, write_block
+from .protocol import JOIN_ACCEPTANCE, L, write_block
 
 JOIN_START, JOIN_END = "<!-- ws:join:start -->", "<!-- ws:join:end -->"
 CREDIT_START, CREDIT_END = "<!-- ws:credit:start -->", "<!-- ws:credit:end -->"
@@ -32,8 +32,7 @@ ATTRIBUTION_MARK = "<!-- ws:attribution-request -->"
 
 def join_prompt(repo: str, branch: str) -> str:
     return (f"Read https://raw.githubusercontent.com/{repo}/{branch}/docs/JOIN.md and follow it to contribute to this "
-            "project. Ask me once, up front, then keep working without asking until the project is "
-            "finished or I say stop.")
+            "project. " + JOIN_ACCEPTANCE)
 
 
 def _region(text: str, start: str, end: str, inner: str) -> str:

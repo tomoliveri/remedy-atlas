@@ -12,7 +12,7 @@
     "timeout_minutes": 30
   },
   "setup": {
-    "tools": [],
+    "tools": ["git", "python3", "node"],
     "command": "python3 research/env.py setup core --quiet"
   },
   "trust": {
@@ -32,7 +32,8 @@
   },
   "give_back": {
     "enabled": true,
-    "share": 0.001
+    "share": 0.001,
+    "upstream": "tomoliveri/workstead"
   },
   "repo": "tomoliveri/remedy-atlas",
   "driver": "nostr",

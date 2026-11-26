@@ -16,7 +16,7 @@ import itertools
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .gh import GitHubError
-from .protocol import now_iso
+from .protocol import now_iso, quiet
 
 
 class World:
@@ -193,12 +193,14 @@ class FakeGitHub:
 
     def create_issue(self, title: str, body: str, labels: List[str]) -> Dict[str, Any]:
         self._call("create_issue")
-        n = self._new_issue(title, body, labels)
+        n = self._new_issue(title, quiet(body), labels)
         self.w.emit("issues", {"action": "opened", "issue": self.w.raw_issue(n)}, self.login)
         return self.get_issue(n, _count=False)
 
     def edit_issue(self, n: int, **fields: Any) -> Dict[str, Any]:
         self._call("edit_issue")
+        if "body" in fields:
+            fields["body"] = quiet(fields["body"])
         i = self.w.issues[n]
         was = i["state"]
         old_body = i["body"]
@@ -266,7 +268,7 @@ class FakeGitHub:
         if i.get("locked") and self.w.perms.get(self.login) not in ("admin", "write") and self.login != self.w.bot:
             raise GitHubError(403, "issue is locked")
         cid = next(self.w.cids)
-        self.w.comments[cid] = {"issue": n, "author": self.login, "body": body, "created_at": self.w.now(),
+        self.w.comments[cid] = {"issue": n, "author": self.login, "body": quiet(body), "created_at": self.w.now(),
                                 "updated_at": self.w.now(), "author_association": self.w.association(self.login)}
         i["commenters"].add(self.login)
         self._touch(n)
@@ -282,7 +284,7 @@ class FakeGitHub:
             raise GitHubError(404, "Not Found")
         if c["author"] != self.login and self.login != self.w.bot and self.w.perms.get(self.login) != "admin":
             raise GitHubError(403, "cannot edit another user's comment")
-        c["body"] = body
+        c["body"] = quiet(body)
         c["updated_at"] = self.w.now()
         self.w.emit("issue_comment", {"action": "edited", "issue": self.w.raw_issue(c["issue"]),
                                       "comment": self.w.raw_comment(cid)}, self.login)
@@ -324,7 +326,7 @@ class FakeGitHub:
         return n
 
     def create_pr(self, head: str, base: str, title: str, body: str, draft: bool = False) -> Dict[str, Any]:
-        n = self.open_pr(title, body, head.split(":")[-1], ["src/x.py"])
+        n = self.open_pr(title, quiet(body), head.split(":")[-1], ["src/x.py"])
         return self.get_pr(n)
 
     def push_pr(self, n: int, sha: str, files: Optional[List[str]] = None) -> None:
