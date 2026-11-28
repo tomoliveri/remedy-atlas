@@ -1,0 +1,1227 @@
+{
+ "cache": {
+  "22": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [
+    26,
+    27,
+    28
+   ],
+   "labels": [
+    "p:plan",
+    "ws:job",
+    "ws:split",
+    "ws:task"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "updated_at": "2026-11-25T21:59:16Z"
+  },
+  "23": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [
+    29,
+    30,
+    31
+   ],
+   "labels": [
+    "p:plan",
+    "ws:job",
+    "ws:split",
+    "ws:task"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "updated_at": "2026-11-25T21:59:28Z"
+  },
+  "24": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [
+    33,
+    34,
+    35
+   ],
+   "labels": [
+    "p:plan",
+    "ws:job",
+    "ws:split",
+    "ws:task"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "updated_at": "2026-11-25T22:00:03Z"
+  },
+  "25": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [
+    36,
+    37,
+    38
+   ],
+   "labels": [
+    "p:plan",
+    "ws:job",
+    "ws:split",
+    "ws:task"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "updated_at": "2026-11-25T22:00:29Z"
+  },
+  "26": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "p:compute",
+    "ws:review",
+    "ws:task"
+   ],
+   "lease": {
+    "comment": 7178746556,
+    "limit_h": 3,
+    "login": "tomoliveri",
+    "node": "Toms-Air-cf89",
+    "since": "2026-11-26T00:25:50Z"
+   },
+   "pr": 45,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "updated_at": "2026-11-26T00:29:04Z"
+  },
+  "27": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "p:compute",
+    "ws:review",
+    "ws:task"
+   ],
+   "lease": {
+    "comment": 7178449725,
+    "limit_h": 3,
+    "login": "tomoliveri",
+    "node": "Toms-Air-cf89",
+    "since": "2026-11-26T00:09:06Z"
+   },
+   "pr": 44,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "updated_at": "2026-11-26T00:16:54Z"
+  },
+  "28": {
+   "attempts": 0,
+   "labels": [
+    "p:replicate",
+    "ws:pending",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T21:59:10Z"
+  },
+  "30": {
+   "attempts": 0,
+   "labels": [
+    "p:compute",
+    "ws:ready",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-26T03:54:46Z"
+  },
+  "31": {
+   "attempts": 0,
+   "labels": [
+    "p:replicate",
+    "ws:pending",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T21:59:22Z"
+  },
+  "32": {
+   "attempts": 0,
+   "labels": [
+    "p:compute",
+    "ws:ready",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T21:59:31Z"
+  },
+  "33": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "p:compute",
+    "ws:review",
+    "ws:task"
+   ],
+   "lease": {
+    "comment": 7181654877,
+    "limit_h": 3,
+    "login": "tomoliveri",
+    "node": "Toms-Air-cf89",
+    "since": "2026-11-26T03:22:02Z"
+   },
+   "pr": 46,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "updated_at": "2026-11-26T03:34:39Z"
+  },
+  "34": {
+   "attempts": 0,
+   "labels": [
+    "p:compute",
+    "ws:ready",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T21:59:55Z"
+  },
+  "35": {
+   "attempts": 0,
+   "labels": [
+    "p:replicate",
+    "ws:pending",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T21:59:57Z"
+  },
+  "36": {
+   "attempts": 0,
+   "labels": [
+    "p:compute",
+    "ws:ready",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T22:00:19Z"
+  },
+  "37": {
+   "attempts": 0,
+   "labels": [
+    "p:compute",
+    "ws:ready",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T22:00:21Z"
+  },
+  "38": {
+   "attempts": 0,
+   "labels": [
+    "p:replicate",
+    "ws:pending",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-25T22:00:22Z"
+  },
+  "40": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "p:code",
+    "ws:review",
+    "ws:task"
+   ],
+   "lease": {
+    "comment": 7176808525,
+    "limit_h": 6,
+    "login": "tomoliveri",
+    "node": "remedy-atlas-maintainer",
+    "since": "2026-11-25T22:48:24Z"
+   },
+   "pr": 41,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "updated_at": "2026-11-25T22:55:16Z"
+  },
+  "41": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "ws:needs-maintainer",
+    "ws:needs-review",
+    "ws:pr"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "touches protected paths (.github/CODEOWNERS, .github/CONTRIBUTING.md, .github/workflows/ws-upstream.yml): a maintainer must approve",
+   "review_lease": null,
+   "status": null,
+   "updated_at": "2026-11-25T22:56:12Z"
+  },
+  "43": {
+   "attempts": 0,
+   "labels": [
+    "p:compute",
+    "ws:ready",
+    "ws:task"
+   ],
+   "status": "queued",
+   "updated_at": "2026-11-26T00:08:58Z"
+  },
+  "44": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "ws:needs-review",
+    "ws:pr"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "",
+   "review_lease": null,
+   "status": null,
+   "updated_at": "2026-11-26T00:16:39Z"
+  },
+  "45": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "ws:needs-review",
+    "ws:pr"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "",
+   "review_lease": null,
+   "status": null,
+   "updated_at": "2026-11-26T00:28:57Z"
+  },
+  "46": {
+   "approvals": 0,
+   "attempts": 0,
+   "children": [],
+   "labels": [
+    "ws:needs-review",
+    "ws:pr"
+   ],
+   "lease": null,
+   "pr": null,
+   "reason": "",
+   "review_lease": null,
+   "status": null,
+   "updated_at": "2026-11-26T03:34:31Z"
+  }
+ },
+ "finished": false,
+ "fleet_learnings": {
+  "fleets": 0,
+  "signals": []
+ },
+ "generated_at": "2026-11-28T13:46:33Z",
+ "held_only": false,
+ "learn": {
+  "days": {
+   "2026-11-25": {
+    "accounts_max": 1,
+    "leases_started": 3,
+    "nodes_max": 2,
+    "plans": 8,
+    "submissions": 2,
+    "tasks_completed": 0,
+    "tasks_created": 35
+   },
+   "2026-11-26": {
+    "accounts_max": 1,
+    "leases_started": 1,
+    "nodes_max": 2,
+    "submissions": 2,
+    "tasks_completed": 1,
+    "tasks_created": 1
+   },
+   "2026-11-27": {
+    "accounts_max": 1,
+    "nodes_max": 2,
+    "tasks_completed": 0
+   },
+   "2026-11-28": {
+    "accounts_max": 1,
+    "nodes_max": 2,
+    "tasks_completed": 0
+   }
+  },
+  "project_id": "c83652e05a8948eb",
+  "samples": {
+   "est_ratio": [
+    0.203,
+    0.198,
+    1.117,
+    2.921
+   ],
+   "lease_hours": [
+    0.203,
+    0.198,
+    1.117,
+    2.921
+   ],
+   "plan_children": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ]
+  }
+ },
+ "learnings_topics": [],
+ "nodes": [
+  {
+   "leases": 4,
+   "login": "tomoliveri",
+   "nodes": [
+    "Toms-Air-cf89",
+    "remedy-atlas-maintainer"
+   ],
+   "since": "2026-11-26T00:25:50Z"
+  }
+ ],
+ "repo": "tomoliveri/remedy-atlas",
+ "reviews": [
+  {
+   "author": "tomoliveri",
+   "created_at": "2026-11-25T22:50:48Z",
+   "kind": "pr",
+   "labels": [
+    "ws:pr",
+    "ws:needs-review",
+    "ws:needs-maintainer"
+   ],
+   "number": 41,
+   "review_lease": null,
+   "title": "Document security and sync Workstead upstream"
+  },
+  {
+   "author": "tomoliveri",
+   "created_at": "2026-11-26T00:16:24Z",
+   "kind": "pr",
+   "labels": [
+    "ws:pr",
+    "ws:needs-review"
+   ],
+   "number": 44,
+   "review_lease": null,
+   "title": "NDM-1: Run the Python sensitivity analysis"
+  },
+  {
+   "author": "tomoliveri",
+   "created_at": "2026-11-26T00:28:43Z",
+   "kind": "pr",
+   "labels": [
+    "ws:pr",
+    "ws:needs-review"
+   ],
+   "number": 45,
+   "review_lease": null,
+   "title": "NDM-1: Run the Python model"
+  },
+  {
+   "author": "tomoliveri",
+   "created_at": "2026-11-26T03:34:13Z",
+   "kind": "pr",
+   "labels": [
+    "ws:pr",
+    "ws:needs-review"
+   ],
+   "number": 46,
+   "review_lease": null,
+   "title": "KPC / OXA-48-like: Run the Python model"
+  }
+ ],
+ "stats": {
+  "by_partition": {
+   "code": 1,
+   "compute": 9,
+   "plan": 4,
+   "replicate": 4
+  },
+  "by_status": {
+   "pending": 4,
+   "ready": 6,
+   "review": 4,
+   "split": 4
+  },
+  "done_24h": 0,
+  "done_7d": 1,
+  "eta_days": 126.0,
+  "open_tasks": 18,
+  "remaining_est_hours": 16.0,
+  "tasks_per_day": 0.1
+ },
+ "tasks": [
+  {
+   "attempts": 0,
+   "author": "tomoliveri",
+   "children": [
+    26,
+    27,
+    28
+   ],
+   "code": "R",
+   "created_at": "2026-11-25T21:58:12Z",
+   "labels": [
+    "ws:task",
+    "ws:job",
+    "ws:split",
+    "p:plan"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 0,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 22,
+    "licenses": [],
+    "origin": "job",
+    "parent": null,
+    "partition": "plan",
+    "plan_ref": null,
+    "priority": 9,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 22,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "title": "NDM-1 inhibitor response"
+  },
+  {
+   "attempts": 0,
+   "author": "tomoliveri",
+   "children": [
+    29,
+    30,
+    31
+   ],
+   "code": "R",
+   "created_at": "2026-11-25T21:58:13Z",
+   "labels": [
+    "ws:task",
+    "ws:job",
+    "ws:split",
+    "p:plan"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 0,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 23,
+    "licenses": [],
+    "origin": "job",
+    "parent": null,
+    "partition": "plan",
+    "plan_ref": null,
+    "priority": 9,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 23,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "title": "Snakebite inhibitor response"
+  },
+  {
+   "attempts": 0,
+   "author": "tomoliveri",
+   "children": [
+    33,
+    34,
+    35
+   ],
+   "code": "R",
+   "created_at": "2026-11-25T21:58:15Z",
+   "labels": [
+    "ws:task",
+    "ws:job",
+    "ws:split",
+    "p:plan"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 0,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 24,
+    "licenses": [],
+    "origin": "job",
+    "parent": null,
+    "partition": "plan",
+    "plan_ref": null,
+    "priority": 8,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 24,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "title": "KPC / OXA-48-like inhibitor response"
+  },
+  {
+   "attempts": 0,
+   "author": "tomoliveri",
+   "children": [
+    36,
+    37,
+    38
+   ],
+   "code": "R",
+   "created_at": "2026-11-25T21:58:16Z",
+   "labels": [
+    "ws:task",
+    "ws:job",
+    "ws:split",
+    "p:plan"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 0,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 25,
+    "licenses": [],
+    "origin": "job",
+    "parent": null,
+    "partition": "plan",
+    "plan_ref": null,
+    "priority": 4,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 25,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "split",
+   "title": "Cervical tumour drug-response simulation"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "CG",
+   "created_at": "2026-11-25T21:59:06Z",
+   "labels": [
+    "ws:task",
+    "ws:review",
+    "p:compute"
+   ],
+   "lease": {
+    "comment": 7178746556,
+    "limit_h": 3,
+    "login": "tomoliveri",
+    "node": "Toms-Air-cf89",
+    "since": "2026-11-26T00:25:50Z"
+   },
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 22,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 22,
+    "partition": "compute",
+    "plan_ref": "22/7175783717/model",
+    "priority": 9,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 26,
+   "pr": 45,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "title": "NDM-1: Run the Python model"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "CG",
+   "created_at": "2026-11-25T21:59:08Z",
+   "labels": [
+    "ws:task",
+    "ws:review",
+    "p:compute"
+   ],
+   "lease": {
+    "comment": 7178449725,
+    "limit_h": 3,
+    "login": "tomoliveri",
+    "node": "Toms-Air-cf89",
+    "since": "2026-11-26T00:09:06Z"
+   },
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 22,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 22,
+    "partition": "compute",
+    "plan_ref": "22/7175783717/sensitivity",
+    "priority": 9,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 27,
+   "pr": 44,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "title": "NDM-1: Run the Python sensitivity analysis"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T21:59:10Z",
+   "labels": [
+    "ws:task",
+    "ws:pending",
+    "p:replicate"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [
+     26,
+     27
+    ],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 22,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 22,
+    "partition": "replicate",
+    "plan_ref": "22/7175783717/reproduce",
+    "priority": 9,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 28,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "NDM-1: Reproduce the computed results"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T21:59:21Z",
+   "labels": [
+    "ws:task",
+    "ws:ready",
+    "p:compute"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 23,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 23,
+    "partition": "compute",
+    "plan_ref": "23/7175790693/sensitivity",
+    "priority": 9,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 30,
+   "pr": null,
+   "ready": true,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "Snakebite SVMP: Run the Python sensitivity analysis"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T21:59:22Z",
+   "labels": [
+    "ws:task",
+    "ws:pending",
+    "p:replicate"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [
+     29,
+     30
+    ],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 23,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 23,
+    "partition": "replicate",
+    "plan_ref": "23/7175790693/reproduce",
+    "priority": 9,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 31,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "Snakebite SVMP: Reproduce the computed results"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T21:59:31Z",
+   "labels": [
+    "ws:task",
+    "ws:ready",
+    "p:compute"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 0,
+    "est_hours": 2.0,
+    "features": [],
+    "found_in": null,
+    "job": null,
+    "licenses": [],
+    "origin": "manual",
+    "parent": null,
+    "partition": "compute",
+    "plan_ref": null,
+    "priority": 5,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 32,
+   "pr": null,
+   "ready": true,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "Portfolio review: find the next opportunity to save lives"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "CG",
+   "created_at": "2026-11-25T21:59:54Z",
+   "labels": [
+    "ws:task",
+    "ws:review",
+    "p:compute"
+   ],
+   "lease": {
+    "comment": 7181654877,
+    "limit_h": 3,
+    "login": "tomoliveri",
+    "node": "Toms-Air-cf89",
+    "since": "2026-11-26T03:22:02Z"
+   },
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 24,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 24,
+    "partition": "compute",
+    "plan_ref": "24/7175802681/model",
+    "priority": 8,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 33,
+   "pr": 46,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "title": "KPC / OXA-48-like: Run the Python model"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T21:59:55Z",
+   "labels": [
+    "ws:task",
+    "ws:ready",
+    "p:compute"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 24,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 24,
+    "partition": "compute",
+    "plan_ref": "24/7175802681/sensitivity",
+    "priority": 8,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 34,
+   "pr": null,
+   "ready": true,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "KPC / OXA-48-like: Run the Python sensitivity analysis"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T21:59:57Z",
+   "labels": [
+    "ws:task",
+    "ws:pending",
+    "p:replicate"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [
+     33,
+     34
+    ],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 24,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 24,
+    "partition": "replicate",
+    "plan_ref": "24/7175802681/reproduce",
+    "priority": 8,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 35,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "KPC / OXA-48-like: Reproduce the computed results"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T22:00:19Z",
+   "labels": [
+    "ws:task",
+    "ws:ready",
+    "p:compute"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 25,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 25,
+    "partition": "compute",
+    "plan_ref": "25/7175810657/model",
+    "priority": 4,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 36,
+   "pr": null,
+   "ready": true,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "Cervical tumour drug response: Run the Python model"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T22:00:21Z",
+   "labels": [
+    "ws:task",
+    "ws:ready",
+    "p:compute"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 25,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 25,
+    "partition": "compute",
+    "plan_ref": "25/7175810657/sensitivity",
+    "priority": 4,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 37,
+   "pr": null,
+   "ready": true,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "Cervical tumour drug response: Run the Python sensitivity analysis"
+  },
+  {
+   "attempts": 0,
+   "author": "github-actions[bot]",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-25T22:00:22Z",
+   "labels": [
+    "ws:task",
+    "ws:pending",
+    "p:replicate"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [
+     36,
+     37
+    ],
+    "depth": 1,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": null,
+    "job": 25,
+    "licenses": [],
+    "origin": "plan",
+    "parent": 25,
+    "partition": "replicate",
+    "plan_ref": "25/7175810657/reproduce",
+    "priority": 4,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 38,
+   "pr": null,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "Cervical tumour drug response: Reproduce the computed results"
+  },
+  {
+   "attempts": 0,
+   "author": "tomoliveri",
+   "children": [],
+   "code": "CG",
+   "created_at": "2026-11-25T22:47:58Z",
+   "labels": [
+    "ws:task",
+    "ws:review",
+    "p:code"
+   ],
+   "lease": {
+    "comment": 7176808525,
+    "limit_h": 6,
+    "login": "tomoliveri",
+    "node": "remedy-atlas-maintainer",
+    "since": "2026-11-25T22:48:24Z"
+   },
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 0,
+    "est_hours": 2.0,
+    "features": [],
+    "found_in": null,
+    "job": null,
+    "licenses": [],
+    "origin": "found",
+    "parent": null,
+    "partition": "code",
+    "plan_ref": null,
+    "priority": 8,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 40,
+   "pr": 41,
+   "ready": false,
+   "reason": "",
+   "review_lease": null,
+   "status": "review",
+   "title": "Document security and sync Workstead upstream"
+  },
+  {
+   "attempts": 0,
+   "author": "tomoliveri",
+   "children": [],
+   "code": "PD",
+   "created_at": "2026-11-26T00:08:44Z",
+   "labels": [
+    "ws:task",
+    "ws:ready",
+    "p:compute"
+   ],
+   "lease": null,
+   "meta": {
+    "after": "ok",
+    "deps": [],
+    "depth": 0,
+    "est_hours": 1.0,
+    "features": [],
+    "found_in": 29,
+    "job": 23,
+    "licenses": [],
+    "origin": "found",
+    "parent": 23,
+    "partition": "compute",
+    "plan_ref": null,
+    "priority": 3,
+    "source": null,
+    "topics": [],
+    "v": 1
+   },
+   "number": 43,
+   "pr": null,
+   "ready": true,
+   "reason": "",
+   "review_lease": null,
+   "status": "queued",
+   "title": "ws next offers a worker the review of its own pull request"
+  }
+ ],
+ "v": 1
+}

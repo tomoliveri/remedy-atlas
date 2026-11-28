@@ -1,0 +1,39 @@
+{
+ "config": {
+  "approvals_required": 1,
+  "heartbeat_minutes": 120,
+  "max_attempts": 3,
+  "max_per_account": 8,
+  "merge": "maintainer",
+  "time_factor": 3,
+  "top_k": 8,
+  "trust": "earned",
+  "validate": "set"
+ },
+ "generated_at": "2026-11-28T13:46:36Z",
+ "held_reasons": {},
+ "metrics": {
+  "accounts_max": 1,
+  "est_ratio_median": 0.66,
+  "expiry_rate": 0.0,
+  "held": 0,
+  "held_rate": 0.0,
+  "lease_hours_median": 0.66,
+  "leases_started": 4,
+  "nodes_max": 2,
+  "plan_children_median": 3.0,
+  "plans": 8,
+  "proposals": 0,
+  "requeues": 0,
+  "rework": 0,
+  "rework_rate": 0.0,
+  "tasks_completed": 1,
+  "tasks_created": 36,
+  "tasks_per_day": 0.25
+ },
+ "project": "c83652e05a8948eb",
+ "topics": [],
+ "v": 1,
+ "window_days": 4,
+ "workstead": "1.0.0"
+}
